@@ -15,7 +15,7 @@ PanelWindow {
 
     property bool open: false
     property var gaming
-    property string activeTab: "gamescope" // "gamescope" or "mangohud"
+    property string activeTab: "bulldoptimizer" // "bulldoptimizer" | "gamescope" | "mangohud"
 
     readonly property var game: gaming
 
@@ -293,7 +293,7 @@ PanelWindow {
 
                 Item {
                     // Spacer
-                    width: Math.max(10, parent.width - 32 - 280 - theme.spacingMd * 2 - 210)
+                    width: Math.max(10, parent.width - 32 - 280 - theme.spacingMd * 2 - 310)
                     height: 1
                 }
 
@@ -303,14 +303,21 @@ PanelWindow {
                     spacing: theme.spacingSm
 
                     SettingPill {
-                        width: 100
+                        width: 105
+                        label: "Bulldoptimizer"
+                        active: root.activeTab === "bulldoptimizer"
+                        onClicked: root.activeTab = "bulldoptimizer"
+                    }
+
+                    SettingPill {
+                        width: 95
                         label: "Gamescope"
                         active: root.activeTab === "gamescope"
                         onClicked: root.activeTab = "gamescope"
                     }
 
                     SettingPill {
-                        width: 100
+                        width: 95
                         label: "MangoHud"
                         active: root.activeTab === "mangohud"
                         onClicked: root.activeTab = "mangohud"
@@ -338,6 +345,58 @@ PanelWindow {
                     id: contentCol
                     width: parent.width
                     spacing: theme.spacingSm
+
+                    // =========================================================
+                    // TAB 0: BULLDOPTIMIZER (SYSTEM, HYPRLAND & GPU OPTIMIZATION)
+                    // =========================================================
+                    Column {
+                        width: parent.width
+                        visible: root.activeTab === "bulldoptimizer"
+                        spacing: theme.spacingSm
+
+                        SectionHeader { title: "Shell & Sistema" }
+
+                        SettingToggleRow {
+                            iconGlyph: ""
+                            title: "Wallpaper Estático (Zero-GPU)"
+                            subtitle: "Pausa o Wallpaper Engine e exibe imagem estática para liberar VRAM e GPU"
+                            checked: root.game.boWallpaperStatic
+                            onToggled: {
+                                root.game.boWallpaperStatic = !root.game.boWallpaperStatic
+                                root.game.saveConfig()
+                            }
+                        }
+
+                        SettingToggleRow {
+                            iconGlyph: ""
+                            title: "Desativar Efeitos do Hyprland"
+                            subtitle: "Desativa blur, sombras e animações do compositor ao ativar o Bulldoptimizer"
+                            checked: root.game.boHyprlandEffects
+                            onToggled: {
+                                root.game.boHyprlandEffects = !root.game.boHyprlandEffects
+                                root.game.saveConfig()
+                                if (root.game.bulldoptimizerEnabled) {
+                                    root.game.applyBulldoptimizer(true)
+                                }
+                            }
+                        }
+
+                        SectionHeader { title: "Hardware & Driver GPU" }
+
+                        SettingToggleRow {
+                            iconGlyph: ""
+                            title: "NVIDIA PowerMizer Performance"
+                            subtitle: "Trava a GPU em modo de desempenho máximo (Seguro: ignora em GPUs AMD/Intel)"
+                            checked: root.game.boPowerMizer
+                            onToggled: {
+                                root.game.boPowerMizer = !root.game.boPowerMizer
+                                root.game.saveConfig()
+                                if (root.game.bulldoptimizerEnabled) {
+                                    root.game.applyBulldoptimizer(true)
+                                }
+                            }
+                        }
+                    }
 
                     // =========================================================
                     // TAB 1: GAMESCOPE (COMPREHENSIVE)

@@ -34,6 +34,7 @@ ShellRoot {
 
     WallpaperEngine {
         id: globalWallpaper
+        optimizerActive: globalGaming.bulldoptimizerEnabled && globalGaming.boWallpaperStatic
     }
 
     Notifications {
@@ -231,6 +232,56 @@ ShellRoot {
         function toggleMute() { globalAudio.toggleMute() }
     }
 
+    // Static Desktop Wallpaper for GameMode (Zero-GPU Mode)
+    Variants {
+        model: Quickshell.screens
+
+        delegate: Component {
+            PanelWindow {
+                required property var modelData
+                screen: modelData
+
+                WlrLayershell.namespace: "bulldoze-wallpaper-static"
+                WlrLayershell.layer: WlrLayer.Background
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                exclusiveZone: -1
+                focusable: false
+                visible: globalGaming.bulldoptimizerEnabled && globalGaming.boWallpaperStatic
+
+                anchors {
+                    top: true
+                    bottom: true
+                    left: true
+                    right: true
+                }
+
+                color: "transparent"
+
+                Image {
+                    id: staticWallpaperImg
+                    anchors.fill: parent
+                    fillMode: Image.PreserveAspectCrop
+                    source: "file://" + Quickshell.env("HOME") + "/.cache/bulldoze/Wallpaper_greeter.png"
+                    asynchronous: true
+                    cache: false
+                    onStatusChanged: {
+                        if (status === Image.Error) {
+                            source = "file:///var/lib/greetd/Wallpaper_greeter.png"
+                        }
+                    }
+
+                    Connections {
+                        target: globalWallpaper
+                        function onSnapshotVersionChanged() {
+                            staticWallpaperImg.source = ""
+                            staticWallpaperImg.source = "file://" + Quickshell.env("HOME") + "/.cache/bulldoze/Wallpaper_greeter.png"
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // Unified Morphing Top Notch Bar
     Variants {
         model: Quickshell.screens
@@ -260,7 +311,7 @@ ShellRoot {
                     if (shell.activeMode === "wifi") return 460
                     if (shell.activeMode === "bluetooth") return 470
                     if (shell.activeMode === "audio") return 380
-                    if (shell.activeMode === "gaming") return 480
+                    if (shell.activeMode === "gaming") return 620
                     if (shell.activeMode === "notifications") return 520
                     if (shell.activeMode === "power" || shell.activeMode === "profile") return 490
                     return root.isExpanded ? expandedWidth : collapsedWidth

@@ -516,6 +516,10 @@ def main():
         res = apply_wallpaper()
         print(json.dumps(res, ensure_ascii=False))
 
+    elif action == "stop":
+        stop_running_wallpaper()
+        print(json.dumps({"status": "stopped"}))
+
     elif action == "save":
         if len(sys.argv) > 2:
             try:

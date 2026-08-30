@@ -6,6 +6,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.1.0] - 2026-08
 
+### ✨ Adicionado
+- **Módulo e Toggle Rápido Bulldoptimizer (``)**:
+  - Novo recurso de otimização de jogos modular e desacoplado do GameMode, permitindo economia de GPU e redução de latência com controle individual.
+  - **Wallpaper Estático Zero-GPU**: Pausa o motor dinâmico `linux-wallpaperengine` e exibe imagem estática (`Wallpaper_greeter.png`) na camada de fundo Wayland (`WlrLayer.Background`), liberando VRAM e ciclos de GPU para o jogo.
+  - **Otimizações Dinâmicas do Hyprland**: Desativação de blur, sombras e animações do compositor com Direct Scanout (`render:direct_scanout 1`) enquanto o Bulldoptimizer estiver ativo.
+  - **NVIDIA PowerMizer Performance**: Alternância opcional para travar a GPU em desempenho máximo (`GpuPowerMizerMode=1`), com detecção segura e compatível com futuras trocas para AMD/Intel.
+  - **Interface & Controles**: Novo botão de alternância rápida no Notch Bar (`GamingBarView.qml`), grid 2x2 na Central de Controle (`ControlCenter.qml`) e aba de ajustes no modal flutuante (`GamingSettingsModal.qml`).
+  - **Integração com Wrapper**: Notificação do `scripts/bulldoze-game-run` atualizada para refletir o status do Bulldoptimizer.
+
 ### 🐛 Corrigido
 - **Persistência das Configurações de Jogos e Perfil**:
   - Corrigida a leitura assíncrona de arquivos de configuração JSON multilinhas (`modules/Gaming.qml` e `modules/UserProfile.qml`), concatenando o fluxo de dados (`cat | tr '\n' ' '`) para evitar que o `SplitParser` dividisse o payload por linha e causasse falha no `JSON.parse`.

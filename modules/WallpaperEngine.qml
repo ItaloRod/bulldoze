@@ -20,6 +20,16 @@ QtObject {
     property int volume: 0
     property bool mouseEnabled: true
     property bool hideSponsor: true
+    property bool optimizerActive: false
+    property int snapshotVersion: 0
+
+    onOptimizerActiveChanged: {
+        if (optimizerActive) {
+            stopEngine()
+        } else {
+            saveAndApplyActive()
+        }
+    }
 
     // Per wallpaper settings map
     property var perWallpaperSettings: ({})
@@ -55,6 +65,10 @@ QtObject {
         applyWallpaper(selectedId)
     }
 
+    function stopEngine() {
+        stopProc.exec(["python3", root.scriptPath, "stop"])
+    }
+
     function applyWallpaper(id) {
         if (!id) return
         activeId = id
@@ -71,13 +85,23 @@ QtObject {
             "per_wallpaper_settings": root.perWallpaperSettings
         }
 
-        applyProc.exec([
-            "python3",
-            root.scriptPath,
-            "apply",
-            id,
-            JSON.stringify(payload)
-        ])
+        if (optimizerActive) {
+            applyProc.exec([
+                "python3",
+                root.scriptPath,
+                "snapshot-silent",
+                id
+            ])
+            stopEngine()
+        } else {
+            applyProc.exec([
+                "python3",
+                root.scriptPath,
+                "apply",
+                id,
+                JSON.stringify(payload)
+            ])
+        }
     }
 
     function setScalingMode(mode) {
@@ -189,10 +213,20 @@ QtObject {
 
     property var applyProc: Process {
         id: applyProc
+        onExited: (code, status) => {
+            snapshotVersion++
+        }
+    }
+
+    property var stopProc: Process {
+        id: stopProc
     }
 
     Component.onCompleted: {
         loadConfig()
         loadWallpapers()
+        if (optimizerActive) {
+            stopEngine()
+        }
     }
 }

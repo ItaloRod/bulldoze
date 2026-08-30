@@ -127,7 +127,59 @@ Item {
                 }
             }
 
-            // 4. Quick Toggle: MangoHud
+            // 4. Quick Toggle: Bulldoptimizer
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                height: 32
+                implicitWidth: boRow.implicitWidth + 20
+                radius: theme.radiusSmall
+                color: root.game.bulldoptimizerEnabled ? theme.activeFill : (boMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                border.width: 1
+                border.color: root.game.bulldoptimizerEnabled ? theme.glassBorderStrong : (boMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: boMouse.pressed ? 0.92 : (boMouse.containsMouse ? 1.06 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: theme.animDurationFast
+                        easing.type: Easing.OutBack
+                        easing.overshoot: theme.buttonOvershoot
+                    }
+                }
+
+                Row {
+                    id: boRow
+                    anchors.centerIn: parent
+                    spacing: 6
+
+                    Text {
+                        text: ""
+                        color: root.game.bulldoptimizerEnabled ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                        font.pixelSize: theme.iconSizeSm
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+
+                    Text {
+                        text: "Bulldoptimizer"
+                        color: root.game.bulldoptimizerEnabled ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                        font.pixelSize: theme.fontSizeSubmenuBody
+                        font.weight: root.game.bulldoptimizerEnabled ? Font.Bold : Font.DemiBold
+                        anchors.verticalCenter: parent.verticalCenter
+                    }
+                }
+
+                MouseArea {
+                    id: boMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.game.toggleBulldoptimizer()
+                }
+            }
+
+            // 5. Quick Toggle: MangoHud
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
                 height: 32
