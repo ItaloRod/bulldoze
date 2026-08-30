@@ -4,6 +4,13 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.1.0] - 2026-08
+
+### 🐛 Corrigido
+- **Persistência das Configurações de Jogos e Perfil**:
+  - Corrigida a leitura assíncrona de arquivos de configuração JSON multilinhas (`modules/Gaming.qml` e `modules/UserProfile.qml`), concatenando o fluxo de dados (`cat | tr '\n' ' '`) para evitar que o `SplitParser` dividisse o payload por linha e causasse falha no `JSON.parse`.
+  - Restaurada a persistência e exibição imediata dos estados ativos de **GameMode**, **MangoHud** e **Gamescope** no Notch Bar, na Central de Jogos e na Central de Controle após reinicialização do shell.
+
 ---
 
 ## [3.0.0] - 2026-08

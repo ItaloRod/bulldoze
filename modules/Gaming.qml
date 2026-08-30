@@ -275,7 +275,7 @@ QtObject {
 
     property var readProc: Process {
         id: readProc
-        command: ["cat", root.configPath]
+        command: ["sh", "-c", "cat '" + root.configPath + "' 2>/dev/null | tr '\\n' ' '"]
         stdout: SplitParser {
             onRead: data => {
                 try {
