@@ -1,0 +1,147 @@
+#!/usr/bin/env bash
+# ==============================================================================
+# Bulldoze 3.0 --- Game Launch Wrapper
+# Caminho: ~/.config/quickshell/bulldoze/scripts/bulldoze-game-run
+# ==============================================================================
+
+CONFIG_FILE="$HOME/.config/bulldoze/gaming.json"
+
+USE_GAMEMODE=false
+USE_GAMESCOPE=false
+USE_MANGOHUD=false
+GAMESCOPE_ARGS="-W 2560 -H 1440 -r 240 --fullscreen"
+MANGOHUD_CONF_ITEMS=()
+GS_HDR=false
+
+# 1. Carrega configurações da Central de Controle
+if [[ -f "$CONFIG_FILE" ]]; then
+    USE_GAMEMODE=$(jq -r '.gamemode // false' "$CONFIG_FILE" 2>/dev/null)
+    USE_GAMESCOPE=$(jq -r '.gamescope // false' "$CONFIG_FILE" 2>/dev/null)
+    USE_MANGOHUD=$(jq -r '.mangohud // false' "$CONFIG_FILE" 2>/dev/null)
+    
+    # Gamescope Config
+    if jq -e '.gamescope_config' "$CONFIG_FILE" &>/dev/null; then
+        GS_W=$(jq -r '.gamescope_config.width // 2560' "$CONFIG_FILE")
+        GS_H=$(jq -r '.gamescope_config.height // 1440' "$CONFIG_FILE")
+        GS_RENDER_W=$(jq -r '.gamescope_config.render_width // empty' "$CONFIG_FILE")
+        GS_RENDER_H=$(jq -r '.gamescope_config.render_height // empty' "$CONFIG_FILE")
+        GS_R=$(jq -r '.gamescope_config.refresh_rate // 240' "$CONFIG_FILE")
+        GS_FULLSCREEN=$(jq -r '.gamescope_config.fullscreen // true' "$CONFIG_FILE")
+        GS_BORDERLESS=$(jq -r '.gamescope_config.borderless // false' "$CONFIG_FILE")
+        GS_HDR=$(jq -r '.gamescope_config.hdr // false' "$CONFIG_FILE")
+        GS_HDR_ITM=$(jq -r '.gamescope_config.hdr_itm // false' "$CONFIG_FILE")
+        GS_HDR_NITS=$(jq -r '.gamescope_config.hdr_sdr_nits // 400' "$CONFIG_FILE")
+        GS_FSR=$(jq -r '.gamescope_config.fsr // false' "$CONFIG_FILE")
+        GS_FSR_SHARP=$(jq -r '.gamescope_config.fsr_sharpness // 2' "$CONFIG_FILE")
+        GS_SCALER_FILTER=$(jq -r '.gamescope_config.scaler_filter // "fsr"' "$CONFIG_FILE")
+        GS_SCALER_TYPE=$(jq -r '.gamescope_config.scaler_type // "fit"' "$CONFIG_FILE")
+        GS_INTEGER=$(jq -r '.gamescope_config.integer_scaling // false' "$CONFIG_FILE")
+        GS_VRR=$(jq -r '.gamescope_config.adaptive_sync // false' "$CONFIG_FILE")
+        GS_FPS_LIMIT=$(jq -r '.gamescope_config.fps_limit // 0' "$CONFIG_FILE")
+        GS_CUSTOM=$(jq -r '.gamescope_config.custom_args // empty' "$CONFIG_FILE")
+        
+        GAMESCOPE_ARGS="-W $GS_W -H $GS_H -r $GS_R"
+        [[ -n "$GS_RENDER_W" && -n "$GS_RENDER_H" && "$GS_RENDER_W" -gt 0 && "$GS_RENDER_H" -gt 0 ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS -w $GS_RENDER_W -h $GS_RENDER_H"
+        [[ "$GS_FULLSCREEN" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --fullscreen"
+        [[ "$GS_BORDERLESS" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS -b"
+        [[ "$GS_HDR" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-enabled"
+        [[ "$GS_HDR_ITM" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-itm-enabled"
+        [[ -n "$GS_HDR_NITS" && "$GS_HDR_NITS" != "400" && "$GS_HDR_NITS" -gt 0 ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-sdr-content-nits $GS_HDR_NITS"
+        if [[ "$GS_FSR" == "true" ]]; then
+            GAMESCOPE_ARGS="$GAMESCOPE_ARGS -F ${GS_SCALER_FILTER:-fsr} --fsr-sharpness $GS_FSR_SHARP"
+        elif [[ -n "$GS_SCALER_FILTER" && "$GS_SCALER_FILTER" != "auto" && "$GS_SCALER_FILTER" != "fsr" ]]; then
+            GAMESCOPE_ARGS="$GAMESCOPE_ARGS -F $GS_SCALER_FILTER"
+        fi
+        if [[ "$GS_INTEGER" == "true" ]]; then
+            GAMESCOPE_ARGS="$GAMESCOPE_ARGS -S integer"
+        elif [[ -n "$GS_SCALER_TYPE" && "$GS_SCALER_TYPE" != "fit" && "$GS_SCALER_TYPE" != "auto" ]]; then
+            GAMESCOPE_ARGS="$GAMESCOPE_ARGS -S $GS_SCALER_TYPE"
+        fi
+        [[ "$GS_VRR" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --adaptive-sync"
+        [[ "$GS_FPS_LIMIT" -gt 0 ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --max-fps $GS_FPS_LIMIT"
+        [[ -n "$GS_CUSTOM" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS $GS_CUSTOM"
+    else
+        CUSTOM_GAMESCOPE_ARGS=$(jq -r '.gamescope_args // empty' "$CONFIG_FILE" 2>/dev/null)
+        [[ -n "$CUSTOM_GAMESCOPE_ARGS" ]] && GAMESCOPE_ARGS="$CUSTOM_GAMESCOPE_ARGS"
+    fi
+
+    # MangoHud Config
+    if jq -e '.mangohud_config' "$CONFIG_FILE" &>/dev/null; then
+        [[ $(jq -r '.mangohud_config.fps // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("fps")
+        [[ $(jq -r '.mangohud_config.frametime // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("frametime")
+        [[ $(jq -r '.mangohud_config.vram // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("vram")
+        [[ $(jq -r '.mangohud_config.ram // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("ram")
+        [[ $(jq -r '.mangohud_config.gpu_stats // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("gpu_stats")
+        [[ $(jq -r '.mangohud_config.gpu_temp // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("gpu_temp")
+        [[ $(jq -r '.mangohud_config.gpu_core_clock // false' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("gpu_core_clock")
+        [[ $(jq -r '.mangohud_config.gpu_power // false' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("gpu_power")
+        [[ $(jq -r '.mangohud_config.cpu_stats // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("cpu_stats")
+        [[ $(jq -r '.mangohud_config.cpu_temp // true' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("cpu_temp")
+        [[ $(jq -r '.mangohud_config.cpu_mhz // false' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("cpu_mhz")
+        [[ $(jq -r '.mangohud_config.cpu_power // false' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("cpu_power")
+        
+        MH_POS=$(jq -r '.mangohud_config.position // "top-left"' "$CONFIG_FILE")
+        [[ -n "$MH_POS" ]] && MANGOHUD_CONF_ITEMS+=("position=$MH_POS")
+        
+        MH_LIMIT=$(jq -r '.mangohud_config.fps_limit // 0' "$CONFIG_FILE")
+        [[ "$MH_LIMIT" -gt 0 ]] && MANGOHUD_CONF_ITEMS+=("fps_limit=$MH_LIMIT")
+        
+        [[ $(jq -r '.mangohud_config.hud_compact // false' "$CONFIG_FILE") == "true" ]] && MANGOHUD_CONF_ITEMS+=("hud_compact")
+    fi
+fi
+
+# 2. Identifica o nome legível do jogo/executável
+GAME_NAME="Jogo"
+if [[ -n "$SteamAppId" ]]; then
+    GAME_NAME="Steam App ID $SteamAppId"
+elif [[ -n "$1" ]]; then
+    RAW_EXE=$(basename "$1")
+    GAME_NAME="${RAW_EXE%.*}"
+fi
+
+# 3. Monta a lista de recursos e emite a notificação se houver perfil ativo
+ACTIVE_FEATURES=()
+[[ "$USE_GAMEMODE" == "true" ]] && ACTIVE_FEATURES+=("GameMode")
+if [[ "$USE_GAMESCOPE" == "true" ]]; then
+    GS_LABEL="Gamescope"
+    [[ "$GS_HDR" == "true" ]] && GS_LABEL="$GS_LABEL (HDR)"
+    [[ -n "$GS_RENDER_W" && "$GS_RENDER_W" -gt 0 ]] && GS_LABEL="$GS_LABEL (${GS_RENDER_H}p->$GS_H"p")"
+    [[ "$GS_FSR" == "true" ]] && GS_LABEL="$GS_LABEL [${GS_SCALER_FILTER^^}]"
+    ACTIVE_FEATURES+=("$GS_LABEL")
+fi
+if [[ "$USE_MANGOHUD" == "true" ]]; then
+    ACTIVE_FEATURES+=("MangoHud")
+fi
+
+if [[ ${#ACTIVE_FEATURES[@]} -gt 0 ]]; then
+    FEATURES_STR=$(IFS=", "; echo "${ACTIVE_FEATURES[*]}")
+    notify-send \
+        -a "Bulldoze Gaming" \
+        -i "applications-games" \
+        "Perfil de Jogo Ativado" \
+        "Otimizações ativas [$FEATURES_STR] para: $GAME_NAME" &
+fi
+
+# 4. Configura variáveis de ambiente do MangoHud se ativo
+if [[ "$USE_MANGOHUD" == "true" && ${#MANGOHUD_CONF_ITEMS[@]} -gt 0 ]]; then
+    export MANGOHUD_CONFIG=$(IFS=","; echo "${MANGOHUD_CONF_ITEMS[*]}")
+fi
+
+# 5. Encadeia a ordem de execução
+CMD=()
+
+if [[ "$USE_GAMEMODE" == "true" ]] && command -v gamemoderun &>/dev/null; then
+    CMD+=("gamemoderun")
+fi
+
+if [[ "$USE_GAMESCOPE" == "true" ]] && command -v gamescope &>/dev/null; then
+    # shellcheck disable=SC2086
+    CMD+=("gamescope" $GAMESCOPE_ARGS "--")
+fi
+
+if [[ "$USE_MANGOHUD" == "true" ]] && command -v mangohud &>/dev/null; then
+    CMD+=("mangohud")
+fi
+
+# 6. Executa a aplicação do jogo
+exec "${CMD[@]}" "$@"

@@ -1,0 +1,629 @@
+/* ==========================================================================
+   Bulldoze 3.0 Design System — Firefox userChrome.css
+   Token-Driven / Glassmorphic / Resilient Architecture
+   Optimized for Firefox Official "System dark" / Dark Theme
+   ========================================================================== */
+
+:root {
+  --tabpanel-background-color: transparent !important;
+  background: transparent !important;
+  background-color: transparent !important;
+
+  /* Surface Tokens (Bulldoze Design System) */
+  --bulldoze-glass-fill: rgba(14, 16, 22, 0.40);
+  --bulldoze-glass-fill-dark: rgba(14, 16, 22, 0.78);
+  --bulldoze-glass-border: rgba(255, 255, 255, 0.14);
+  --bulldoze-glass-border-subtle: rgba(255, 255, 255, 0.09);
+  --bulldoze-glass-border-strong: rgba(255, 255, 255, 0.22);
+  --bulldoze-item-fill: rgba(255, 255, 255, 0.06);
+  --bulldoze-hover-fill: rgba(255, 255, 255, 0.11);
+  --bulldoze-active-fill: rgba(255, 255, 255, 0.18);
+  --bulldoze-separator: rgba(255, 255, 255, 0.10);
+
+  /* Typography & Text Tokens */
+  --bulldoze-text-strong: rgba(255, 255, 255, 0.95);
+  --bulldoze-text-medium: rgba(255, 255, 255, 0.85);
+  --bulldoze-text-muted: rgba(255, 255, 255, 0.70);
+  --bulldoze-text-subtle: rgba(255, 255, 255, 0.60);
+
+  /* Radii Tokens */
+  --bulldoze-radius-sm: 4px;
+  --bulldoze-radius-pill: 6px;
+  --bulldoze-radius-item: 10px;
+  --bulldoze-radius-card: 14px;
+
+  /* ========================================================================
+     Firefox Native Custom Properties Override (Proton / Gecko)
+     ======================================================================== */
+  --lwt-header-image: none !important;
+  --lwt-additional-images: none !important;
+  --lwt-main-image: none !important;
+
+  --toolbar-bgcolor: transparent !important;
+  --toolbar-color: var(--bulldoze-text-medium) !important;
+  --toolbarbutton-border-radius: var(--bulldoze-radius-item) !important;
+  --toolbarbutton-hover-background: var(--bulldoze-hover-fill) !important;
+  --toolbarbutton-active-background: var(--bulldoze-active-fill) !important;
+  
+  --lwt-accent-color: transparent !important;
+  --lwt-text-color: var(--bulldoze-text-strong) !important;
+  --lwt-tab-text: var(--bulldoze-text-medium) !important;
+  --lwt-selected-tab-background-color: var(--bulldoze-active-fill) !important;
+  
+  --tab-selected-bgcolor: var(--bulldoze-active-fill) !important;
+  --tab-selected-textcolor: var(--bulldoze-text-strong) !important;
+  --tab-shadow-max-size: 0 !important;
+
+  --arrowpanel-background: var(--bulldoze-glass-fill-dark) !important;
+  --arrowpanel-color: var(--bulldoze-text-medium) !important;
+  --arrowpanel-border-color: var(--bulldoze-glass-border) !important;
+  --arrowpanel-border-radius: var(--bulldoze-radius-card) !important;
+
+  /* Focus & Accent Overrides (eliminates native blue/cyan focus outlines) */
+  --focus-outline-color: var(--bulldoze-glass-border-strong) !important;
+  --focus-outline: 1px solid var(--bulldoze-glass-border-strong) !important;
+  --focus-ring-color: var(--bulldoze-glass-border-strong) !important;
+  --accessibility-theme-accent-color: var(--bulldoze-text-strong) !important;
+
+  /* URL Bar & Search Tokens */
+  --toolbar-field-background-color: var(--bulldoze-item-fill) !important;
+  --toolbar-field-color: var(--bulldoze-text-strong) !important;
+  --toolbar-field-border-color: var(--bulldoze-glass-border) !important;
+  --toolbar-field-focus-background-color: var(--bulldoze-active-fill) !important;
+  --toolbar-field-focus-color: var(--bulldoze-text-strong) !important;
+  --toolbar-field-focus-border-color: var(--bulldoze-glass-border-strong) !important;
+  --urlbar-focused-border-color: var(--bulldoze-glass-border-strong) !important;
+  --urlbar-box-bgcolor: var(--bulldoze-item-fill) !important;
+  --urlbar-box-hover-bgcolor: var(--bulldoze-hover-fill) !important;
+  --urlbar-box-active-bgcolor: var(--bulldoze-active-fill) !important;
+  --urlbar-box-focus-bgcolor: var(--bulldoze-active-fill) !important;
+  --urlbar-search-mode-indicator-color: var(--bulldoze-text-strong) !important;
+  --urlbar-search-mode-indicator-background: var(--bulldoze-item-fill) !important;
+  --urlbar-search-mode-indicator-focus-background: var(--bulldoze-active-fill) !important;
+  --urlbar-popup-url-color: var(--bulldoze-text-strong) !important;
+  --urlbar-popup-action-color: var(--bulldoze-text-muted) !important;
+
+  /* Primary Button & Input Overrides */
+  --button-primary-bgcolor: var(--bulldoze-active-fill) !important;
+  --button-primary-hover-bgcolor: var(--bulldoze-hover-fill) !important;
+  --button-primary-active-bgcolor: var(--bulldoze-active-fill) !important;
+  --button-primary-color: var(--bulldoze-text-strong) !important;
+  --button-background-color-primary: var(--bulldoze-active-fill) !important;
+  --button-background-color-primary-hover: var(--bulldoze-hover-fill) !important;
+  --button-background-color-primary-active: var(--bulldoze-active-fill) !important;
+  --button-text-color-primary: var(--bulldoze-text-strong) !important;
+  --input-border-color: var(--bulldoze-glass-border) !important;
+  --input-focus-border-color: var(--bulldoze-glass-border-strong) !important;
+  --input-focus-outline-color: var(--bulldoze-glass-border-strong) !important;
+
+  /* Autocomplete & Results */
+  --autocomplete-popup-background: var(--bulldoze-glass-fill-dark) !important;
+  --autocomplete-popup-color: var(--bulldoze-text-medium) !important;
+  --autocomplete-popup-highlight-background: var(--bulldoze-hover-fill) !important;
+  --autocomplete-popup-highlight-color: var(--bulldoze-text-strong) !important;
+}
+
+/* ==========================================================================
+   1. Window & Main Navigation Toolbox
+   ========================================================================== */
+
+:root,
+#main-window,
+#main-window[lwtheme],
+#titlebar,
+#toolbar-menubar,
+#TabsToolbar,
+#nav-bar,
+#PersonalToolbar,
+.browser-toolbar {
+  background: transparent !important;
+  background-color: transparent !important;
+  background-image: none !important;
+  appearance: none !important;
+  -moz-appearance: none !important;
+  --lwt-header-image: none !important;
+  --lwt-additional-images: none !important;
+  --lwt-main-image: none !important;
+}
+
+#browser,
+.browserSidebarContainer {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
+#tabbrowser-tabbox,
+#tabbrowser-tabpanels,
+.browserContainer,
+.browserStack,
+browser[type="content"] {
+  background-color: #0E1016 !important;
+  border-radius: var(--bulldoze-radius-card) !important;
+  overflow: hidden !important;
+}
+
+#tabbrowser-tabpanels {
+  margin: 0 6px 6px 6px !important;
+  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
+  border-radius: var(--bulldoze-radius-card) !important;
+  overflow: hidden !important;
+}
+
+#navigator-toolbox,
+#navigator-toolbox[lwtheme] {
+  background-color: var(--bulldoze-glass-fill) !important;
+  background-image: none !important;
+  border-bottom: none !important;
+  box-shadow: none !important;
+  appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+#nav-bar,
+#TabsToolbar,
+#PersonalToolbar {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* ==========================================================================
+   2. Tabs Styling (Pill / Card shaped, Translucent Glass, Bulldoze Design Tokens)
+   ========================================================================== */
+
+.tabbrowser-tab {
+  padding-inline: 3px !important;
+  margin-block: 2px !important;
+}
+
+.tab-background {
+  border-radius: var(--bulldoze-radius-item) !important;
+  border: 1px solid transparent !important;
+  box-shadow: none !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
+}
+
+/* Tab Inactive Hover */
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected="true"]):not([visuallyselected="true"]):not([multiselected]) {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
+}
+
+/* Tab Active / Selected / Visually Selected */
+.tabbrowser-tab[selected="true"] > .tab-stack > .tab-background,
+.tabbrowser-tab[visuallyselected="true"] > .tab-stack > .tab-background,
+.tabbrowser-tab[multiselected] > .tab-stack > .tab-background {
+  background-color: var(--bulldoze-active-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  box-shadow: none !important;
+}
+
+.tab-label {
+  color: var(--bulldoze-text-muted) !important;
+  font-weight: 500 !important;
+}
+
+.tabbrowser-tab[selected="true"] .tab-label,
+.tabbrowser-tab[visuallyselected="true"] .tab-label {
+  color: var(--bulldoze-text-strong) !important;
+  font-weight: 600 !important;
+}
+
+/* Tab Separators Removal */
+.tabbrowser-tab::before,
+.tabbrowser-tab::after {
+  display: none !important;
+}
+
+/* Tab Close Button */
+.tab-close-button {
+  border-radius: var(--bulldoze-radius-sm) !important;
+  color: var(--bulldoze-text-muted) !important;
+  transition: background-color 0.12s ease !important;
+}
+
+.tab-close-button:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* Sound / Playing Indicator Badge (Bulldoze Micro-glass Pill) */
+.tab-icon-sound,
+.tab-icon-overlay,
+.tab-audio-button {
+  background-color: var(--bulldoze-glass-fill-dark) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-radius: 50% !important;
+  fill: var(--bulldoze-text-strong) !important;
+  color: var(--bulldoze-text-strong) !important;
+  padding: 1px !important;
+}
+
+.tab-icon-overlay:hover,
+.tab-audio-button:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-color: var(--bulldoze-glass-border-strong) !important;
+}
+
+/* New Tab Button & All Tabs Button */
+#tabs-newtab-button,
+#new-tab-button,
+#vertical-tabs-newtab-button,
+.tabs-newtab-button,
+.all-tabs-button {
+  border-radius: var(--bulldoze-radius-item) !important;
+  color: var(--bulldoze-text-medium) !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
+}
+
+#tabs-newtab-button:hover,
+#new-tab-button:hover,
+#vertical-tabs-newtab-button:hover,
+.tabs-newtab-button:hover,
+.all-tabs-button:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* ==========================================================================
+   3. URL Bar & Search Box (Bulldoze Item/Selected Component Pattern)
+   ========================================================================== */
+
+#urlbar-background,
+#searchbar {
+  background-color: var(--bulldoze-item-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-radius: var(--bulldoze-radius-item) !important;
+  box-shadow: none !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease !important;
+}
+
+#urlbar:hover:not([focused="true"]):not([open]) > #urlbar-background {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-color: var(--bulldoze-glass-border-strong) !important;
+}
+
+#urlbar[focused="true"] > #urlbar-background,
+#urlbar[open] > #urlbar-background,
+#searchbar:focus-within {
+  background-color: var(--bulldoze-active-fill) !important;
+  border-color: var(--bulldoze-glass-border-strong) !important;
+  box-shadow: none !important;
+}
+
+#urlbar-input,
+#searchbar-input,
+.urlbar-input-box input {
+  color: var(--bulldoze-text-strong) !important;
+  font-weight: 500 !important;
+}
+
+#urlbar-input::placeholder,
+#searchbar-input::placeholder,
+.urlbar-input-box input::placeholder,
+#urlbar-input:-moz-placeholder {
+  color: var(--bulldoze-text-subtle) !important;
+  opacity: 1 !important;
+}
+
+#urlbar-input::selection,
+#searchbar-input::selection,
+.urlbar-input-box input::selection {
+  background-color: rgba(255, 255, 255, 0.25) !important;
+  color: #FFFFFF !important;
+}
+
+/* Extension chips, search buttons, search mode indicator, identity box, tracking protection & URL bar actions */
+#identity-box,
+#identity-permission-box,
+#identity-icon-box,
+#notification-popup-box,
+#urlbar-search-mode-indicator,
+#urlbar-search-button,
+#search-button,
+.searchbar-search-button,
+.searchbar-engine-button,
+.urlbar-search-button,
+#tracking-protection-icon-container,
+.urlbar-page-action,
+#page-action-buttons,
+#urlbar-label-box,
+.urlbar-label-box {
+  border-radius: var(--bulldoze-radius-pill) !important;
+  color: var(--bulldoze-text-strong) !important;
+  fill: var(--bulldoze-text-strong) !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#identity-box:hover,
+#identity-permission-box:hover,
+#identity-icon-box:hover,
+#urlbar-search-mode-indicator:hover,
+#urlbar-search-button:hover,
+#search-button:hover,
+.searchbar-search-button:hover,
+.searchbar-engine-button:hover,
+#tracking-protection-icon-container:hover,
+.urlbar-page-action:hover,
+#urlbar-go-button:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-color: var(--bulldoze-glass-border-subtle) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#identity-box:hover:active,
+#identity-box[open="true"],
+#identity-permission-box:hover:active,
+#urlbar-search-mode-indicator:hover:active,
+#urlbar-search-mode-indicator[focused],
+#urlbar-search-button:hover:active,
+#search-button:hover:active,
+.searchbar-search-button:hover:active,
+.urlbar-page-action:hover:active {
+  background-color: var(--bulldoze-active-fill) !important;
+  border-color: var(--bulldoze-glass-border-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#urlbar-search-mode-indicator {
+  background-color: var(--bulldoze-item-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+}
+
+#urlbar-search-mode-indicator-title,
+#urlbar-search-mode-indicator-close {
+  color: var(--bulldoze-text-strong) !important;
+  fill: var(--bulldoze-text-strong) !important;
+}
+
+#urlbar-search-mode-indicator-close:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-radius: var(--bulldoze-radius-sm) !important;
+}
+
+#identity-icon-label,
+#identity-box.extensionPage #identity-icon-label,
+.identity-box-label,
+#urlbar-extension-description {
+  color: var(--bulldoze-text-strong) !important;
+}
+
+#identity-icon,
+#tracking-protection-icon,
+.urlbar-icon,
+.urlbar-page-action,
+.urlbar-icon-button {
+  fill: var(--bulldoze-text-strong) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* URL Bar Results Dropdown */
+.urlbarView {
+  background-color: var(--bulldoze-glass-fill-dark) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-top: 1px solid var(--bulldoze-separator) !important;
+  border-radius: 0 0 var(--bulldoze-radius-card) var(--bulldoze-radius-card) !important;
+  margin-inline: 0 !important;
+  width: 100% !important;
+}
+
+.urlbarView-row[selected],
+.urlbarView-row:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-radius: var(--bulldoze-radius-sm) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+.urlbarView-url {
+  color: var(--bulldoze-text-muted) !important;
+}
+
+.urlbarView-title {
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* ==========================================================================
+   4. Buttons & Controls
+   ========================================================================== */
+
+toolbarbutton.bookmark-item:not(.subviewbutton),
+.toolbarbutton-1 {
+  border-radius: var(--bulldoze-radius-item) !important;
+  color: var(--bulldoze-text-medium) !important;
+  transition: background-color 0.12s ease !important;
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton):hover,
+.toolbarbutton-1:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* ==========================================================================
+   5. Popups, Context Menus, Panels & Content Select Dropdowns
+   ========================================================================== */
+
+menupopup,
+panelmultiview,
+#appMenu-popup,
+#downloadsPanel,
+#unified-extensions-panel,
+.panel-arrowcontent,
+.menupopup-arrowscrollbox,
+#ContentSelectDropdown,
+#ContentSelectDropdown menupopup,
+#ContentSelectDropdown .menupopup-arrowscrollbox,
+#ContentSelectDropdown arrowscrollbox,
+#ContentSelectDropdown scrollbox {
+  --panel-background: rgba(14, 16, 22, 0.96) !important;
+  --panel-color: var(--bulldoze-text-medium) !important;
+  --panel-border-color: var(--bulldoze-glass-border) !important;
+  --panel-border-radius: var(--bulldoze-radius-card) !important;
+  background-color: rgba(14, 16, 22, 0.96) !important;
+  background: rgba(14, 16, 22, 0.96) !important;
+  border-radius: var(--bulldoze-radius-card) !important;
+  -moz-appearance: none !important;
+  appearance: none !important;
+}
+
+menupopup,
+#ContentSelectDropdown {
+  border: 1px solid var(--bulldoze-glass-border) !important;
+}
+
+menupopup > menu,
+menupopup > menuitem,
+#ContentSelectDropdown menuitem,
+#ContentSelectDropdown richlistitem,
+#ContentSelectDropdown .content-select-dropdown-item,
+.subviewbutton,
+.panel-subview-body toolbarbutton {
+  border-radius: var(--bulldoze-radius-sm) !important;
+  color: var(--bulldoze-text-medium) !important;
+  background-color: transparent !important;
+  transition: background-color 0.12s ease !important;
+}
+
+menupopup > menu[_moz-menuactive="true"],
+menupopup > menuitem[_moz-menuactive="true"],
+#ContentSelectDropdown menuitem[_moz-menuactive="true"],
+#ContentSelectDropdown menuitem:hover,
+#ContentSelectDropdown menuitem[selected="true"],
+#ContentSelectDropdown richlistitem[_moz-menuactive="true"],
+#ContentSelectDropdown richlistitem:hover,
+#ContentSelectDropdown richlistitem[selected="true"],
+.subviewbutton:hover,
+.panel-subview-body toolbarbutton:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+#ContentSelectDropdown autorepeatbutton {
+  background-color: transparent !important;
+  color: var(--bulldoze-text-medium) !important;
+  fill: var(--bulldoze-text-medium) !important;
+}
+
+#ContentSelectDropdown autorepeatbutton:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  color: var(--bulldoze-text-strong) !important;
+  fill: var(--bulldoze-text-strong) !important;
+}
+
+menuseparator,
+toolbarseparator,
+#ContentSelectDropdown menuseparator {
+  border-top: 1px solid var(--bulldoze-separator) !important;
+  border-bottom: none !important;
+}
+
+/* ==========================================================================
+   6. Findbar & Sidebar
+   ========================================================================== */
+
+findbar {
+  background-color: var(--bulldoze-glass-fill-dark) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-bottom: none !important;
+  border-radius: var(--bulldoze-radius-card) var(--bulldoze-radius-card) 0 0 !important;
+}
+
+findbar .findbar-textbox {
+  background-color: var(--bulldoze-item-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-radius: var(--bulldoze-radius-item) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+#sidebar-box,
+#sidebar-main,
+sidebar-main,
+#sidebar-launcher,
+#sidebar-panel-wrapper,
+#sidebar,
+.sidebar-panel,
+.sidebar-placesTree,
+#tabbrowser-tabs[vertical],
+tab-strip[orient="vertical"],
+.browserSidebarContainer {
+  background: var(--bulldoze-glass-fill) !important;
+  background-color: var(--bulldoze-glass-fill) !important;
+  color: var(--bulldoze-text-medium) !important;
+  border-top: none !important;
+}
+
+#sidebar-box,
+#sidebar-main,
+sidebar-main,
+#sidebar-launcher,
+#sidebar-panel-wrapper,
+#sidebar {
+  border: none !important;
+  border-right: none !important;
+  border-left: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+#sidebar-header {
+  border: none !important;
+  border-bottom: none !important;
+  color: var(--bulldoze-text-strong) !important;
+  background: transparent !important;
+}
+
+#sidebar-splitter,
+.sidebar-splitter {
+  border: none !important;
+  width: 0px !important;
+  min-width: 0px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  opacity: 0 !important;
+}
+
+/* Sidebar action buttons & icons */
+#sidebar-launcher toolbarbutton,
+#sidebar-main toolbarbutton,
+#sidebar-switcher-target,
+.sidebar-panel toolbarbutton,
+#sidebar-box toolbarbutton {
+  border-radius: var(--bulldoze-radius-item) !important;
+  color: var(--bulldoze-text-medium) !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
+}
+
+#sidebar-launcher toolbarbutton:hover,
+#sidebar-main toolbarbutton:hover,
+.sidebar-panel toolbarbutton:hover,
+#sidebar-box toolbarbutton:hover {
+  background-color: var(--bulldoze-hover-fill) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+#sidebar-launcher toolbarbutton[checked="true"],
+#sidebar-launcher toolbarbutton[aria-checked="true"],
+#sidebar-launcher toolbarbutton[selected="true"],
+#sidebar-main toolbarbutton[checked="true"],
+#sidebar-main toolbarbutton[active="true"] {
+  background-color: var(--bulldoze-active-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+/* ==========================================================================
+   7. Statuspanel (Tooltip at bottom left)
+   ========================================================================== */
+
+#statuspanel #statuspanel-label {
+  background-color: var(--bulldoze-glass-fill-dark) !important;
+  border: 1px solid var(--bulldoze-glass-border) !important;
+  border-radius: var(--bulldoze-radius-sm) !important;
+  color: var(--bulldoze-text-medium) !important;
+}

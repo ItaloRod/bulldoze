@@ -1,0 +1,204 @@
+-- =========================================================
+-- Bulldoze 3.0 Design System — Hyprland Configuration (Lua)
+-- =========================================================
+
+-- =========================================================
+-- 1. Environment Variables
+-- =========================================================
+
+local home = os.getenv("HOME") or "/home/user"
+hl.env("PATH", home .. "/.local/bin:" .. (os.getenv("PATH") or "/usr/local/bin:/usr/bin"))
+
+-- Qt/GTK & Wayland Integration
+hl.env("QT_QPA_PLATFORMTHEME", "gtk3")
+hl.env("QT_QPA_PLATFORM", "wayland")
+hl.env("GDK_BACKEND", "wayland,x11,*")
+hl.env("XCURSOR_THEME", "Bibata-Modern-Ice")
+hl.env("XCURSOR_SIZE", "24")
+
+-- =========================================================
+-- 2. Monitor Configuration
+-- =========================================================
+
+-- Exemplo: 2560x1440 @ 240Hz (Ajuste para o seu monitor)
+hl.monitor({
+    output = "HDMI-A-1",
+    mode = "2560x1440@240",
+    position = "0x0",
+    scale = 1,
+})
+
+-- =========================================================
+-- 3. Autostart
+-- =========================================================
+
+hl.on("hyprland.start", function()
+    -- Inicializa o Bulldoze Desktop Shell via Quickshell
+    hl.exec_cmd("quickshell -p " .. home .. "/.config/quickshell/bulldoze")
+end)
+
+-- =========================================================
+-- 4. General / Tiling / Spacing
+-- =========================================================
+
+hl.config({
+    general = {
+        -- Escala de espaçamento Bulldoze: 8 / 16
+        gaps_in = 8,
+        gaps_out = 16,
+        border_size = 0,
+        layout = "dwindle",
+        allow_tearing = false,
+        col = {
+            active_border = "rgba(00000000)",
+            inactive_border = "rgba(00000000)",
+        },
+    },
+
+    -- =====================================================
+    -- Decoration & Glassmorphism Blur
+    -- =====================================================
+    decoration = {
+        rounding = 8,
+
+        blur = {
+            enabled = true,
+            size = 4,
+            passes = 2,
+            new_optimizations = true,
+            ignore_opacity = true,
+        },
+
+        shadow = {
+            enabled = false,
+        },
+    },
+
+    -- =====================================================
+    -- Input
+    -- =====================================================
+    input = {
+        kb_layout = "us",
+        kb_variant = "intl",
+        follow_mouse = 1,
+    },
+
+    -- =====================================================
+    -- Misc
+    -- =====================================================
+    misc = {
+        disable_hyprland_logo = true,
+        disable_splash_rendering = true,
+        background_color = "0x000000",
+    },
+})
+
+-- =========================================================
+-- 5. Layer Rules (Blur & Glassmorphism para o Bulldoze)
+-- =========================================================
+
+hl.layer_rule({
+    match = {
+        namespace = "bulldoze-.*"
+    },
+    blur = true,
+    ignore_alpha = 0.1,
+})
+
+-- =========================================================
+-- 6. Window Rules (Transparência Glassmorphic nos Apps)
+-- =========================================================
+
+-- File Manager (Thunar)
+hl.window_rule({
+    match = { class = "thunar" },
+    opacity = "0.78 override 0.78 override 0.78 override",
+})
+hl.window_rule({
+    match = { class = "Thunar" },
+    opacity = "0.78 override 0.78 override 0.78 override",
+})
+
+-- Bluetooth Manager
+hl.window_rule({
+    match = { class = "blueman-manager" },
+    float = true,
+    size = "620 460",
+    center = true,
+    opacity = "0.78 override 0.78 override 0.78 override",
+})
+
+-- Network Manager Connection Editor
+hl.window_rule({
+    match = { class = "nm-connection-editor" },
+    float = true,
+    size = "560 480",
+    center = true,
+    opacity = "0.78 override 0.78 override 0.78 override",
+})
+
+-- GTK Portal File Chooser
+hl.window_rule({
+    match = { class = "xdg-desktop-portal-gtk" },
+    opacity = "0.78 override 0.78 override 0.78 override",
+})
+
+-- =========================================================
+-- 7. Binds & Atalhos do Bulldoze Shell
+-- =========================================================
+
+-- Launcher de Aplicativos
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleLauncher"))
+hl.bind("ALT + D", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleLauncher"))
+
+-- Central de Jogos & Settings
+hl.bind("ALT + G", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleGamingSettings"))
+
+-- Gerenciador de Wallpapers
+hl.bind("SUPER + W", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleWallpaperManager"))
+hl.bind("ALT + W", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleWallpaperManager"))
+
+-- Painéis da Barra Superior (Modos Contextuais)
+hl.bind("ALT + C", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleControlCenter"))
+hl.bind("ALT + X", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell togglePowerMenu"))
+
+-- Bloquear Sessão (Lock Screen)
+hl.bind("SUPER + CONTROL + Q", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell lockScreen"))
+hl.bind("SUPER + L", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell lockScreen"))
+
+-- Controle de Volume & Mudo com OSD
+hl.bind("XF86AudioRaiseVolume", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell raiseVolume"), { locked = true, repeating = true })
+hl.bind("XF86AudioLowerVolume", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell lowerVolume"), { locked = true, repeating = true })
+hl.bind("XF86AudioMute", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleMute"), { locked = true })
+hl.bind("XF86AudioMicMute", hl.dsp.exec_cmd("wpctl set-mute @DEFAULT_AUDIO_SOURCE@ toggle"), { locked = true })
+
+-- =========================================================
+-- 8. Gerenciamento de Janelas e Terminal
+-- =========================================================
+
+local terminal = "kitty"
+hl.bind("SUPER + T", hl.dsp.exec_cmd(terminal))
+hl.bind("SUPER + Q", hl.dsp.window.close())
+hl.bind("SUPER + F", hl.dsp.window.float({ action = "toggle" }))
+hl.bind("SUPER + P", hl.dsp.window.pin({ action = "toggle" }))
+
+-- Screenshots
+hl.bind("SUPER + SHIFT + 5", hl.dsp.exec_cmd("hyprshot -m region"))
+
+-- Workspaces (1 - 10)
+for i = 1, 9 do
+    hl.bind("CTRL + " .. i, hl.dsp.focus({ workspace = i }))
+    hl.bind("CTRL + SHIFT + " .. i, hl.dsp.window.move({ workspace = i }))
+end
+hl.bind("CTRL + 0", hl.dsp.focus({ workspace = 10 }))
+hl.bind("CTRL + SHIFT + 0", hl.dsp.window.move({ workspace = 10 }))
+
+-- Navegação cíclica de workspaces
+hl.bind("CTRL + LEFT", hl.dsp.focus({ workspace = "e-1" }))
+hl.bind("CTRL + RIGHT", hl.dsp.focus({ workspace = "e+1" }))
+hl.bind("CTRL + SHIFT + LEFT", hl.dsp.window.move({ workspace = "e-1" }))
+hl.bind("CTRL + SHIFT + RIGHT", hl.dsp.window.move({ workspace = "e+1" }))
+
+-- Mouse
+hl.bind("SUPER + mouse:272", hl.dsp.window.drag(), { mouse = true })
+hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })

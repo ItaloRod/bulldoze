@@ -1,0 +1,54 @@
+# =========================================================
+# Bulldoze 3.0 Design System — Kitty Terminal Configuration
+# =========================================================
+
+# Typography
+font_family      RobotoMono Nerd Font
+bold_font        auto
+italic_font      auto
+bold_italic_font auto
+font_size        10.0
+
+# Window Layout & Padding
+window_padding_width 4
+
+# Terminal Shell & Editor
+editor vim
+shell zsh
+
+# Glassmorphism & Background Transparency
+background_opacity 0.20
+background_blur    1
+
+foreground #FFFFFF
+background #000000
+
+# Cursor
+cursor            #88C0D0
+cursor_text_color #0F1926
+cursor_shape      block
+
+# Selection Colors
+selection_foreground #ECEFF4
+selection_background #345A6A
+
+# ANSI Color Palette (Nord-infused Dark Glass)
+# Normal Colors
+color0  #0F1926
+color1  #BF616A
+color2  #A3BE8C
+color3  #EBCB8B
+color4  #81A1C1
+color5  #B48EAD
+color6  #88C0D0
+color7  #D8DEE9
+
+# Bright Colors
+color8  #4C566A
+color9  #BF616A
+color10 #A3BE8C
+color11 #EBCB8B
+color12 #88C0D0
+color13 #B48EAD
+color14 #8FBCBB
+color15 #ECEFF4
