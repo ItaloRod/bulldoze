@@ -1,280 +1,297 @@
-# 🚜 Bulldoze 3.0 — Modern Wayland Glassmorphic Desktop Shell
+# 🚜 Bulldoze 3.0 — Glassmorphic Desktop Shell for Linux
 
 [![Wayland](https://img.shields.io/badge/Wayland-Hyprland-0055FF.svg?logo=wayland&logoColor=white)](https://hyprland.org)
-[![Quickshell](https://img.shields.io/badge/Framework-Quickshell-FF4081.svg)](https://outfoxxed.me/quickshell/)
+[![Quickshell](https://img.shields.io/badge/Framework-Quickshell-FF4081.svg)](https://quickshell.org/)
 [![Qt](https://img.shields.io/badge/Qt6-QML-41CD52.svg?logo=qt&logoColor=white)](https://www.qt.io/)
 [![Arch Linux](https://img.shields.io/badge/OS-Arch_Linux-1793D1.svg?logo=archlinux&logoColor=white)](https://archlinux.org)
-[![Refresh Rate](https://img.shields.io/badge/Optimized-240Hz-00E676.svg)](#)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](LICENSE)
 
-**Bulldoze 3.0** é um Desktop Shell completo, modular e de altíssimo desempenho desenvolvido para **Arch Linux** e **Hyprland**, construído sobre o framework [Quickshell](https://outfoxxed.me/quickshell/) e **QtQuick / QML**.
+**Bulldoze 3.0** é um projeto de desktop shell para Linux, desenvolvido com **QtQuick / QML** e integrado ao ecossistema **Wayland**. O projeto é pensado principalmente para **Arch Linux** e **Hyprland**, com foco em uma interface moderna, modular e altamente personalizável.
 
-Projetado sob o conceito de **Glassmorphism Físico**, o Bulldoze apresenta superfícies de vidro translúcido que se acoplam geometricamente aos limites do monitor (*bezels*), com física de mola elástica (*sticky spring*) e animações calibradas para monitores de alta taxa de atualização (**240Hz**).
+O Bulldoze busca oferecer uma experiência visual baseada em superfícies translúcidas, animações suaves e integração com ferramentas do sistema, mantendo as dependências externas separadas do código do projeto.
+
+> **Nota sobre o escopo:** nomes de projetos, softwares, serviços, lojas e tecnologias de terceiros mencionados neste README são referências a dependências, integrações ou formatos compatíveis. O projeto Bulldoze não é afiliado, patrocinado ou endossado por esses projetos, salvo indicação expressa em seus respectivos canais oficiais.
 
 ---
 
 ## 📑 Sumário
 
-- [🌟 Principais Recursos](#-principais-recursos)
-- [🎨 Design System & Estética](#-design-system--estética)
-- [🕹️ Gaming Hub & Wrapper de Jogos](#️-gaming-hub--wrapper-de-jogos)
-- [🌌 Wallpaper Engine Manager](#-wallpaper-engine-manager)
-- [🔒 Lock Screen & Greeter (Login Manager)](#-lock-screen--greeter-login-manager)
-- [📦 Requisitos do Sistema](#-requisitos-do-sistema)
-- [🚀 Instalação e Configuração](#-instalação-e-configuração)
-- [⌨️ Atalhos de Teclado (Hyprland)](#️-atalhos-de-teclado-hyprland)
-- [🔌 Controle via IPC (Linha de Comando)](#-controle-via-ipc-linha-de-comando)
-- [📂 Estrutura do Repositório](#-estrutura-do-repositório)
-- [📄 Licença](#-licença)
+- [🌟 Recursos](#-recursos)
+- [🎨 Design e Interface](#-design-e-interface)
+- [🕹️ Integração com Jogos](#️-integração-com-jogos)
+- [🌌 Wallpapers](#-wallpapers)
+- [🔒 Lock Screen e Greeter](#-lock-screen-e-greeter)
+- [📦 Requisitos](#-requisitos)
+- [🚀 Instalação](#-instalação)
+- [⌨️ Atalhos](#️-atalhos)
+- [🔌 IPC](#-ipc)
+- [📂 Estrutura](#-estrutura)
+- [⚖️ Licença e Terceiros](#️-licença-e-terceiros)
+- [⚠️ Avisos](#️-avisos)
 
 ---
 
-## 🌟 Principais Recursos
+## 🌟 Recursos
 
-| Componente | Arquivo Principal | Namespace Wayland | Descrição |
-| :--- | :--- | :--- | :--- |
-| **Top Notch Bar Unificada** | [`shell.qml`](shell.qml)<br>[`components/GlassPanel.qml`](components/GlassPanel.qml) | `bulldoze-bar` | Barra superior inteligente com expansão e views contextuais (Workspaces, Áudio, Wi-Fi, Bluetooth, Perfil, Energia, Notificações). |
-| **Application Launcher** | [`components/Launcher.qml`](components/Launcher.qml) | `bulldoze-launcher` | Menu modal centralizado com busca instantânea, navegação completa por teclado e ícones dinâmicos do sistema. |
-| **Central de Jogos & Settings** | [`components/GamingSettingsModal.qml`](components/GamingSettingsModal.qml)<br>[`modules/Gaming.qml`](modules/Gaming.qml) | `bulldoze-gaming-modal` | Painel completo com suporte a **Gamescope HDR / FSR**, resoluções, taxas até 240Hz e telemetria **MangoHud** (VRAM, RAM, GPU, CPU). |
-| **Wallpaper Engine Manager** | [`components/WallpaperManagerModal.qml`](components/WallpaperManagerModal.qml)<br>[`scripts/bulldoze-wallpaper.py`](scripts/bulldoze-wallpaper.py) | `bulldoze-wallpaper-modal` | Gerenciador e explorador de papéis de parede do Steam Workshop com remoção de propagandas, ajuste de shaders e snapshot para Lock/Greeter. |
-| **Central de Notificações** | [`components/NotificationCenter.qml`](components/NotificationCenter.qml)<br>[`components/SideGlassPanel.qml`](components/SideGlassPanel.qml) | `bulldoze-notifications` | Toasts dinâmicos na lateral direita, auto-dismiss inteligente e histórico integrado. |
-| **On-Screen Display (OSD)** | [`components/Osd.qml`](components/Osd.qml)<br>[`components/views/AudioBarView.qml`](components/views/AudioBarView.qml) | Integrado / OSD | Feedback visual moderno e não intrusivo para controle de volume e mudo. |
-| **Tela de Bloqueio** | [`components/LockScreen.qml`](components/LockScreen.qml) | `bulldoze-lock` | Autenticação PAM nativa, relógio flutuante e fundo sincronizado com efeito de desfoque. |
-| **Greeter (Login Manager)** | [`greeter.qml`](greeter.qml)<br>[`components/Greeter.qml`](components/Greeter.qml) | `bulldoze-greeter` | Display manager nativo para `greetd` com seleção de sessões Wayland e sincronização de avatares. |
-
----
-
-## 🎨 Design System & Estética
-
-O Bulldoze 3.0 adota uma filosofia de design focada em precisão geométrica e elegância visual:
-
-* **Geometria Côncava e Convexa**: Painéis acoplados às bordas utilizam transições côncavas suaves de **8px** que se fundem organicamente à moldura da tela, com cantos convexos arredondados de **12px** e bordas de destaque de `1px` (`#24FFFFFF`).
-* **Física de Mola ("Sticky Spring")**: Movimentos suaves utilizando `Easing.OutBack` com coeficiente elástico de overshoot (`1.15`), criando a sensação física de atração magnética às bordas da tela.
-* **Calibração 240Hz**: Tempos de resposta entre 120ms e 320ms, garantindo fluidez absoluta sem micro-travamentos (*stuttering*).
-* **Localização em Português Brasileiro (pt-BR)**: Formatação completa de datas, horas, rótulos e avisos do sistema em português.
+| Componente | Arquivo / Área | Descrição |
+| :--- | :--- | :--- |
+| **Top Bar** | `shell.qml`, `components/` | Barra superior com informações e controles do sistema. |
+| **Launcher** | `components/Launcher.qml` | Lançador de aplicativos com busca e navegação por teclado. |
+| **Gaming Hub** | `components/GamingSettingsModal.qml`, `modules/Gaming.qml` | Interface para configurar recursos relacionados a jogos e ferramentas externas. |
+| **Wallpaper Manager** | `components/WallpaperManagerModal.qml` | Interface para gerenciamento de wallpapers compatíveis com ferramentas externas. |
+| **Notificações** | `components/NotificationCenter.qml` | Exibição e histórico de notificações. |
+| **OSD** | `components/Osd.qml` | Feedback visual para ações como volume e mute. |
+| **Lock Screen** | `components/LockScreen.qml` | Tela de bloqueio da sessão. |
+| **Greeter** | `greeter.qml`, `components/Greeter.qml` | Interface de login destinada à integração com `greetd`. |
 
 ---
 
-## 🕹️ Gaming Hub & Wrapper de Jogos
+## 🎨 Design e Interface
 
-O Bulldoze inclui um subsistema dedicado para jogos sem risco de interferir no ambiente de trabalho:
+O projeto segue uma direção visual inspirada em **glassmorphism**, com foco em:
 
-* **Isolamento de Processos**: Os módulos de **Gamescope**, **MangoHud** e **GameMode** só são injetados em aplicações executadas explicitamente através do script wrapper [`scripts/bulldoze-game-run`](scripts/bulldoze-game-run).
-* **Gamescope HDR & FSR**: Controle em tempo real de modos HDR (`--hdr-enabled`), conversão SDR->HDR (`--hdr-itm-enabled`), nits de luminância, resoluções internas/saída (1080p, 1440p, 4K) e taxas de atualização (240Hz, 165Hz, etc.).
-* **MangoHud Telemetry**: Monitoramento granular de **Consumo de VRAM** (memória de vídeo), **Consumo de RAM**, uso de CPU/GPU, temperaturas, potências em Watts e frametimes.
+- superfícies translúcidas;
+- cantos e transições arredondadas;
+- animações suaves;
+- adaptação a diferentes resoluções e taxas de atualização;
+- localização em português brasileiro (`pt-BR`).
 
-### Como usar no Steam
-Nas **Opções de Inicialização** (*Launch Options*) de qualquer jogo na Steam, basta adicionar:
+Os valores de dimensões, animações, cores e outros tokens visuais podem ser encontrados no sistema de design do projeto.
+
+---
+
+## 🕹️ Integração com Jogos
+
+O Bulldoze pode integrar ferramentas externas para execução e monitoramento de jogos, como:
+
+- **Gamescope**;
+- **MangoHud**;
+- **GameMode**.
+
+Essas ferramentas são programas independentes e devem ser instaladas separadamente quando necessárias.
+
+### Steam Launch Options
+
+Um exemplo de uso do wrapper fornecido pelo projeto:
 
 ```bash
 ~/.config/quickshell/bulldoze/scripts/bulldoze-game-run %command%
 ```
 
-*(Também compatível com Heroic Games Launcher, Lutris e Bottles).*
+A compatibilidade real depende do jogo, da configuração do sistema e das ferramentas externas instaladas.
 
 ---
 
-## 🌌 Wallpaper Engine Manager
+## 🌌 Wallpapers
 
-Gerenciador nativo de papéis de parede animados do Steam Workshop via `linux-wallpaperengine`:
+O Bulldoze pode oferecer uma interface para gerenciamento de wallpapers utilizando ferramentas e formatos compatíveis disponíveis no Linux.
 
-* **Scan do Workshop**: Identifica automaticamente wallpapers instalados, prévias e arquivos `project.json` / `scene.pkg`.
-* **Filtro Anti-Sponsor Inteligente**: Identifica e remove camadas indesejadas de doação, QR Codes (WeChat/Alipay/Afdian) e anúncios embutidos por autores.
-* **Ajuste de Propriedades**: Personalização de esquemas de cores, velocidade, shaders e volume de áudio por papel de parede.
-* **Sincronização de Snapshot**: Captura automaticamente frames limpos para utilização na tela de bloqueio ([`LockScreen.qml`](components/LockScreen.qml)) e no greeter de login.
+Dependendo da implementação utilizada, podem ser necessários softwares de terceiros, arquivos fornecidos pelos próprios usuários e conteúdo distribuído por plataformas externas.
 
----
-
-## 🔒 Lock Screen & Greeter (Login Manager)
-
-O projeto inclui tanto a tela de bloqueio da sessão ativa quanto o Greeter para inicialização do sistema via `greetd`:
-
-* **Autenticação PAM Segura**: Validação de senha nativa sem componentes externos inseguros.
-* **Sync de Perfil & Avatar**: O script [`scripts/sync-profile.py`](scripts/sync-profile.py) sincroniza o avatar do usuário através do perfil do Firefox, contas do sistema (`AccountsService`) ou imagem local (`~/.face`).
-* **Instalador Automatizado**: Script de configuração para o `greetd` pronto para execução.
+O Bulldoze **não redistribui automaticamente conteúdo de terceiros** apenas por disponibilizar uma interface para encontrá-lo ou utilizá-lo.
 
 ---
 
-## 📦 Requisitos do Sistema
+## 🔒 Lock Screen e Greeter
 
-### Pacotes Principais
-* **Arch Linux** (ou distribuição baseada)
-* **Hyprland** (compositor Wayland)
-* **Quickshell** (`quickshell-git`)
-* **Qt 6** (`qt6-declarative`, `qt6-svg`, `qt6-5compat`)
+O projeto pode incluir componentes destinados a:
 
-### Áudio, Rede & Sistema
-* **PipeWire** & **WirePlumber** (gerenciamento de áudio)
-* **NetworkManager** (`nmcli`)
-* **BlueZ** & **bluez-utils** (`bluetoothctl`)
-* **Python 3** + **Pillow** (`python-pillow`)
+- bloqueio da sessão gráfica;
+- autenticação através de mecanismos do sistema;
+- integração com `greetd`;
+- exibição de informações do usuário e da sessão.
 
-### Jogos & Papel de Parede (Opcionais / Recomendados)
-* `gamescope`
-* `mangohud`
-* `gamemode`
-* `linux-wallpaperengine`
-* `greetd` (para uso como gerenciador de login)
+A configuração de autenticação e login deve ser tratada com cuidado, especialmente ao utilizar scripts que alterem arquivos de configuração do sistema ou executem comandos com privilégios administrativos.
+
+O código do projeto não deve ser interpretado como uma auditoria de segurança. Revise a configuração antes de utilizá-la em uma máquina de produção.
 
 ---
 
-## 🚀 Instalação e Configuração
+## 📦 Requisitos
 
-### 1. Clonar o Repositório
-Clone os arquivos diretamente no diretório de configuração do Quickshell:
+### Base
+
+- Linux
+- Wayland
+- Qt 6 / QtQuick
+- Quickshell
+
+### Ambiente recomendado
+
+- Arch Linux ou distribuição compatível
+- Hyprland
+
+### Integrações opcionais
+
+- PipeWire / WirePlumber
+- NetworkManager
+- BlueZ / `bluez-utils`
+- Python 3
+- `gamescope`
+- `mangohud`
+- `gamemode`
+- `linux-wallpaperengine`
+- `greetd`
+
+As ferramentas acima são projetos independentes, sujeitos às suas próprias licenças e condições de uso.
+
+---
+
+## 🚀 Instalação
+
+### 1. Clonar o repositório
 
 ```bash
-git clone https://github.com/SEU_USUARIO/bulldoze.git ~/.config/quickshell/bulldoze
+git clone https://github.com/ItaloRod/bulldoze.git ~/.config/quickshell/bulldoze
 ```
 
-### 2. Configurar Permissões de Execução
-Torne os scripts auxiliares executáveis:
+### 2. Configurar permissões
 
 ```bash
 chmod +x ~/.config/quickshell/bulldoze/scripts/*
 ```
 
-### 3. Integrar ao Hyprland (`hyprland.conf`)
-Adicione a inicialização do Bulldoze e as regras de camada/blur ao seu arquivo de configuração do Hyprland:
+### 3. Iniciar o shell
+
+Adicione ao seu `hyprland.conf` um comando de inicialização compatível com a sua versão do Quickshell. Por exemplo:
 
 ```ini
-# Inicialização do Bulldoze Shell
 exec-once = quickshell -p ~/.config/quickshell/bulldoze
-
-# Regras de Blur e Camadas para o Glassmorphism
-layerrule = blur, bulldoze-bar
-layerrule = ignorezero, bulldoze-bar
-layerrule = blur, bulldoze-launcher
-layerrule = ignorezero, bulldoze-launcher
-layerrule = blur, bulldoze-gaming-modal
-layerrule = ignorezero, bulldoze-gaming-modal
-layerrule = blur, bulldoze-wallpaper-modal
-layerrule = ignorezero, bulldoze-wallpaper-modal
-layerrule = blur, bulldoze-notifications
-layerrule = ignorezero, bulldoze-notifications
-layerrule = blur, bulldoze-lock
 ```
 
-### 4. (Opcional) Instalar o Greeter de Login para `greetd`
-Para usar o Bulldoze como tela de login do sistema:
+### 4. Integração com o sistema
 
-```bash
-sudo ~/.config/quickshell/bulldoze/scripts/install-greeter.sh
-```
+Alguns recursos dependem de configuração adicional do Hyprland, do sistema de áudio, da rede, do Bluetooth ou de outras ferramentas externas.
+
+Consulte a documentação específica de cada componente antes de habilitá-lo.
 
 ---
 
-## ⌨️ Atalhos de Teclado (Hyprland)
+## ⌨️ Atalhos
 
-Adicione as seguintes associações de teclas ao seu `hyprland.conf`:
+Exemplo de associações para o Hyprland:
 
 ```ini
-# Lançador de Aplicativos
+# Launcher
 bind = ALT, D, exec, quickshell ipc -c bulldoze call shell toggleLauncher
 
-# Painéis & Modos da Top Notch Bar
+# Modais
 bind = ALT, C, exec, quickshell ipc -c bulldoze call shell toggleControlCenter
 bind = ALT, X, exec, quickshell ipc -c bulldoze call shell togglePowerMenu
 bind = ALT, G, exec, quickshell ipc -c bulldoze call shell toggleGamingSettings
 bind = ALT, W, exec, quickshell ipc -c bulldoze call shell toggleWallpaperManager
 
-# Bloqueio de Sessão
+# Lock
 bind = SUPER, L, exec, quickshell ipc -c bulldoze call shell lockScreen
 
-# Controle de Volume & Mute (com feedback OSD)
+# Volume
 binde = , XF86AudioRaiseVolume, exec, quickshell ipc -c bulldoze call shell raiseVolume
 binde = , XF86AudioLowerVolume, exec, quickshell ipc -c bulldoze call shell lowerVolume
-bind  = , XF86AudioMute, exec, quickshell ipc -c bulldoze call shell toggleMute
+bind = , XF86AudioMute, exec, quickshell ipc -c bulldoze call shell toggleMute
 ```
+
+Os nomes e parâmetros de comandos podem variar conforme a versão do Quickshell e do Hyprland utilizada.
 
 ---
 
-## 🔌 Controle via IPC (Linha de Comando)
+## 🔌 IPC
 
-Você pode controlar qualquer função do shell via terminal ou scripts externos:
+Quando habilitado pelos componentes correspondentes, algumas funções podem ser acionadas através do IPC do Quickshell:
 
 ```bash
-# Alternar Lançador e Modais
 quickshell ipc -c bulldoze call shell toggleLauncher
 quickshell ipc -c bulldoze call shell toggleGamingSettings
 quickshell ipc -c bulldoze call shell toggleWallpaperManager
 quickshell ipc -c bulldoze call shell closeActiveMode
-
-# Modos da Barra Superior
 quickshell ipc -c bulldoze call shell toggleWifi
 quickshell ipc -c bulldoze call shell toggleBluetooth
 quickshell ipc -c bulldoze call shell toggleAudio
-quickshell ipc -c bulldoze call shell toggleGaming
 quickshell ipc -c bulldoze call shell toggleNotifications
 quickshell ipc -c bulldoze call shell togglePowerMenu
-
-# Controle de Áudio e Bloqueio
 quickshell ipc -c bulldoze call shell raiseVolume
 quickshell ipc -c bulldoze call shell lowerVolume
 quickshell ipc -c bulldoze call shell toggleMute
 quickshell ipc -c bulldoze call shell lockScreen
 ```
 
+Esses comandos são exemplos da interface disponibilizada pelo projeto e podem mudar entre versões.
+
 ---
 
-## 📂 Estrutura do Repositório
+## 📂 Estrutura
 
 ```text
 ~/.config/quickshell/bulldoze/
-├── shell.qml                     # Orquestrador raiz da interface e barra notch
-├── greeter.qml                   # Ponto de entrada do Greeter (Login greetd)
-├── components/                   # Componentes de interface do usuário
-│   ├── Theme.qml                 # Design tokens, cores, física e animações
-│   ├── GlassPanel.qml            # Superfície de vidro superior com curvas côncavas
-│   ├── SideGlassPanel.qml        # Superfície de vidro lateral (Notificações)
-│   ├── BottomGlassPanel.qml      # Superfície de vidro inferior (Lock / Greeter)
-│   ├── Launcher.qml              # Menu de aplicativos com busca rápida
-│   ├── GamingSettingsModal.qml   # Modal avançado de Gamescope & MangoHud
-│   ├── WallpaperManagerModal.qml # Modal do Wallpaper Engine do Steam Workshop
-│   ├── NotificationCenter.qml    # Central e toasts de notificações
-│   ├── LockScreen.qml            # Tela de bloqueio PAM nativa
-│   ├── Greeter.qml               # Card de autenticação do login manager
-│   ├── Clock.qml, Osd.qml, ...   # Relógio, OSD, Workspace pills e Logo
-│   └── views/                    # Views contextuais da barra superior
-│       ├── AudioBarView.qml
-│       ├── BluetoothBarView.qml
-│       ├── DefaultBarView.qml
-│       ├── GamingBarView.qml
-│       ├── NotificationBarView.qml
-│       ├── PowerBarView.qml
-│       ├── ProfileBarView.qml
-│       ├── SearchBarView.qml
-│       └── WifiBarView.qml
-├── modules/                      # Módulos de integração com o sistema
-│   ├── Audio.qml                 # Controle PipeWire / WirePlumber
-│   ├── Network.qml               # Gerenciamento Wi-Fi via NetworkManager
-│   ├── Bluetooth.qml             # Conexões via BlueZ
-│   ├── Gaming.qml                # Estados de Gamescope e MangoHud
-│   ├── UserProfile.qml           # Sincronização de perfil e avatar
-│   ├── WallpaperEngine.qml       # Integração com Wallpaper Engine
-│   ├── Notifications.qml         # Daemon Wayland de notificações
-│   └── System.qml, Battery.qml   # Recursos e monitoramento do sistema
-├── scripts/                      # Scripts e utilitários auxiliares
-│   ├── bulldoze-game-run         # Wrapper de execução para jogos Steam/Lutris
-│   ├── bulldoze-wallpaper.py     # Backend Python do Wallpaper Engine
-│   ├── sync-profile.py           # Sincronizador de avatar e perfil
-│   ├── greetd-client.py          # Cliente IPC JSON-RPC para o greetd
-│   └── install-greeter.sh        # Script instalador do Greeter no sistema
-├── examples/                     # Modelos e arquivos de configuração de exemplo
-│   ├── hyprland.lua.example      # Configuração do Hyprland (Lua) com binds e layers
-│   ├── kitty.conf.example        # Terminal Kitty translúcido (Bulldoze Theme)
-│   └── firefox/
-│       └── userChrome.css.example# Estilização Glassmorphic completa para o Firefox
-├── design.md                     # Especificação técnica do Design System
-├── agents.md                     # Diretrizes de arquitetura para agentes IA
-├── gaming_guide.md               # Guia detalhado de calibração para jogos
-├── CHANGELOG.md                  # Histórico de versões e evolução do projeto
-├── LICENSE                       # Licença GNU General Public License v3.0
-└── README.md                     # Documentação principal
+├── shell.qml
+├── greeter.qml
+├── components/
+│   ├── Theme.qml
+│   ├── GlassPanel.qml
+│   ├── SideGlassPanel.qml
+│   ├── BottomGlassPanel.qml
+│   ├── Launcher.qml
+│   ├── GamingSettingsModal.qml
+│   ├── WallpaperManagerModal.qml
+│   ├── NotificationCenter.qml
+│   ├── LockScreen.qml
+│   ├── Greeter.qml
+│   └── views/
+├── modules/
+│   ├── Audio.qml
+│   ├── Network.qml
+│   ├── Bluetooth.qml
+│   ├── Gaming.qml
+│   ├── UserProfile.qml
+│   ├── WallpaperEngine.qml
+│   ├── Notifications.qml
+│   └── System.qml
+├── scripts/
+├── examples/
+├── design.md
+├── agents.md
+├── gaming_guide.md
+├── CHANGELOG.md
+├── LICENSE
+└── README.md
 ```
+
+A estrutura pode mudar conforme o projeto evolui.
+
+---
+
+## ⚖️ Licença e Terceiros
+
+Os arquivos originais do **Bulldoze** são distribuídos sob a **GNU General Public License v3.0**, conforme indicado no arquivo [`LICENSE`](LICENSE).
+
+A licença GPL-3.0 se aplica aos arquivos que fazem parte deste projeto e que são efetivamente licenciados sob essa licença. **Dependências, bibliotecas, ferramentas, fontes, ícones, imagens, wallpapers e outros materiais de terceiros não passam automaticamente a ser licenciados pela GPL-3.0 do Bulldoze.**
+
+Cada componente de terceiros continua sujeito à sua própria licença e aos respectivos avisos de copyright.
+
+Quando este repositório incorporar código ou recursos de terceiros, a intenção é manter os respectivos avisos e informações de licença junto do material correspondente.
+
+### Marcas e nomes de produtos
+
+Nomes como **Linux**, **Arch Linux**, **Hyprland**, **Quickshell**, **Qt**, **Steam**, **Wallpaper Engine**, **Gamescope**, **MangoHud**, **GameMode**, **Firefox**, **greetd** e outros nomes mencionados neste projeto pertencem aos seus respectivos titulares.
+
+A menção a essas tecnologias indica compatibilidade, dependência ou integração técnica e não implica endosso ou afiliação, salvo quando expressamente indicado.
+
+---
+
+## ⚠️ Avisos
+
+- Este projeto é fornecido **como está**, sem garantia de funcionamento em todas as combinações de hardware, distribuição, compositor ou versões de dependências.
+- Recursos que executam comandos do sistema, modificam configurações ou utilizam privilégios administrativos devem ser revisados antes de serem executados.
+- Conteúdo obtido de plataformas externas, incluindo wallpapers, jogos e outros arquivos, permanece sujeito aos termos e licenças aplicáveis à respectiva plataforma e ao respectivo conteúdo.
+- O usuário é responsável por verificar se a utilização e a redistribuição de qualquer conteúdo de terceiros são permitidas em sua região e no contexto de uso escolhido.
+
+---
+
+## 🤝 Contribuição
+
+Contribuições são bem-vindas. Ao enviar código, imagens, documentação ou outros materiais para o projeto, certifique-se de que você possui os direitos necessários para contribuir com esse material e que sua contribuição pode ser distribuída de acordo com os termos aplicáveis ao projeto.
 
 ---
 
 ## 📄 Licença
 
-Distribuído sob a licença [GNU General Public License v3.0 (GPL-3.0)](LICENSE). Você tem a liberdade de executar, estudar, compartilhar e modificar este software livremente.
+Distribuído sob a **GNU General Public License v3.0**. Consulte o arquivo [`LICENSE`](LICENSE) para o texto completo da licença.
