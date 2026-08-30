@@ -10,7 +10,7 @@ import "modules"
 ShellRoot {
     id: shell
 
-    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "wallpaper" | "power" | "profile" | "notifications"
+    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "power" | "profile" | "notifications"
 
     Theme {
         id: theme
@@ -42,7 +42,7 @@ ShellRoot {
         property bool ready: false
 
         onNotificationReceived: notif => {
-            if (ready && shell.activeMode === "none" && !launcher.open && !gamingModal.open) {
+            if (ready && shell.activeMode === "none" && !launcher.open) {
                 shell.showNotificationOsd()
             }
         }
@@ -62,13 +62,13 @@ ShellRoot {
         property bool ready: false
 
         onVolumeChanged: {
-            if (ready) {
+            if (ready && shell.activeMode === "none" && !launcher.open) {
                 shell.showAudioOsd()
             }
         }
 
         onMutedChanged: {
-            if (ready) {
+            if (ready && shell.activeMode === "none" && !launcher.open) {
                 shell.showAudioOsd()
             }
         }
@@ -78,16 +78,17 @@ ShellRoot {
         }
 
         property var readyTimer: Timer {
-            interval: 500
+            interval: 1000
             onTriggered: globalAudio.ready = true
         }
     }
 
     property bool audioTriggeredByOsd: false
 
-    Timer {
+    property var audioOsdTimer: Timer {
         id: audioOsdTimer
-        interval: 2000
+        interval: 3000
+        repeat: false
         onTriggered: {
             if (shell.audioTriggeredByOsd && shell.activeMode === "audio") {
                 shell.activeMode = "none"
@@ -96,7 +97,7 @@ ShellRoot {
         }
     }
 
-    Timer {
+    property var notificationTimer: Timer {
         id: notificationTimer
         interval: 5000
         repeat: false
@@ -115,7 +116,6 @@ ShellRoot {
 
     function showAudioOsd() {
         if (launcher.open) launcher.open = false
-        if (gamingModal.open) gamingModal.open = false
         notificationTimer.stop()
         if (shell.activeMode !== "audio") {
             shell.activeMode = "audio"
@@ -126,7 +126,6 @@ ShellRoot {
 
     function showNotificationOsd() {
         if (launcher.open) launcher.open = false
-        if (gamingModal.open) gamingModal.open = false
         audioOsdTimer.stop()
         shell.audioTriggeredByOsd = false
         if (shell.activeMode !== "notifications") {
@@ -137,7 +136,6 @@ ShellRoot {
 
     function toggleMode(mode) {
         if (launcher.open) launcher.open = false
-        if (gamingModal.open) gamingModal.open = false
         audioOsdTimer.stop()
         notificationTimer.stop()
         shell.audioTriggeredByOsd = false
@@ -156,7 +154,6 @@ ShellRoot {
         notificationTimer.stop()
         shell.audioTriggeredByOsd = false
         activeMode = "none"
-        if (gamingModal.open) gamingModal.open = false
     }
 
     function toggleLauncher() {
@@ -164,19 +161,12 @@ ShellRoot {
             launcher.open = false
         } else {
             shell.closeActiveMode()
-            if (gamingModal.open) gamingModal.open = false
             launcher.open = true
         }
     }
 
     function toggleGamingModal() {
-        if (gamingModal.open) {
-            gamingModal.open = false
-        } else {
-            shell.closeActiveMode()
-            if (launcher.open) launcher.open = false
-            gamingModal.open = true
-        }
+        shell.toggleMode("gaming-settings")
     }
 
     function toggleWallpaperModal() {
@@ -205,7 +195,7 @@ ShellRoot {
         function toggleBluetooth() { shell.toggleMode("bluetooth") }
         function toggleAudio() { shell.toggleMode("audio") }
         function toggleGaming() { shell.toggleMode("gaming") }
-        function toggleGamingSettings() { shell.toggleGamingModal() }
+        function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
         function toggleWallpaperManager() { shell.toggleMode("wallpaper") }
         function toggleWallpaper() { shell.toggleMode("wallpaper") }
         function toggleWallpaperModal() { shell.toggleWallpaperModal() }
@@ -213,7 +203,7 @@ ShellRoot {
         function togglePowerMenu() { shell.toggleMode("power") }
         function toggleNotifications() { shell.toggleMode("notifications") }
         function toggleControlCenter() { shell.toggleMode("gaming") }
-        function closeActiveMode() { shell.closeActiveMode(); launcher.open = false; gamingModal.open = false; wallpaperModal.open = false }
+        function closeActiveMode() { shell.closeActiveMode(); launcher.open = false }
         function lockScreen() { shell.lockScreen() }
         function raiseVolume() { globalAudio.stepVolume(0.05) }
         function lowerVolume() { globalAudio.stepVolume(-0.05) }
@@ -300,6 +290,7 @@ ShellRoot {
                     if (shell.activeMode === "bluetooth") return 470
                     if (shell.activeMode === "audio") return 380
                     if (shell.activeMode === "gaming") return 620
+                    if (shell.activeMode === "gaming-settings") return 720
                     if (shell.activeMode === "wallpaper") return 920
                     if (shell.activeMode === "notifications") return 520
                     if (shell.activeMode === "power" || shell.activeMode === "profile") return 520
@@ -308,6 +299,7 @@ ShellRoot {
 
                 property int targetHeight: {
                     if (shell.activeMode === "wallpaper") return 620
+                    if (shell.activeMode === "gaming-settings") return 580
                     if (shell.activeMode === "notifications") return theme.notchNotificationHeight
                     if (shell.activeMode !== "none") return theme.notchExpandedHeight
                     if (root.isHovered || launcher.open) return theme.notchHoverHeight
@@ -418,10 +410,7 @@ ShellRoot {
                         opacity: shell.activeMode === "gaming" ? 1.0 : 0.0
                         gaming: globalGaming
                         goBack: () => shell.closeActiveMode()
-                        openSettings: () => {
-                            shell.closeActiveMode()
-                            gamingModal.open = true
-                        }
+                        openSettings: () => shell.toggleMode("gaming-settings")
 
                         Behavior on opacity {
                             NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
@@ -469,6 +458,19 @@ ShellRoot {
                             NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
                         }
                     }
+
+                    // View 8: Advanced Gaming Settings Notch View
+                    GamingSettingsBarView {
+                        anchors.fill: parent
+                        visible: opacity > 0.001
+                        opacity: shell.activeMode === "gaming-settings" ? 1.0 : 0.0
+                        gaming: globalGaming
+                        goBack: () => shell.toggleMode("gaming")
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                        }
+                    }
                 }
             }
         }
@@ -476,11 +478,6 @@ ShellRoot {
 
     Launcher {
         id: launcher
-    }
-
-    GamingSettingsModal {
-        id: gamingModal
-        gaming: globalGaming
     }
 
     LockScreen {

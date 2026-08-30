@@ -15,6 +15,15 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
     - Inspetor de propriedades com pré-visualização, controles de enquadramento (16:9/Fit/Stretch), FPS (60/120/240), áudio, interatividade de mouse e sliders/toggles dinâmicos de shaders do Workshop.
   - **Acesso Rápido no Menu de Perfil**: Adicionado botão de atalho `` no menu de sessão e perfil (`PowerBarView.qml`).
 
+- **Painel de Configurações de Jogos Integrado ao Notch (`GamingSettingsBarView.qml`)**:
+  - Migração completa do painel avançado de configurações de jogos para dentro do Notch, eliminando o modal flutuante centralizado.
+  - **Expansão Fluida**: O Notch se expande para `720 × 580 px` ao clicar no botão de engrenagem (``) ou ao executar `quickshell ipc -c bulldoze call shell toggleGamingSettings`.
+  - **Navegação em 3 Abas Responsivas**:
+    - **Bulldoptimizer**: Controles de Wallpaper Estático (Zero-GPU), Efeitos do Hyprland e NVIDIA PowerMizer.
+    - **Gamescope**: Ajustes de HDR Nativo, Mapeamento Inverso HDR ITM, Nits, Resoluções (1080p/1440p/4K), Taxas de atualização (60-240Hz), FSR Sharpness e Integer Scaling.
+    - **MangoHud**: Presets de HUD (*Completo*, *Essencial*, *Mínimo*), telemetria detalhada de CPU/GPU, VRAM, RAM, frametime, potência em Watts e seletor visual de posicionamento na tela.
+
+
 - **Módulo e Toggle Rápido Bulldoptimizer (``)**:
   - Novo recurso de otimização de jogos modular e desacoplado do GameMode, permitindo economia de GPU e redução de latência com controle individual.
   - **Wallpaper Estático Zero-GPU**: Pausa o motor dinâmico `linux-wallpaperengine` e exibe imagem estática (`Wallpaper_greeter.png`) na camada de fundo Wayland (`WlrLayer.Background`), liberando VRAM e ciclos de GPU para o jogo.
