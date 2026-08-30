@@ -156,6 +156,7 @@ PanelWindow {
         property bool active: false
         signal clicked()
 
+        implicitWidth: pillText.implicitWidth + 24
         height: 28
         radius: theme.radiusSmall
         color: active ? theme.activeFill : (pMouse.containsMouse ? theme.hoverFill : theme.itemFill)
@@ -167,6 +168,7 @@ PanelWindow {
         }
 
         Text {
+            id: pillText
             anchors.centerIn: parent
             text: pill.label
             color: pill.active ? theme.textStrong : theme.textMedium
@@ -201,8 +203,8 @@ PanelWindow {
 
     Rectangle {
         id: card
-        width: 640
-        height: 560
+        width: 700
+        height: 580
         anchors.centerIn: parent
         radius: theme.radiusModal
         color: theme.glassFillDark
@@ -237,87 +239,85 @@ PanelWindow {
             anchors.margins: theme.spacingXxl
             spacing: theme.spacingMd
 
-            // 1. Header with Title and Close Button
-            Row {
+            // 1. Header with Title, Close Button and Tabs
+            Item {
                 width: parent.width
                 height: 36
-                spacing: theme.spacingMd
 
-                // Close / Back Button
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 32
-                    height: 32
-                    radius: theme.radiusSmall
-                    color: closeMouse.containsMouse ? theme.hoverFill : theme.itemFill
-                    border.width: 1
-                    border.color: closeMouse.containsMouse ? theme.glassBorderStrong : theme.glassBorderSubtle
-                    scale: closeMouse.pressed ? 0.92 : 1.0
-
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic } }
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: ""
-                        color: theme.textStrong
-                        font.pixelSize: theme.fontSizeMd
-                    }
-
-                    MouseArea {
-                        id: closeMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.open = false
-                    }
-                }
-
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 1
-
-                    Text {
-                        text: "Configurações Avançadas de Jogos"
-                        color: theme.textStrong
-                        font.pixelSize: theme.fontSizeLg
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: "Gamescope HDR, Upscaling FSR & Métricas MangoHud"
-                        color: theme.textMuted
-                        font.pixelSize: theme.fontSizeXs
-                    }
-                }
-
-                Item {
-                    // Spacer
-                    width: Math.max(10, parent.width - 32 - 280 - theme.spacingMd * 2 - 310)
-                    height: 1
-                }
-
-                // Tab Switcher Pills
+                // Left: Back button + Title column
                 Row {
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: theme.spacingMd
+
+                    // Close / Back Button
+                    Rectangle {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 32
+                        height: 32
+                        radius: theme.radiusSmall
+                        color: closeMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                        border.width: 1
+                        border.color: closeMouse.containsMouse ? theme.glassBorderStrong : theme.glassBorderSubtle
+                        scale: closeMouse.pressed ? 0.92 : 1.0
+
+                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                        Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: ""
+                            color: theme.textStrong
+                            font.pixelSize: theme.fontSizeMd
+                        }
+
+                        MouseArea {
+                            id: closeMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.open = false
+                        }
+                    }
+
+                    Column {
+                        anchors.verticalCenter: parent.verticalCenter
+                        spacing: 1
+
+                        Text {
+                            text: "Configurações de Jogos"
+                            color: theme.textStrong
+                            font.pixelSize: theme.fontSizeLg
+                            font.weight: Font.DemiBold
+                        }
+
+                        Text {
+                            text: "Bulldoptimizer, Gamescope HDR & MangoHud"
+                            color: theme.textMuted
+                            font.pixelSize: theme.fontSizeXs
+                        }
+                    }
+                }
+
+                // Right: Tab Switcher Pills anchored cleanly to the right
+                Row {
+                    anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
                     spacing: theme.spacingSm
 
                     SettingPill {
-                        width: 105
                         label: "Bulldoptimizer"
                         active: root.activeTab === "bulldoptimizer"
                         onClicked: root.activeTab = "bulldoptimizer"
                     }
 
                     SettingPill {
-                        width: 95
                         label: "Gamescope"
                         active: root.activeTab === "gamescope"
                         onClicked: root.activeTab = "gamescope"
                     }
 
                     SettingPill {
-                        width: 95
                         label: "MangoHud"
                         active: root.activeTab === "mangohud"
                         onClicked: root.activeTab = "mangohud"
