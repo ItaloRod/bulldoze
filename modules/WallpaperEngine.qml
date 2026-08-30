@@ -65,6 +65,40 @@ QtObject {
         applyWallpaper(selectedId)
     }
 
+    function getActiveIndex() {
+        if (!wallpapers || wallpapers.length === 0) return 0
+        for (let i = 0; i < wallpapers.length; i++) {
+            if (wallpapers[i].id === activeId) return i
+        }
+        return 0
+    }
+
+    function nextWallpaper() {
+        if (!wallpapers || wallpapers.length === 0) return
+        let idx = getActiveIndex()
+        let nextIdx = (idx + 1) % wallpapers.length
+        applyWallpaper(wallpapers[nextIdx].id)
+    }
+
+    function previousWallpaper() {
+        if (!wallpapers || wallpapers.length === 0) return
+        let idx = getActiveIndex()
+        let prevIdx = (idx - 1 + wallpapers.length) % wallpapers.length
+        applyWallpaper(wallpapers[prevIdx].id)
+    }
+
+    function toggleMute() {
+        if (volume > 0) {
+            setVolumeLevel(0)
+        } else {
+            setVolumeLevel(50)
+        }
+    }
+
+    function toggleMouse() {
+        setMouseEnabled(!mouseEnabled)
+    }
+
     function stopEngine() {
         stopProc.exec(["python3", root.scriptPath, "stop"])
     }

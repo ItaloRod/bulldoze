@@ -10,7 +10,7 @@ import "modules"
 ShellRoot {
     id: shell
 
-    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "power" | "profile" | "notifications"
+    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "wallpaper" | "power" | "profile" | "notifications"
 
     Theme {
         id: theme
@@ -42,7 +42,7 @@ ShellRoot {
         property bool ready: false
 
         onNotificationReceived: notif => {
-            if (ready && shell.activeMode === "none" && !launcher.open && !gamingModal.open && !wallpaperModal.open) {
+            if (ready && shell.activeMode === "none" && !launcher.open && !gamingModal.open) {
                 shell.showNotificationOsd()
             }
         }
@@ -116,7 +116,6 @@ ShellRoot {
     function showAudioOsd() {
         if (launcher.open) launcher.open = false
         if (gamingModal.open) gamingModal.open = false
-        if (wallpaperModal.open) wallpaperModal.open = false
         notificationTimer.stop()
         if (shell.activeMode !== "audio") {
             shell.activeMode = "audio"
@@ -128,7 +127,6 @@ ShellRoot {
     function showNotificationOsd() {
         if (launcher.open) launcher.open = false
         if (gamingModal.open) gamingModal.open = false
-        if (wallpaperModal.open) wallpaperModal.open = false
         audioOsdTimer.stop()
         shell.audioTriggeredByOsd = false
         if (shell.activeMode !== "notifications") {
@@ -140,7 +138,6 @@ ShellRoot {
     function toggleMode(mode) {
         if (launcher.open) launcher.open = false
         if (gamingModal.open) gamingModal.open = false
-        if (wallpaperModal.open) wallpaperModal.open = false
         audioOsdTimer.stop()
         notificationTimer.stop()
         shell.audioTriggeredByOsd = false
@@ -160,7 +157,6 @@ ShellRoot {
         shell.audioTriggeredByOsd = false
         activeMode = "none"
         if (gamingModal.open) gamingModal.open = false
-        if (wallpaperModal.open) wallpaperModal.open = false
     }
 
     function toggleLauncher() {
@@ -169,7 +165,6 @@ ShellRoot {
         } else {
             shell.closeActiveMode()
             if (gamingModal.open) gamingModal.open = false
-            if (wallpaperModal.open) wallpaperModal.open = false
             launcher.open = true
         }
     }
@@ -180,20 +175,12 @@ ShellRoot {
         } else {
             shell.closeActiveMode()
             if (launcher.open) launcher.open = false
-            if (wallpaperModal.open) wallpaperModal.open = false
             gamingModal.open = true
         }
     }
 
     function toggleWallpaperModal() {
-        if (wallpaperModal.open) {
-            wallpaperModal.open = false
-        } else {
-            shell.closeActiveMode()
-            if (launcher.open) launcher.open = false
-            if (gamingModal.open) gamingModal.open = false
-            wallpaperModal.open = true
-        }
+        shell.toggleMode("wallpaper")
     }
 
     function activateWorkspace(id) {
@@ -219,8 +206,9 @@ ShellRoot {
         function toggleAudio() { shell.toggleMode("audio") }
         function toggleGaming() { shell.toggleMode("gaming") }
         function toggleGamingSettings() { shell.toggleGamingModal() }
-        function toggleWallpaperManager() { shell.toggleWallpaperModal() }
-        function toggleWallpaper() { shell.toggleWallpaperModal() }
+        function toggleWallpaperManager() { shell.toggleMode("wallpaper") }
+        function toggleWallpaper() { shell.toggleMode("wallpaper") }
+        function toggleWallpaperModal() { shell.toggleWallpaperModal() }
         function toggleProfile() { shell.toggleMode("power") }
         function togglePowerMenu() { shell.toggleMode("power") }
         function toggleNotifications() { shell.toggleMode("notifications") }
@@ -294,9 +282,9 @@ ShellRoot {
 
                 WlrLayershell.namespace: "bulldoze-bar"
                 WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (shell.activeMode === "wallpaper") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
                 exclusiveZone: theme.notchHeight
-                focusable: false
+                focusable: shell.activeMode === "wallpaper"
 
                 anchors {
                     top: true
@@ -312,12 +300,14 @@ ShellRoot {
                     if (shell.activeMode === "bluetooth") return 470
                     if (shell.activeMode === "audio") return 380
                     if (shell.activeMode === "gaming") return 620
+                    if (shell.activeMode === "wallpaper") return 920
                     if (shell.activeMode === "notifications") return 520
-                    if (shell.activeMode === "power" || shell.activeMode === "profile") return 490
+                    if (shell.activeMode === "power" || shell.activeMode === "profile") return 520
                     return root.isExpanded ? expandedWidth : collapsedWidth
                 }
 
                 property int targetHeight: {
+                    if (shell.activeMode === "wallpaper") return 620
                     if (shell.activeMode === "notifications") return theme.notchNotificationHeight
                     if (shell.activeMode !== "none") return theme.notchExpandedHeight
                     if (root.isHovered || launcher.open) return theme.notchHoverHeight
@@ -445,6 +435,7 @@ ShellRoot {
                         opacity: (shell.activeMode === "power" || shell.activeMode === "profile") ? 1.0 : 0.0
                         userProfile: globalUserProfile
                         lockScreen: () => shell.lockScreen()
+                        openWallpaper: () => shell.toggleMode("wallpaper")
                         goBack: () => shell.closeActiveMode()
 
                         Behavior on opacity {
@@ -465,6 +456,19 @@ ShellRoot {
                             NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
                         }
                     }
+
+                    // View 7: Bulldoze Wallpaper Handler View (Full Notch Grid & Inspector)
+                    WallpaperBarView {
+                        anchors.fill: parent
+                        visible: opacity > 0.001
+                        opacity: shell.activeMode === "wallpaper" ? 1.0 : 0.0
+                        wallpaperEngine: globalWallpaper
+                        goBack: () => shell.closeActiveMode()
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                        }
+                    }
                 }
             }
         }
@@ -477,11 +481,6 @@ ShellRoot {
     GamingSettingsModal {
         id: gamingModal
         gaming: globalGaming
-    }
-
-    WallpaperManagerModal {
-        id: wallpaperModal
-        wallpaperEngine: globalWallpaper
     }
 
     LockScreen {

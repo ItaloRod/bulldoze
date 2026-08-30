@@ -9,6 +9,7 @@ Item {
 
     property var goBack
     property var lockScreen
+    property var openWallpaper
     property var userProfile
 
     Theme {
@@ -272,6 +273,46 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.prof.togglePrivacy()
+                }
+            }
+
+            // 6. Wallpaper Handler Button
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: 28
+                height: 28
+                radius: theme.radiusSmall
+                color: wpMouse.containsMouse ? theme.hoverFill : "transparent"
+                border.width: 1
+                border.color: wpMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                scale: wpMouse.pressed ? 0.90 : (wpMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale {
+                    NumberAnimation {
+                        duration: theme.animDurationFast
+                        easing.type: Easing.OutBack
+                        easing.overshoot: theme.buttonOvershoot
+                    }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: wpMouse.containsMouse ? theme.textStrong : theme.textMuted
+                    font.pixelSize: theme.iconSizeSm
+                }
+
+                MouseArea {
+                    id: wpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (root.openWallpaper) root.openWallpaper()
+                    }
                 }
             }
         }

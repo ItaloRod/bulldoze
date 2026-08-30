@@ -7,6 +7,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 ## [3.1.0] - 2026-08
 
 ### ✨ Adicionado
+- **Bulldoze Wallpaper Handler Integrado ao Notch (`WallpaperBarView.qml`)**:
+  - Centralização completa do Gerenciador de Wallpapers no Notch superior, eliminando modais flutuantes centralizados avulsos.
+  - **Expansão Dinâmica da Barra**: Ao ativar o menu (`ALT + W`, comando IPC ou botão no perfil), o Notch expande fluidamente para `920 × 620 px` sobrepondo o desktop sem empurrar as janelas abertas (`exclusiveZone: 36`).
+  - **Interface Completa em Duas Colunas**:
+    - Galeria em grade (`GridView`) com busca em tempo real, badges de status (*Ativo, Vídeo, Cena*) e seleção visual.
+    - Inspetor de propriedades com pré-visualização, controles de enquadramento (16:9/Fit/Stretch), FPS (60/120/240), áudio, interatividade de mouse e sliders/toggles dinâmicos de shaders do Workshop.
+  - **Acesso Rápido no Menu de Perfil**: Adicionado botão de atalho `` no menu de sessão e perfil (`PowerBarView.qml`).
+
 - **Módulo e Toggle Rápido Bulldoptimizer (``)**:
   - Novo recurso de otimização de jogos modular e desacoplado do GameMode, permitindo economia de GPU e redução de latência com controle individual.
   - **Wallpaper Estático Zero-GPU**: Pausa o motor dinâmico `linux-wallpaperengine` e exibe imagem estática (`Wallpaper_greeter.png`) na camada de fundo Wayland (`WlrLayer.Background`), liberando VRAM e ciclos de GPU para o jogo.
