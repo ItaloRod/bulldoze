@@ -230,6 +230,7 @@ def get_current_config():
         "volume": 0,
         "mouse_enabled": True,
         "hide_sponsor": True,
+        "pause_on_window": True,
         "screen": "HDMI-A-1",
         "per_wallpaper_settings": {}
     }
@@ -281,6 +282,7 @@ def apply_wallpaper(wp_id=None, overrides=None):
     volume = int(cfg.get("volume", 0))
     mouse = cfg.get("mouse_enabled", True)
     hide_sponsor = cfg.get("hide_sponsor", True)
+    pause_on_window = cfg.get("pause_on_window", True)
 
     wp_settings = cfg.get("per_wallpaper_settings", {}).get(active_id, {})
     custom_props = dict(wp_settings.get("properties", {}))
@@ -338,6 +340,30 @@ def apply_wallpaper(wp_id=None, overrides=None):
         stderr=subprocess.DEVNULL,
         start_new_session=True
     )
+
+    # If pause_on_window is active and current workspace has windows, pause shortly after initial render
+    if pause_on_window:
+        def _delayed_pause():
+            import time, signal
+            time.sleep(0.35)
+            try:
+                res = subprocess.run(["hyprctl", "activeworkspace", "-j"], capture_output=True, text=True, timeout=1)
+                if res.returncode == 0:
+                    data = json.loads(res.stdout)
+                    if int(data.get("windows", 0)) > 0:
+                        out = subprocess.check_output(["pidof", "linux-wallpaperengine"], text=True)
+                        for p in out.strip().split():
+                            try:
+                                os.kill(int(p), signal.SIGSTOP)
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+
+        import threading
+        t = threading.Thread(target=_delayed_pause, daemon=True)
+        t.start()
+        t.join(timeout=0.4)
 
     # Automatically generate clean snapshot for LockScreen & Greeter in background
     subprocess.Popen(

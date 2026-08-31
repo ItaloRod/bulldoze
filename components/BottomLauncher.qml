@@ -3,11 +3,12 @@ import Quickshell.Widgets
 import QtQuick
 import QtQuick.Effects
 
-Item {
+FocusScope {
     id: root
 
     property bool open: false
     property var closeLauncher
+    focus: true
 
     Theme {
         id: theme
@@ -35,6 +36,47 @@ Item {
             search.text = ""
             appList.currentIndex = 0
             search.forceActiveFocus()
+            Qt.callLater(() => {
+                if (root.open) search.forceActiveFocus()
+            })
+            searchFocusTimer.restart()
+            searchFocusRetryTimer.restart()
+        }
+    }
+
+    onVisibleChanged: {
+        if (visible && open) {
+            search.forceActiveFocus()
+            searchFocusTimer.restart()
+            searchFocusRetryTimer.restart()
+        }
+    }
+
+    Component.onCompleted: {
+        if (open) {
+            search.forceActiveFocus()
+        }
+    }
+
+    Timer {
+        id: searchFocusTimer
+        interval: 40
+        repeat: false
+        onTriggered: {
+            if (root.open) {
+                search.forceActiveFocus()
+            }
+        }
+    }
+
+    Timer {
+        id: searchFocusRetryTimer
+        interval: 120
+        repeat: false
+        onTriggered: {
+            if (root.open && !search.activeFocus) {
+                search.forceActiveFocus()
+            }
         }
     }
 
@@ -249,7 +291,7 @@ Item {
                 color: theme.textStrong
                 font.pixelSize: theme.fontSizeLg
                 font.weight: Font.Medium
-                focus: root.open
+                focus: true
                 clip: true
                 selectionColor: theme.hoverFill
 

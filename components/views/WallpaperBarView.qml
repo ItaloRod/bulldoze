@@ -810,6 +810,14 @@ Item {
                                 }
 
                                 SettingToggleRow {
+                                    title: "Pausar com Janelas no Workspace"
+                                    subtitle: "Economiza GPU pausando a animação quando houver janelas abertas"
+                                    iconGlyph: "⏸"
+                                    checked: root.wp && root.wp.pauseOnWindow
+                                    onToggled: root.wp.setPauseOnWindow(!root.wp.pauseOnWindow)
+                                }
+
+                                SettingToggleRow {
                                     title: "Interatividade e Efeitos de Mouse"
                                     subtitle: "Permite hover, iluminação, revelação e parallax"
                                     iconGlyph: ""

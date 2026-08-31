@@ -307,6 +307,16 @@ ShellRoot {
                     item: shell.isLauncherOpen ? fullscreenOverlay : notchContainer
                 }
 
+                HyprlandFocusGrab {
+                    windows: [root]
+                    active: shell.isLauncherOpen
+                    onCleared: {
+                        if (shell.isLauncherOpen) {
+                            shell.isLauncherOpen = false
+                        }
+                    }
+                }
+
                 Theme {
                     id: theme
                 }
@@ -1012,7 +1022,8 @@ ShellRoot {
                         width: root.animLauncherWidth
                         height: root.animLauncherHeight + root.borderThickness
                         clip: true
-                        visible: root.animLauncherHeight > 10
+                        visible: shell.isLauncherOpen || root.animLauncherHeight > 0
+                        focus: shell.isLauncherOpen
                         z: 100
 
                         BottomLauncher {

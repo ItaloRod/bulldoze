@@ -52,7 +52,14 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - **Otimizações Dinâmicas do Hyprland**: Desativação de blur, sombras e animações do compositor com Direct Scanout (`render:direct_scanout 1`) enquanto o Bulldoptimizer estiver ativo.
   - **NVIDIA PowerMizer Performance**: Alternância opcional para travar a GPU em desempenho máximo (`GpuPowerMizerMode=1`), com detecção segura e compatível com futuras trocas para AMD/Intel.
   - **Interface & Controles**: Novo botão de alternância rápida no Notch Bar (`GamingBarView.qml`), grid 2x2 na Central de Controle (`ControlCenter.qml`) e aba de ajustes no modal flutuante (`GamingSettingsModal.qml`).
-  - **Integração com Wrapper**: Notificação do `scripts/bulldoze-game-run` atualizada para refletir o status do Bulldoptimizer.
+- **Pausa Automática do Wallpaper Engine por Workspace (`bulldoze-hypr-events.py`, `bulldoze-wallpaper.py`, `WallpaperEngine.qml`, `WallpaperBarView.qml`)**:
+  - **Economia Inteligente de GPU & Compositor**: O daemon monitora em tempo real a quantidade de janelas abertas no workspace ativo via socket do Hyprland. Ao detectar qualquer janela aberta (`windows > 0`), envia sinal `SIGSTOP` para o `linux-wallpaperengine`, congelando no último frame renderizado e zerando o consumo da GPU e de recomposição de blur do Hyprland.
+  - **Retomada Instantânea**: Ao alternar para um workspace vazio (`windows == 0`), envia sinal `SIGCONT` imediatamente, retomando a animação com fluidez sem nenhum delay.
+  - **Controle por UI & Persistência**: Adicionada a opção `"pause_on_window": true` por padrão no `wallpaper.json` e novo toggle *"Pausar com Janelas no Workspace"* na seção de Desempenho do Gerenciador de Wallpapers.
+
+- **Captura de Foco e Fechamento Confiável no Bottom Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+  - Conversão do componente base para `FocusScope` com timers de foco imediato e em fallback.
+  - Integração do `HyprlandFocusGrab` no shell para fechar o launcher com segurança ao clicar fora.
 
 ### 🐛 Corrigido
 - **Persistência das Configurações de Jogos e Perfil**:

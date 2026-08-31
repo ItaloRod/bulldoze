@@ -20,6 +20,7 @@ QtObject {
     property int volume: 0
     property bool mouseEnabled: true
     property bool hideSponsor: true
+    property bool pauseOnWindow: true
     property bool optimizerActive: false
     property int snapshotVersion: 0
 
@@ -116,6 +117,7 @@ QtObject {
             "volume": root.volume,
             "mouse_enabled": root.mouseEnabled,
             "hide_sponsor": root.hideSponsor,
+            "pause_on_window": root.pauseOnWindow,
             "per_wallpaper_settings": root.perWallpaperSettings
         }
 
@@ -160,6 +162,11 @@ QtObject {
 
     function setHideSponsor(hide) {
         hideSponsor = hide
+        saveAndApplyActive()
+    }
+
+    function setPauseOnWindow(paused) {
+        pauseOnWindow = paused
         saveAndApplyActive()
     }
 
@@ -237,6 +244,7 @@ QtObject {
                     if (cfg.volume !== undefined) root.volume = cfg.volume
                     if (cfg.mouse_enabled !== undefined) root.mouseEnabled = !!cfg.mouse_enabled
                     if (cfg.hide_sponsor !== undefined) root.hideSponsor = !!cfg.hide_sponsor
+                    if (cfg.pause_on_window !== undefined) root.pauseOnWindow = !!cfg.pause_on_window
                     if (cfg.per_wallpaper_settings) root.perWallpaperSettings = cfg.per_wallpaper_settings
                 } catch(e) {
                     console.warn("Error parsing wallpaper config:", e)
