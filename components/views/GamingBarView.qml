@@ -7,7 +7,6 @@ Item {
 
     property var goBack
     property var gaming
-    property var openSettings
 
     Theme {
         id: theme
@@ -280,52 +279,6 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.game.toggleGamescope()
-                }
-            }
-
-            // 6. Vertical Separator
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 1
-                height: 20
-                color: theme.separator
-            }
-
-            // 7. Gear Settings Button (Opens floating modal)
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 32
-                height: 32
-                radius: theme.radiusSmall
-                color: gearMouse.containsMouse ? theme.hoverFill : "transparent"
-                border.width: 1
-                border.color: gearMouse.containsMouse ? theme.glassBorderStrong : "transparent"
-                scale: gearMouse.pressed ? 0.90 : (gearMouse.containsMouse ? 1.12 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: theme.animDurationFast
-                        easing.type: Easing.OutBack
-                        easing.overshoot: theme.buttonOvershoot
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: gearMouse.containsMouse ? theme.textStrong : theme.textMedium
-                    font.pixelSize: theme.iconSizeSm
-                }
-
-                MouseArea {
-                    id: gearMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.openSettings) root.openSettings()
                 }
             }
         }

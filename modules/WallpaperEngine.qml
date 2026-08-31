@@ -17,7 +17,6 @@ QtObject {
     property string scaling: "fill" // "fill" | "fit" | "stretch"
     property string clamp: "border"
     property string backgroundColor: "#000000"
-    property int volume: 0
     property bool mouseEnabled: true
     property bool hideSponsor: true
     property bool pauseOnWindow: true
@@ -88,14 +87,6 @@ QtObject {
         applyWallpaper(wallpapers[prevIdx].id)
     }
 
-    function toggleMute() {
-        if (volume > 0) {
-            setVolumeLevel(0)
-        } else {
-            setVolumeLevel(50)
-        }
-    }
-
     function toggleMouse() {
         setMouseEnabled(!mouseEnabled)
     }
@@ -114,7 +105,6 @@ QtObject {
             "scaling": root.scaling,
             "clamp": root.clamp,
             "background_color": root.backgroundColor,
-            "volume": root.volume,
             "mouse_enabled": root.mouseEnabled,
             "hide_sponsor": root.hideSponsor,
             "pause_on_window": root.pauseOnWindow,
@@ -147,11 +137,6 @@ QtObject {
 
     function setFps(newFps) {
         fps = newFps
-        saveAndApplyActive()
-    }
-
-    function setVolumeLevel(vol) {
-        volume = vol
         saveAndApplyActive()
     }
 
@@ -241,7 +226,6 @@ QtObject {
                     if (cfg.scaling) root.scaling = cfg.scaling
                     if (cfg.clamp) root.clamp = cfg.clamp
                     if (cfg.background_color) root.backgroundColor = cfg.background_color
-                    if (cfg.volume !== undefined) root.volume = cfg.volume
                     if (cfg.mouse_enabled !== undefined) root.mouseEnabled = !!cfg.mouse_enabled
                     if (cfg.hide_sponsor !== undefined) root.hideSponsor = !!cfg.hide_sponsor
                     if (cfg.pause_on_window !== undefined) root.pauseOnWindow = !!cfg.pause_on_window

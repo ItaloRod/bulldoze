@@ -780,7 +780,7 @@ Item {
                                 spacing: 6
 
                                 SectionHeader {
-                                    title: "Desempenho e Áudio"
+                                    title: "Desempenho"
                                 }
 
                                 Row {
@@ -823,14 +823,6 @@ Item {
                                     iconGlyph: ""
                                     checked: root.wp && root.wp.mouseEnabled
                                     onToggled: root.wp.setMouseEnabled(!root.wp.mouseEnabled)
-                                }
-
-                                SettingToggleRow {
-                                    title: "Áudio do Wallpaper"
-                                    subtitle: root.wp && root.wp.volume > 0 ? ("Volume: " + root.wp.volume + "%") : "Mudo"
-                                    iconGlyph: root.wp && root.wp.volume > 0 ? "" : "󰖁"
-                                    checked: root.wp && root.wp.volume > 0
-                                    onToggled: root.wp.setVolumeLevel(root.wp.volume > 0 ? 0 : 30)
                                 }
                             }
                         }

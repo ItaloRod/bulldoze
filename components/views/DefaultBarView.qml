@@ -12,6 +12,7 @@ Item {
     property var toggleAudio
     property var toggleGaming
     property var toggleNotifications
+    property var toggleSettings
     property var toggleProfile
     property var togglePowerMenu
 
@@ -134,6 +135,7 @@ Item {
             userProfile: root.userProfile
 
             toggleNotifications: root.toggleNotifications
+            toggleSettings: root.toggleSettings
             toggleProfile: root.toggleProfile
             togglePowerMenu: root.togglePowerMenu
         }

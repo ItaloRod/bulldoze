@@ -6,6 +6,7 @@ Row {
     id: root
 
     property var toggleNotifications
+    property var toggleSettings
     property var toggleProfile
     property var togglePowerMenu
 
@@ -85,7 +86,49 @@ Row {
         }
     }
 
-    // 2. Mini Avatar Button
+    // 3. Settings Gear Button
+    Rectangle {
+        anchors.verticalCenter: parent.verticalCenter
+        width: 26
+        height: 26
+        radius: theme.radiusItem
+        color: settingsMouse.containsMouse ? theme.hoverFill : "transparent"
+        border.width: 1
+        border.color: settingsMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+        scale: settingsMouse.pressed ? 0.90 : (settingsMouse.containsMouse ? 1.18 : 1.0)
+        transformOrigin: Item.Center
+
+        Behavior on color {
+            ColorAnimation { duration: theme.animDurationFast }
+        }
+        Behavior on border.color {
+            ColorAnimation { duration: theme.animDurationFast }
+        }
+        Behavior on scale {
+            NumberAnimation {
+                duration: theme.animDurationFast
+                easing.type: Easing.OutBack
+                easing.overshoot: theme.buttonOvershoot
+            }
+        }
+
+        Text {
+            anchors.centerIn: parent
+            text: ""
+            color: settingsMouse.containsMouse ? theme.textStrong : theme.textMedium
+            font.pixelSize: theme.iconSizeSm
+        }
+
+        MouseArea {
+            id: settingsMouse
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: if (root.toggleSettings) root.toggleSettings()
+        }
+    }
+
+    // 4. Mini Avatar Button
     Rectangle {
         id: avatarBtn
         anchors.verticalCenter: parent.verticalCenter

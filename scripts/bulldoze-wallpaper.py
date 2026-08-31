@@ -227,7 +227,6 @@ def get_current_config():
         "scaling": "fill",
         "clamp": "border",
         "background_color": "#000000",
-        "volume": 0,
         "mouse_enabled": True,
         "hide_sponsor": True,
         "pause_on_window": True,
@@ -279,10 +278,10 @@ def apply_wallpaper(wp_id=None, overrides=None):
     fps = int(cfg.get("fps", 60))
     scaling = cfg.get("scaling", "fill")
     clamp = cfg.get("clamp", "border")
-    volume = int(cfg.get("volume", 0))
     mouse = cfg.get("mouse_enabled", True)
     hide_sponsor = cfg.get("hide_sponsor", True)
     pause_on_window = cfg.get("pause_on_window", True)
+    cfg.pop("volume", None)
 
     wp_settings = cfg.get("per_wallpaper_settings", {}).get(active_id, {})
     custom_props = dict(wp_settings.get("properties", {}))
@@ -305,16 +304,12 @@ def apply_wallpaper(wp_id=None, overrides=None):
         "--bg", active_id,
         "--scaling", scaling,
         "--clamp", clamp,
-        "--fps", str(fps)
+        "--fps", str(fps),
+        "--silent"
     ]
 
     if not mouse:
         cmd.append("--disable-mouse")
-
-    if volume <= 0:
-        cmd.append("--silent")
-    else:
-        cmd.extend(["--volume", str(volume)])
 
     # Set individual properties
     for p_key, p_val in custom_props.items():

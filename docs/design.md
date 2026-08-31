@@ -253,7 +253,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
   - **Aspect Ratio & Enquadramento**: Segmented Pills for `Preencher (Fill - 16:9)`, `Adaptar (Fit - Inteiro sem cortes)` e `Esticar (Stretch)`.
   - **Sponsor & Layer Suppression**: Automatic deep scanning of `scene.pkg` to detect QR Code / donation objects (`sponsor_tip_x`, `微信赞助码`, etc.) and hardware-level skip pass via `--render-debug skip-object=<id>`.
   - **Dynamic Scene Shader Properties**: Real-time interactive sliders and toggles for scene uniforms.
-  - **Performance & Audio**: 60 / 120 / 240 FPS selectors, mouse tracking toggle, and volume control.
+  - **Performance**: 60 / 120 / 240 FPS selectors, pause on visible windows, and mouse tracking toggle (strict `--silent` execution with no audio output).
 - **Direct Wallpaper Sync**:
   - Python engine in `scripts/bulldoze-wallpaper.py` syncs wallpaper image directly to `~/.cache/bulldoze/Wallpaper_greeter.png` and `/var/lib/greetd/Wallpaper_greeter.png` cleanly without capturing mouse hover states or overlay notches.
 

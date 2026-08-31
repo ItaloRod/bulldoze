@@ -11,7 +11,8 @@ import "modules"
 ShellRoot {
     id: shell
 
-    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "power" | "profile" | "notifications"
+    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "settings" | "power" | "profile" | "notifications"
+    property string activeSettingsTab: "wifi"
     property bool isFullscreenActive: false
     property bool isLauncherOpen: false
     property real notchActualWidth: 200
@@ -187,6 +188,12 @@ ShellRoot {
         shell.toggleMode("gaming-settings")
     }
 
+    function openSettingsTab(tab) {
+        if (shell.isLauncherOpen) shell.isLauncherOpen = false
+        shell.activeSettingsTab = tab || "wifi"
+        shell.activeMode = "settings"
+    }
+
     function toggleWallpaperModal() {
         shell.toggleMode("wallpaper")
     }
@@ -214,14 +221,20 @@ ShellRoot {
         function toggleAudio() { shell.toggleMode("audio") }
         function toggleGaming() { shell.toggleMode("gaming") }
         function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
-        function toggleWallpaperManager() { shell.toggleMode("wallpaper") }
+        function toggleSettings() { shell.toggleMode("settings") }
+        function openSettings(tab: string) { shell.openSettingsTab(tab) }
+        function openWifiSettings() { shell.openSettingsTab("wifi") }
+        function openBluetoothSettings() { shell.openSettingsTab("bluetooth") }
+        function openWallpaperSettings() { shell.openSettingsTab("wallpaper") }
+        function openGamingSettings() { shell.openSettingsTab("gaming") }
+        function toggleWallpaperManager() { shell.toggleMode("settings") }
         function toggleWallpaper() { shell.toggleMode("wallpaper") }
         function toggleWallpaperModal() { shell.toggleWallpaperModal() }
         function toggleProfile() { shell.toggleMode("power") }
         function togglePowerMenu() { shell.toggleMode("power") }
         function toggleNotifications() { shell.toggleMode("notifications") }
         function toggleControlCenter() { shell.toggleMode("gaming") }
-        function closeActiveMode() { shell.closeActiveMode(); launcher.open = false }
+        function closeActiveMode() { shell.closeActiveMode(); shell.isLauncherOpen = false }
         function lockScreen() { shell.lockScreen() }
         function raiseVolume() { globalAudio.stepVolume(0.05) }
         function lowerVolume() { globalAudio.stepVolume(-0.05) }
@@ -290,9 +303,9 @@ ShellRoot {
 
                 WlrLayershell.namespace: "bulldoze-bar"
                 WlrLayershell.layer: shell.isLauncherOpen ? WlrLayer.Overlay : WlrLayer.Top
-                WlrLayershell.keyboardFocus: (shell.isLauncherOpen || shell.activeMode === "wallpaper") ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "settings") ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
                 exclusiveZone: 0
-                focusable: shell.isLauncherOpen || shell.activeMode === "wallpaper"
+                focusable: shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "settings"
                 visible: (!shell.isFullscreenActive || shell.activeMode !== "none" || shell.isLauncherOpen) && mainContainer.opacity > 0.001
                 color: "transparent"
 
@@ -340,6 +353,7 @@ ShellRoot {
                     if (shell.activeMode === "gaming") return 620
                     if (shell.activeMode === "gaming-settings") return 720
                     if (shell.activeMode === "wallpaper") return 920
+                    if (shell.activeMode === "settings") return 920
                     if (shell.activeMode === "notifications") return 520
                     if (shell.activeMode === "power" || shell.activeMode === "profile") return 520
                     return root.isExpanded ? expandedWidth : collapsedWidth
@@ -347,6 +361,7 @@ ShellRoot {
 
                 property int targetHeight: {
                     if (shell.activeMode === "wallpaper") return 620
+                    if (shell.activeMode === "settings") return 640
                     if (shell.activeMode === "gaming-settings") return 580
                     if (shell.activeMode === "notifications") return theme.notchNotificationHeight
                     if (shell.activeMode !== "none") return theme.notchExpandedHeight
@@ -886,6 +901,7 @@ ShellRoot {
                                 toggleAudio: () => shell.toggleMode("audio")
                                 toggleGaming: () => shell.toggleMode("gaming")
                                 toggleNotifications: () => shell.toggleMode("notifications")
+                                toggleSettings: () => shell.toggleMode("settings")
                                 toggleProfile: () => shell.toggleMode("power")
                                 togglePowerMenu: () => shell.toggleMode("power")
 
@@ -900,6 +916,7 @@ ShellRoot {
                                 visible: opacity > 0.001
                                 opacity: shell.activeMode === "wifi" ? 1.0 : 0.0
                                 network: globalNetwork
+                                openSettings: () => shell.openSettingsTab("wifi")
                                 goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
@@ -913,6 +930,7 @@ ShellRoot {
                                 visible: opacity > 0.001
                                 opacity: shell.activeMode === "bluetooth" ? 1.0 : 0.0
                                 bluetooth: globalBluetooth
+                                openSettings: () => shell.openSettingsTab("bluetooth")
                                 goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
@@ -941,7 +959,6 @@ ShellRoot {
                                 opacity: shell.activeMode === "gaming" ? 1.0 : 0.0
                                 gaming: globalGaming
                                 goBack: () => shell.closeActiveMode()
-                                openSettings: () => shell.toggleMode("gaming-settings")
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
@@ -955,7 +972,6 @@ ShellRoot {
                                 opacity: (shell.activeMode === "power" || shell.activeMode === "profile") ? 1.0 : 0.0
                                 userProfile: globalUserProfile
                                 lockScreen: () => shell.lockScreen()
-                                openWallpaper: () => shell.toggleMode("wallpaper")
                                 goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
@@ -997,6 +1013,24 @@ ShellRoot {
                                 opacity: shell.activeMode === "gaming-settings" ? 1.0 : 0.0
                                 gaming: globalGaming
                                 goBack: () => shell.toggleMode("gaming")
+
+                                Behavior on opacity {
+                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                                }
+                            }
+
+                            // View 9: Unified Settings View (WiFi + Bluetooth + Wallpapers + Gaming)
+                            SettingsBarView {
+                                id: settingsView
+                                anchors.fill: parent
+                                visible: opacity > 0.001
+                                opacity: shell.activeMode === "settings" ? 1.0 : 0.0
+                                activeCategory: shell.activeSettingsTab
+                                network: globalNetwork
+                                bluetooth: globalBluetooth
+                                gaming: globalGaming
+                                wallpaperEngine: globalWallpaper
+                                goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
