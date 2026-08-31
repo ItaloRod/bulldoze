@@ -128,8 +128,8 @@
 
 #browser,
 .browserSidebarContainer {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: var(--bulldoze-glass-fill) !important;
+  background-color: var(--bulldoze-glass-fill) !important;
 }
 
 #tabbrowser-tabbox,
@@ -551,10 +551,9 @@ sidebar-main,
 .sidebar-panel,
 .sidebar-placesTree,
 #tabbrowser-tabs[vertical],
-tab-strip[orient="vertical"],
-.browserSidebarContainer {
-  background: var(--bulldoze-glass-fill) !important;
-  background-color: var(--bulldoze-glass-fill) !important;
+tab-strip[orient="vertical"] {
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--bulldoze-text-medium) !important;
   border-top: none !important;
 }
