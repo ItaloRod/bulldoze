@@ -59,11 +59,12 @@ QtObject {
     readonly property int radiusCard: 18                     // Notifications, Control Center, OSD
     readonly property int radiusModal: 22                    // Launcher modal, Power menu modal
 
-    // Notch-specific Geometry
-    readonly property int notchHeight: 36
-    readonly property int notchHoverHeight: 42               // Height on hover when showing menu items
-    readonly property int notchExpandedHeight: 48            // Height when a submenu/activeMode is open
-    readonly property int notchNotificationHeight: 82        // Height when notifications activeMode is open
+    readonly property int borderThickness: 8
+    readonly property int innerRadius: 8
+    readonly property int notchHeight: 32
+    readonly property int notchHoverHeight: 64               // Height on hover when showing 2-level menu items
+    readonly property int notchExpandedHeight: 64            // Height when a submenu/activeMode is open
+    readonly property int notchNotificationHeight: 96        // Height when notifications activeMode is open
     readonly property int notchRadius: 14
     readonly property int notchTopRadius: 12
     readonly property int notchConcaveWidth: 16
