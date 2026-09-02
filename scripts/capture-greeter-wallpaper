@@ -1,0 +1,3 @@
+#!/bin/bash
+# Bulldoze Clean Wallpaper Snapshot for LockScreen & Greeter
+exec /usr/bin/python3 /home/paulo/.config/quickshell/bulldoze/scripts/bulldoze-wallpaper.py snapshot

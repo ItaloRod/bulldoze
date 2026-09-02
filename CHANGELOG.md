@@ -4,6 +4,28 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.5.0] - 2026-09-02
+
+### ⚡ Performance & Otimizações do Sistema
+- **Integração de Agendamento em Tempo Real (`ananicy-cpp` + `cachyos-ananicy-rules`)**:
+  - Priorização automática e contínua de processos com baixa latência para o compositor Hyprland, Quickshell e jogos.
+  - Rebaixamento automático de I/O e prioridade de CPU para processos em segundo plano (atualizadores, compiladores), eliminando micro-stutters.
+- **Desduplicação de Memória RAM com KSM (`cachyos-ksm-settings` / `ksmd`)**:
+  - Ativação do *Kernel Samepage Merging* (KSM) nativo via systemd, mesclando páginas idênticas de RAM entre processos de forma segura e sem consumo excessivo de CPU.
+- **Guia Completo de Otimizações de Sistema (`docs/system_optimizations.md`)**:
+  - Documentação detalhada sobre a arquitetura de agendamento de processos, KSM, comandos de instalação, ativação no systemd e monitoramento de economia de memória via `ksmstats`.
+
+### 📂 Centralização & Arquitetura
+- **Unificação de Scripts no Repositório (`scripts/`)**:
+  - Centralizados e versionados os scripts de inicialização de sessão e wallpaper: `start-session`, `capture-greeter-wallpaper` e `bulldoze-wallpaper-daemon`.
+  - Criados links simbólicos (*symlinks*) transparentes em `~/.config/bulldoze/scripts/` para total retrocompatibilidade com daemons e inicialização do Hyprland.
+- **Separação Clara de Runtime vs Código**:
+  - `~/.config/bulldoze/` mantido estritamente para dados de runtime e preferências mutáveis do usuário (`wallpaper.json`, `gaming.json`, `privacy.json`), desacoplando o código-fonte da configuração de estado.
+
+### 🐛 Correções & Polimento
+- **Suporte a Ícone do Bitwarden na System Tray (`components/Tray.qml`)**:
+  - Tratamento e mapeamento dedicado para renderização correta do ícone do Bitwarden quando ativo na bandeja do sistema.
+
 ## [3.1.0] - 2026-08
 
 ### ✨ Adicionado
