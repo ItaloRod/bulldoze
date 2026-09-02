@@ -4,6 +4,68 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.1.0] - 2026-08
+
+### ✨ Adicionado
+- **Spotlight Dock Inferior Invertido Fusionado à Moldura (`BottomLauncher.qml`, `shell.qml`)**:
+  - **Fusão Vetorial Direta no `shell.qml`**: O Launcher deixou de ser uma janela isolada e foi fundido diretamente na malha vetorial contínua (`unifiedShape`) da borda inferior de 8px, utilizando o mesmo efeito de *frosted glass* de passagem única (`frameBlurContainer`) e borda contínua de 1px sem vazamento de papel de parede.
+  - **Inversão de Hierarquia (Bottom-Up)**: Barra de pesquisa posicionada no rodapé da tela (`y = height - 8px`) com foco automático e badge `ESC`, com a lista de aplicativos e resultados expandindo-se fluidamente para cima.
+  - **Tipografia e Escala Refinadas**: Altura de linha compactada para 38px, ícones de 22x22 e títulos em 13px (`theme.fontSizeMd`) para visual leve e sofisticado.
+
+- **Layout do Notch Superior em 2 Níveis Equilibrado (`DefaultBarView.qml`, `QuickControls.qml`, `Status.qml`)**:
+  - **Linha Principal Superior (Simetria Trilateral)**:
+    - *Esquerda*: Menu Spotlight (`BulldozeLogo`) e alternador de workspaces (`WorkspacePills`).
+    - *Centro*: Relógio e Data travados matematicamente no centro físico horizontal (`anchors.centerIn`).
+    - *Direita*: System Tray, Notificações com badge e Mini Avatar do usuário com foto sincronizada.
+  - **Linha Inferior Centralizada (`QuickControls.qml`)**: Controles rápidos de acesso imediato (Wi-Fi, Bluetooth, Som e Gaming Hub) posicionados diretamente abaixo do relógio.
+  - **Dimensões & Margens Polidas**: Altura em repouso de `32px` e altura expandida de `64px`, com transições suaves e contêiner `mainRow` de 26px livre de conflitos de âncoras.
+
+- **Moldura Perimetral de Vidro Transparente Integrada ao Notch (`shell.qml`, `LockScreen.qml`, `Greeter.qml`)**:
+  - Moldura contínua de 8px ao redor de todo o perímetro do monitor (360°), alinhada com a escala de espaçamento definitiva do Hyprland (`gaps_in: 8`, `gaps_out: { top = 40, right = 24, bottom = 24, left = 24 }`).
+  - **Fusão Estrutural e Vetorial Contínua**: A moldura perimetral e os notches superior e inferior foram fundidos em uma **única superfície Wayland (`PanelWindow`) e um único `ShapePath` contínuo**.
+  - **Geometria de Curvas Cúbicas Tangenciais (`PathCubic`)**: Curvatura padronizada em `Theme.qml` com asas côncavas suaves (`notchConcaveWidth: 16px`, `notchConcaveHeight: 10px`) e cantos internos arredondados de 8px (`innerRadius: 8px`).
+  - **Notch Fechado Compacto em 32px**: Altura do notch em repouso reduzida para `32px` (`notchHeight: 32px`).
+  - **Harmonização Total com Lock Screen e Greeter**: Implementada a mesma moldura de vidro perimetral de 8px e caimento do notch no `LockScreen.qml` e no `Greeter.qml` (`greetd`).
+  - **Transparência Total ao Mouse com Máscara Dinâmica**: Configurado com `mask: Region` dinâmico para liberar cliques para o desktop e interceptar durante foco no launcher ou submenus.
+  - **Ocultação Automática em Tela Cheia (*Fullscreen Auto-Hide*)**: Monitoramento reativo via daemon assíncrono (`scripts/bulldoze-hypr-events.py`) conectado ao socket do Hyprland.
+
+- **Bulldoze Wallpaper Handler Integrado ao Notch (`WallpaperBarView.qml`)**:
+  - Centralização completa do Gerenciador de Wallpapers no Notch superior, eliminando modais flutuantes centralizados avulsos.
+  - **Expansão Dinâmica da Barra**: Ao ativar o menu (`ALT + W`, comando IPC ou botão no perfil), o Notch expande fluidamente para `920 × 620 px` sobrepondo o desktop sem empurrar as janelas abertas (`exclusiveZone: 36`).
+  - **Interface Completa em Duas Colunas**:
+    - Galeria em grade (`GridView`) com busca em tempo real, badges de status (*Ativo, Vídeo, Cena*) e seleção visual.
+    - Inspetor de propriedades com pré-visualização, controles de enquadramento (16:9/Fit/Stretch), FPS (60/120/240), áudio, interatividade de mouse e sliders/toggles dinâmicos de shaders do Workshop.
+  - **Acesso Rápido no Menu de Perfil**: Adicionado botão de atalho `` no menu de sessão e perfil (`PowerBarView.qml`).
+
+- **Painel de Configurações de Jogos Integrado ao Notch (`GamingSettingsBarView.qml`)**:
+  - Migração completa do painel avançado de configurações de jogos para dentro do Notch, eliminando o modal flutuante centralizado.
+  - **Expansão Fluida**: O Notch se expande para `720 × 580 px` ao clicar no botão de engrenagem (``) ou ao executar `quickshell ipc -c bulldoze call shell toggleGamingSettings`.
+  - **Navegação em 3 Abas Responsivas**:
+    - **Bulldoptimizer**: Controles de Wallpaper Estático (Zero-GPU), Efeitos do Hyprland e NVIDIA PowerMizer.
+    - **Gamescope**: Ajustes de HDR Nativo, Mapeamento Inverso HDR ITM, Nits, Resoluções (1080p/1440p/4K), Taxas de atualização (60-240Hz), FSR Sharpness e Integer Scaling.
+    - **MangoHud**: Presets de HUD (*Completo*, *Essencial*, *Mínimo*), telemetria detalhada de CPU/GPU, VRAM, RAM, frametime, potência em Watts e seletor visual de posicionamento na tela.
+
+
+- **Módulo e Toggle Rápido Bulldoptimizer (``)**:
+  - Novo recurso de otimização de jogos modular e desacoplado do GameMode, permitindo economia de GPU e redução de latência com controle individual.
+  - **Wallpaper Estático Zero-GPU**: Pausa o motor dinâmico `linux-wallpaperengine` e exibe imagem estática (`Wallpaper_greeter.png`) na camada de fundo Wayland (`WlrLayer.Background`), liberando VRAM e ciclos de GPU para o jogo.
+  - **Otimizações Dinâmicas do Hyprland**: Desativação de blur, sombras e animações do compositor com Direct Scanout (`render:direct_scanout 1`) enquanto o Bulldoptimizer estiver ativo.
+  - **NVIDIA PowerMizer Performance**: Alternância opcional para travar a GPU em desempenho máximo (`GpuPowerMizerMode=1`), com detecção segura e compatível com futuras trocas para AMD/Intel.
+  - **Interface & Controles**: Novo botão de alternância rápida no Notch Bar (`GamingBarView.qml`), grid 2x2 na Central de Controle (`ControlCenter.qml`) e aba de ajustes no modal flutuante (`GamingSettingsModal.qml`).
+- **Pausa Automática do Wallpaper Engine por Workspace (`bulldoze-hypr-events.py`, `bulldoze-wallpaper.py`, `WallpaperEngine.qml`, `WallpaperBarView.qml`)**:
+  - **Economia Inteligente de GPU & Compositor**: O daemon monitora em tempo real a quantidade de janelas abertas no workspace ativo via socket do Hyprland. Ao detectar qualquer janela aberta (`windows > 0`), envia sinal `SIGSTOP` para o `linux-wallpaperengine`, congelando no último frame renderizado e zerando o consumo da GPU e de recomposição de blur do Hyprland.
+  - **Retomada Instantânea**: Ao alternar para um workspace vazio (`windows == 0`), envia sinal `SIGCONT` imediatamente, retomando a animação com fluidez sem nenhum delay.
+  - **Controle por UI & Persistência**: Adicionada a opção `"pause_on_window": true` por padrão no `wallpaper.json` e novo toggle *"Pausar com Janelas no Workspace"* na seção de Desempenho do Gerenciador de Wallpapers.
+
+- **Captura de Foco e Fechamento Confiável no Bottom Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+  - Conversão do componente base para `FocusScope` com timers de foco imediato e em fallback.
+  - Integração do `HyprlandFocusGrab` no shell para fechar o launcher com segurança ao clicar fora.
+
+### 🐛 Corrigido
+- **Persistência das Configurações de Jogos e Perfil**:
+  - Corrigida a leitura assíncrona de arquivos de configuração JSON multilinhas (`modules/Gaming.qml` e `modules/UserProfile.qml`), concatenando o fluxo de dados (`cat | tr '\n' ' '`) para evitar que o `SplitParser` dividisse o payload por linha e causasse falha no `JSON.parse`.
+  - Restaurada a persistência e exibição imediata dos estados ativos de **GameMode**, **MangoHud** e **Gamescope** no Notch Bar, na Central de Jogos e na Central de Controle após reinicialização do shell.
+
 ---
 
 ## [3.0.0] - 2026-08

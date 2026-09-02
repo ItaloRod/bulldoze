@@ -10,8 +10,14 @@ QtObject {
 
     // Quick Toggles (Main view)
     property bool gamemodeEnabled: false
+    property bool bulldoptimizerEnabled: false
     property bool mangohudEnabled: false
     property bool gamescopeEnabled: false
+
+    // Bulldoptimizer Advanced Options
+    property bool boWallpaperStatic: true
+    property bool boHyprlandEffects: true
+    property bool boPowerMizer: false
 
     // Gamescope Advanced Options
     property bool gsHdr: false
@@ -50,7 +56,7 @@ QtObject {
     property int mhFpsLimit: 0
     property bool mhCompact: false
 
-    readonly property bool anyActive: gamemodeEnabled || mangohudEnabled || gamescopeEnabled
+    readonly property bool anyActive: gamemodeEnabled || bulldoptimizerEnabled || mangohudEnabled || gamescopeEnabled
 
     function buildGamescopeArgs() {
         let args = "-W " + gsWidth + " -H " + gsHeight + " -r " + gsRefreshRate
@@ -202,6 +208,30 @@ QtObject {
         saveConfig()
     }
 
+    function toggleBulldoptimizer() {
+        bulldoptimizerEnabled = !bulldoptimizerEnabled
+        applyBulldoptimizer(bulldoptimizerEnabled)
+        saveConfig()
+    }
+
+    function applyBulldoptimizer(enabled) {
+        if (enabled) {
+            if (boHyprlandEffects) {
+                hyprOptProc.exec(["sh", "-c", "hyprctl keyword decoration:blur:enabled false && hyprctl keyword decoration:shadow:enabled false && hyprctl keyword animations:enabled false && hyprctl keyword render:direct_scanout 1 2>/dev/null || true"])
+            }
+            if (boPowerMizer) {
+                gpuOptProc.exec(["sh", "-c", "command -v nvidia-settings &>/dev/null && nvidia-settings -a '[gpu:0]/GpuPowerMizerMode=1' 2>/dev/null; command -v nvidia-smi &>/dev/null && nvidia-smi -pm 1 2>/dev/null || true"])
+            }
+        } else {
+            if (boHyprlandEffects) {
+                hyprOptProc.exec(["sh", "-c", "hyprctl keyword decoration:blur:enabled true && hyprctl keyword decoration:shadow:enabled true && hyprctl keyword animations:enabled true 2>/dev/null || true"])
+            }
+            if (boPowerMizer) {
+                gpuOptProc.exec(["sh", "-c", "command -v nvidia-settings &>/dev/null && nvidia-settings -a '[gpu:0]/GpuPowerMizerMode=0' 2>/dev/null || true"])
+            }
+        }
+    }
+
     function toggleMangohud() {
         mangohudEnabled = !mangohudEnabled
         saveConfig()
@@ -215,8 +245,14 @@ QtObject {
     function saveConfig() {
         const payload = {
             "gamemode": gamemodeEnabled,
+            "bulldoptimizer": bulldoptimizerEnabled,
             "mangohud": mangohudEnabled,
             "gamescope": gamescopeEnabled,
+            "bulldoptimizer_config": {
+                "wallpaper_static": boWallpaperStatic,
+                "hyprland_effects": boHyprlandEffects,
+                "powermizer": boPowerMizer
+            },
             "gamescope_args": buildGamescopeArgs(),
             "gamescope_config": {
                 "hdr": gsHdr,
@@ -275,14 +311,26 @@ QtObject {
 
     property var readProc: Process {
         id: readProc
-        command: ["cat", root.configPath]
+        command: ["sh", "-c", "cat '" + root.configPath + "' 2>/dev/null | tr '\\n' ' '"]
         stdout: SplitParser {
             onRead: data => {
                 try {
                     const parsed = JSON.parse(data.trim())
                     root.gamemodeEnabled = !!parsed.gamemode
+                    root.bulldoptimizerEnabled = !!parsed.bulldoptimizer
                     root.mangohudEnabled = !!parsed.mangohud
                     root.gamescopeEnabled = !!parsed.gamescope
+                    
+                    if (parsed.bulldoptimizer_config) {
+                        const bc = parsed.bulldoptimizer_config
+                        root.boWallpaperStatic = bc.wallpaper_static !== undefined ? !!bc.wallpaper_static : true
+                        root.boHyprlandEffects = bc.hyprland_effects !== undefined ? !!bc.hyprland_effects : true
+                        root.boPowerMizer = !!bc.powermizer
+                    }
+                    
+                    if (root.bulldoptimizerEnabled) {
+                        root.applyBulldoptimizer(true)
+                    }
                     
                     if (parsed.gamescope_config) {
                         const gc = parsed.gamescope_config
@@ -333,6 +381,14 @@ QtObject {
 
     property var writeProc: Process {
         id: writeProc
+    }
+
+    property var hyprOptProc: Process {
+        id: hyprOptProc
+    }
+
+    property var gpuOptProc: Process {
+        id: gpuOptProc
     }
 
     Component.onCompleted: loadConfig()

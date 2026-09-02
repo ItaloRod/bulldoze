@@ -6,6 +6,7 @@ Item {
     id: root
 
     property var goBack
+    property var openSettings
     property var network
 
     Theme {
@@ -154,7 +155,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.net.openSettings()
+                    onClicked: {
+                        if (root.openSettings) root.openSettings()
+                    }
                 }
             }
 
@@ -183,7 +186,7 @@ Item {
                 Text {
                     anchors.centerIn: parent
                     text: ""
-                    color: refMouse.containsMouse ? theme.textStrong : theme.textMedium
+                    color: (root.net && root.net.isScanning) ? theme.accent : (refMouse.containsMouse ? theme.textStrong : theme.textMedium)
                     font.pixelSize: theme.iconSizeSm
                 }
 
@@ -192,7 +195,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.net.refresh()
+                    onClicked: {
+                        if (root.net) root.net.scanNetworks(true)
+                    }
                 }
             }
 

@@ -1033,14 +1033,15 @@ PanelWindow {
                             }
                         }
 
-                        // 3 Interactive Quick Tiles
-                        Row {
+                        // 4 Interactive Quick Tiles in 2x2 Grid
+                        Grid {
                             width: parent.width
+                            columns: 2
                             spacing: theme.spacingMd
 
                             // Tile 1: GameMode
                             Rectangle {
-                                width: (parent.width - (theme.spacingMd * 2)) / 3
+                                width: (parent.width - theme.spacingMd) / 2
                                 height: 54
                                 radius: theme.radiusItem
                                 color: gaming.gamemodeEnabled ? theme.activeFill : (gmMouse.containsMouse ? theme.hoverFill : "transparent")
@@ -1087,13 +1088,68 @@ PanelWindow {
                                     id: gmMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: gaming.toggleGamemode()
                                 }
                             }
 
-                            // Tile 2: MangoHud
+                            // Tile 2: Bulldoptimizer
                             Rectangle {
-                                width: (parent.width - (theme.spacingMd * 2)) / 3
+                                width: (parent.width - theme.spacingMd) / 2
+                                height: 54
+                                radius: theme.radiusItem
+                                color: gaming.bulldoptimizerEnabled ? theme.activeFill : (boMouse.containsMouse ? theme.hoverFill : "transparent")
+                                border.width: 1
+                                border.color: gaming.bulldoptimizerEnabled ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                Behavior on color {
+                                    ColorAnimation { duration: theme.animDurationFast }
+                                }
+
+                                Column {
+                                    anchors.centerIn: parent
+                                    spacing: 4
+
+                                    Row {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        spacing: 7
+
+                                        Text {
+                                            text: ""
+                                            color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textMedium
+                                            font.pixelSize: theme.fontSizeSm
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Bulldoptimizer"
+                                            color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textMedium
+                                            font.pixelSize: theme.fontSizeSm
+                                            font.weight: Font.DemiBold
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    Text {
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        text: gaming.bulldoptimizerEnabled ? "Otimizado" : "Desligado"
+                                        color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textSubtle
+                                        font.pixelSize: theme.fontSizeXs
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: boMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: gaming.toggleBulldoptimizer()
+                                }
+                            }
+
+                            // Tile 3: MangoHud
+                            Rectangle {
+                                width: (parent.width - theme.spacingMd) / 2
                                 height: 54
                                 radius: theme.radiusItem
                                 color: gaming.mangohudEnabled ? theme.activeFill : (mhMouse.containsMouse ? theme.hoverFill : "transparent")
@@ -1140,13 +1196,14 @@ PanelWindow {
                                     id: mhMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: gaming.toggleMangohud()
                                 }
                             }
 
-                            // Tile 3: Gamescope
+                            // Tile 4: Gamescope
                             Rectangle {
-                                width: (parent.width - (theme.spacingMd * 2)) / 3
+                                width: (parent.width - theme.spacingMd) / 2
                                 height: 54
                                 radius: theme.radiusItem
                                 color: gaming.gamescopeEnabled ? theme.activeFill : (gsMouse.containsMouse ? theme.hoverFill : "transparent")
@@ -1193,6 +1250,7 @@ PanelWindow {
                                     id: gsMouse
                                     anchors.fill: parent
                                     hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
                                     onClicked: gaming.toggleGamescope()
                                 }
                             }

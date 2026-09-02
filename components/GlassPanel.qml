@@ -1,6 +1,7 @@
 import QtQuick
 import QtQuick.Shapes
 import QtQuick.Effects
+import "."
 
 Item {
     id: root
@@ -11,10 +12,11 @@ Item {
         id: theme
     }
 
+    property real topOffset: theme.borderThickness
     property color fillColor: theme.glassFill
-    property color borderColor: "transparent"
-    property int borderWidth: 0
-    property bool showBorder: false
+    property color borderColor: theme.glassBorderSubtle
+    property int borderWidth: 1
+    property bool showBorder: true
 
     readonly property real concaveWidth: theme.notchConcaveWidth
     readonly property real concaveHeight: theme.notchConcaveHeight
@@ -73,13 +75,18 @@ Item {
                 startX: 0
                 startY: 0
 
+                PathLine {
+                    x: 0
+                    y: root.topOffset
+                }
+
                 PathCubic {
                     x: root.concaveWidth
-                    y: root.concaveHeight
+                    y: root.topOffset + root.concaveHeight
                     control1X: root.concaveWidth * 0.5
-                    control1Y: 0
+                    control1Y: root.topOffset
                     control2X: root.concaveWidth
-                    control2Y: root.concaveHeight * 0.5
+                    control2Y: root.topOffset + root.concaveHeight * 0.5
                 }
                 PathLine {
                     x: root.concaveWidth
@@ -107,15 +114,19 @@ Item {
                 }
                 PathLine {
                     x: root.width - root.concaveWidth
-                    y: root.concaveHeight
+                    y: root.topOffset + root.concaveHeight
                 }
                 PathCubic {
                     x: root.width
-                    y: 0
+                    y: root.topOffset
                     control1X: root.width - root.concaveWidth
-                    control1Y: root.concaveHeight * 0.5
+                    control1Y: root.topOffset + root.concaveHeight * 0.5
                     control2X: root.width - root.concaveWidth * 0.5
-                    control2Y: 0
+                    control2Y: root.topOffset
+                }
+                PathLine {
+                    x: root.width
+                    y: 0
                 }
                 PathLine {
                     x: 0
@@ -136,18 +147,22 @@ Item {
             strokeWidth: 0
             fillColor: root.fillColor
 
-            // Start at top-left screen bezel (0, 0)
             startX: 0
             startY: 0
+
+            PathLine {
+                x: 0
+                y: root.topOffset
+            }
 
             // Top-left smooth concave transition flaring into top bezel
             PathCubic {
                 x: root.concaveWidth
-                y: root.concaveHeight
+                y: root.topOffset + root.concaveHeight
                 control1X: root.concaveWidth * 0.5
-                control1Y: 0
+                control1Y: root.topOffset
                 control2X: root.concaveWidth
-                control2Y: root.concaveHeight * 0.5
+                control2Y: root.topOffset + root.concaveHeight * 0.5
             }
 
             // Left vertical edge
@@ -185,45 +200,48 @@ Item {
             // Right vertical edge
             PathLine {
                 x: root.width - root.concaveWidth
-                y: root.concaveHeight
+                y: root.topOffset + root.concaveHeight
             }
 
             // Top-right smooth concave transition flaring into top bezel
             PathCubic {
                 x: root.width
-                y: 0
+                y: root.topOffset
                 control1X: root.width - root.concaveWidth
-                control1Y: root.concaveHeight * 0.5
+                control1Y: root.topOffset + root.concaveHeight * 0.5
                 control2X: root.width - root.concaveWidth * 0.5
-                control2Y: 0
+                control2Y: root.topOffset
             }
 
-            // Close polygon along screen top boundary (y = 0)
+            PathLine {
+                x: root.width
+                y: 0
+            }
+
             PathLine {
                 x: 0
                 y: 0
             }
         }
 
-        // 2. Subtle 1px Glass Border along exposed desktop contour (NO stroke across top screen bezel)
+        // 2. Subtle 1px Glass Border along exposed desktop contour
         ShapePath {
             strokeColor: root.showBorder ? root.borderColor : "transparent"
             strokeWidth: root.borderWidth
             fillColor: "transparent"
             capStyle: ShapePath.RoundCap
 
-            // Start at top-left screen bezel (0, 0.5)
             startX: 0
-            startY: 0.5
+            startY: root.topOffset + 0.5
 
             // Top-left smooth concave transition
             PathCubic {
                 x: root.concaveWidth + 0.5
-                y: root.concaveHeight
+                y: root.topOffset + root.concaveHeight
                 control1X: root.concaveWidth * 0.5
-                control1Y: 0.5
+                control1Y: root.topOffset + 0.5
                 control2X: root.concaveWidth + 0.5
-                control2Y: root.concaveHeight * 0.5
+                control2Y: root.topOffset + root.concaveHeight * 0.5
             }
 
             // Left vertical edge
@@ -261,17 +279,17 @@ Item {
             // Right vertical edge
             PathLine {
                 x: root.width - root.concaveWidth - 0.5
-                y: root.concaveHeight
+                y: root.topOffset + root.concaveHeight
             }
 
             // Top-right smooth concave transition
             PathCubic {
                 x: root.width
-                y: 0.5
+                y: root.topOffset + 0.5
                 control1X: root.width - root.concaveWidth - 0.5
-                control1Y: root.concaveHeight * 0.5
+                control1Y: root.topOffset + root.concaveHeight * 0.5
                 control2X: root.width - root.concaveWidth * 0.5
-                control2Y: 0.5
+                control2Y: root.topOffset + 0.5
             }
         }
     }

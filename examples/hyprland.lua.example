@@ -43,9 +43,14 @@ end)
 
 hl.config({
     general = {
-        -- Escala de espaçamento Bulldoze: 8 / 16
+        -- Escala de espaçamento Bulldoze: 8 / 24 (Top gap 40px para o Notch Bar, 24px laterais/inferior)
         gaps_in = 8,
-        gaps_out = 16,
+        gaps_out = {
+            top = 40,
+            right = 24,
+            bottom = 24,
+            left = 24,
+        },
         border_size = 0,
         layout = "dwindle",
         allow_tearing = false,

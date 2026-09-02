@@ -128,8 +128,8 @@
 
 #browser,
 .browserSidebarContainer {
-  background: transparent !important;
-  background-color: transparent !important;
+  background: var(--bulldoze-glass-fill) !important;
+  background-color: var(--bulldoze-glass-fill) !important;
 }
 
 #tabbrowser-tabbox,
@@ -138,14 +138,15 @@
 .browserStack,
 browser[type="content"] {
   background-color: #0E1016 !important;
-  border-radius: var(--bulldoze-radius-card) !important;
+  border-radius: var(--bulldoze-radius-card) 0 0 0 !important;
   overflow: hidden !important;
+  border: none !important;
 }
 
 #tabbrowser-tabpanels {
-  margin: 0 6px 6px 6px !important;
-  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
-  border-radius: var(--bulldoze-radius-card) !important;
+  margin: 0 !important;
+  border: none !important;
+  border-radius: var(--bulldoze-radius-card) 0 0 0 !important;
   overflow: hidden !important;
 }
 
@@ -550,10 +551,9 @@ sidebar-main,
 .sidebar-panel,
 .sidebar-placesTree,
 #tabbrowser-tabs[vertical],
-tab-strip[orient="vertical"],
-.browserSidebarContainer {
-  background: var(--bulldoze-glass-fill) !important;
-  background-color: var(--bulldoze-glass-fill) !important;
+tab-strip[orient="vertical"] {
+  background: transparent !important;
+  background-color: transparent !important;
   color: var(--bulldoze-text-medium) !important;
   border-top: none !important;
 }

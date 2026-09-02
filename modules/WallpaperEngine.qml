@@ -17,9 +17,19 @@ QtObject {
     property string scaling: "fill" // "fill" | "fit" | "stretch"
     property string clamp: "border"
     property string backgroundColor: "#000000"
-    property int volume: 0
     property bool mouseEnabled: true
     property bool hideSponsor: true
+    property bool pauseOnWindow: true
+    property bool optimizerActive: false
+    property int snapshotVersion: 0
+
+    onOptimizerActiveChanged: {
+        if (optimizerActive) {
+            stopEngine()
+        } else {
+            saveAndApplyActive()
+        }
+    }
 
     // Per wallpaper settings map
     property var perWallpaperSettings: ({})
@@ -55,6 +65,36 @@ QtObject {
         applyWallpaper(selectedId)
     }
 
+    function getActiveIndex() {
+        if (!wallpapers || wallpapers.length === 0) return 0
+        for (let i = 0; i < wallpapers.length; i++) {
+            if (wallpapers[i].id === activeId) return i
+        }
+        return 0
+    }
+
+    function nextWallpaper() {
+        if (!wallpapers || wallpapers.length === 0) return
+        let idx = getActiveIndex()
+        let nextIdx = (idx + 1) % wallpapers.length
+        applyWallpaper(wallpapers[nextIdx].id)
+    }
+
+    function previousWallpaper() {
+        if (!wallpapers || wallpapers.length === 0) return
+        let idx = getActiveIndex()
+        let prevIdx = (idx - 1 + wallpapers.length) % wallpapers.length
+        applyWallpaper(wallpapers[prevIdx].id)
+    }
+
+    function toggleMouse() {
+        setMouseEnabled(!mouseEnabled)
+    }
+
+    function stopEngine() {
+        stopProc.exec(["python3", root.scriptPath, "stop"])
+    }
+
     function applyWallpaper(id) {
         if (!id) return
         activeId = id
@@ -65,19 +105,29 @@ QtObject {
             "scaling": root.scaling,
             "clamp": root.clamp,
             "background_color": root.backgroundColor,
-            "volume": root.volume,
             "mouse_enabled": root.mouseEnabled,
             "hide_sponsor": root.hideSponsor,
+            "pause_on_window": root.pauseOnWindow,
             "per_wallpaper_settings": root.perWallpaperSettings
         }
 
-        applyProc.exec([
-            "python3",
-            root.scriptPath,
-            "apply",
-            id,
-            JSON.stringify(payload)
-        ])
+        if (optimizerActive) {
+            applyProc.exec([
+                "python3",
+                root.scriptPath,
+                "snapshot-silent",
+                id
+            ])
+            stopEngine()
+        } else {
+            applyProc.exec([
+                "python3",
+                root.scriptPath,
+                "apply",
+                id,
+                JSON.stringify(payload)
+            ])
+        }
     }
 
     function setScalingMode(mode) {
@@ -90,11 +140,6 @@ QtObject {
         saveAndApplyActive()
     }
 
-    function setVolumeLevel(vol) {
-        volume = vol
-        saveAndApplyActive()
-    }
-
     function setMouseEnabled(enabled) {
         mouseEnabled = enabled
         saveAndApplyActive()
@@ -102,6 +147,11 @@ QtObject {
 
     function setHideSponsor(hide) {
         hideSponsor = hide
+        saveAndApplyActive()
+    }
+
+    function setPauseOnWindow(paused) {
+        pauseOnWindow = paused
         saveAndApplyActive()
     }
 
@@ -176,9 +226,9 @@ QtObject {
                     if (cfg.scaling) root.scaling = cfg.scaling
                     if (cfg.clamp) root.clamp = cfg.clamp
                     if (cfg.background_color) root.backgroundColor = cfg.background_color
-                    if (cfg.volume !== undefined) root.volume = cfg.volume
                     if (cfg.mouse_enabled !== undefined) root.mouseEnabled = !!cfg.mouse_enabled
                     if (cfg.hide_sponsor !== undefined) root.hideSponsor = !!cfg.hide_sponsor
+                    if (cfg.pause_on_window !== undefined) root.pauseOnWindow = !!cfg.pause_on_window
                     if (cfg.per_wallpaper_settings) root.perWallpaperSettings = cfg.per_wallpaper_settings
                 } catch(e) {
                     console.warn("Error parsing wallpaper config:", e)
@@ -189,10 +239,20 @@ QtObject {
 
     property var applyProc: Process {
         id: applyProc
+        onExited: (code, status) => {
+            snapshotVersion++
+        }
+    }
+
+    property var stopProc: Process {
+        id: stopProc
     }
 
     Component.onCompleted: {
         loadConfig()
         loadWallpapers()
+        if (optimizerActive) {
+            stopEngine()
+        }
     }
 }

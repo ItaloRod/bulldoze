@@ -13,17 +13,18 @@ This document defines the authoritative design system specification for the **en
 
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
 1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$) with dynamic parametric morphing:
-   - **Default State**: Dynamic hover-expansion (160px idle capsule expanding dynamically to 680px on hover) with Workspaces, dynamic centered Clock, and segmented single-line control buttons (Wi-Fi, Bluetooth, Audio, Gaming Hub, Notifications, Tray, Mini Profile Avatar).
-   - **Segmented Control Modes (All with 48px Submenu Notch Height & 18px Inset Margins)**: Direct morphing into dedicated single-line horizontal views for Wi-Fi (460x48px), Bluetooth (470x48px), Unified Audio (380x48px), Gaming Hub (480x48px), Integrated Notification View (520x82px), and Unified Profile & Power Menu (490x48px).
-   - **Unified Audio Feedback (No Redundant Bottom OSD)**: Volume keys on keyboard or hardware knobs directly trigger the sleek 48px top notch audio view with a 2-second auto-dismiss timer.
-   - **Integrated Notification Stack (FILO)**: Incoming notifications trigger the top notch bar (520x82px) with a 5-second inactivity timer (auto-resetting on hover or dismiss), retaining a stack of up to 7 notifications where dismissing with `` pops the active notification to reveal the previous one until empty.
-   - **Mutual Exclusion & Smart Mode Management**: Strict single-active-mode rule with automatic inactivity timeouts and Escape key handling.
-2. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock, containing integrated high-visibility clock/date typography, masked avatar, PAM authentication with error shake, and integrated power action tiles. Collapses back to the resting notch upon successful authentication.
-3. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$), with multi-user selection, session switching with Hyprland priority, and automated recursive deployment via `scripts/install-greeter.sh`.
-4. **Application Launcher (`Launcher.qml`)**: Centered fast floating glass modal ($580 \times 480\text{px}$) for launching desktop apps with keyboard-first navigation (Walker / Spotlight style).
-5. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$) with full controls for Gamescope (HDR, SDR Nits, VRR, 240Hz, FSR Upscaling & Sharpness, Integer Scaling, Render Resolution, FPS Limiter) and MangoHud (telemetry, GPU/VRAM/CPU Watts & Clock, HUD positions).
-6. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$) with real-time Steam Workshop wallpaper gallery, aspect ratio adapt/fill controls, automatic QR code/sponsor suppression, interactive shader sliders, and 240Hz mouse tracking.
-7. **Bottom Glass Notch OSD (`Osd.qml`, `BottomGlassPanel.qml`)**: Auxiliary bottom-docked capsule for secondary hardware indicators.
+   - **Default Resting State**: Minimalist 32px height capsule with centered Clock/Date locked to physical horizontal center.
+   - **2-Level Hover Expansion (64px)**: Top row perfectly balanced (Left: Bulldoze Spotlight Logo + Workspaces; Center: Clock/Date; Right: System Tray + Notifications + User Avatar), and Bottom row centered with Quick Controls (Wi-Fi, Bluetooth, Audio, Gaming).
+   - **Segmented Control Modes**: Direct morphing into dedicated views for Wi-Fi, Bluetooth, Unified Audio, Gaming Hub, Integrated Notification View, and Unified Profile & Power Menu.
+   - **Integrated Notification Stack (FILO)**: Incoming notifications trigger the top notch bar (520x82px) with a 5-second inactivity timer.
+2. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+   - An inverted search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$) emerging from the bottom bezel ($y = \text{height}$).
+   - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
+   - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
+3. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock.
+4. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$) with 8px perimeter frame.
+5. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$).
+6. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$).
 
 ---
 
@@ -155,18 +156,22 @@ All components in the Bulldoze shell must consume tokens exclusively from `compo
 - `radiusItem: 12px` --- Buttons, list rows, toggle tiles, avatar masks.
 - `radiusCard: 18px` --- Floating cards, Control Center.
 - `radiusModal: 22px` --- Launcher modal, Wallpaper Manager, Gaming Settings.
-- `notchConcaveWidth: 16px` --- Horizontal extent of the concave transition curve.
-- `notchConcaveHeight: 10px` --- Vertical drop of the concave transition curve.
-- `notchTopRadius: 12px` --- Smooth concave transition radius flaring into monitor bezels ($y=0$).
+- `borderThickness: 8px` --- Full 360° screen glass perimeter frame thickness (flush to physical monitor bezels).
+- `innerRadius: 8px` --- Tangent cubic bezier rounded corners on the inner frame boundary (aligns with Hyprland window rounding: 8px).
+- `notchConcaveWidth: 16px` --- Horizontal extent of the concave cubic bezier transition curve.
+- `notchConcaveHeight: 10px` --- Vertical drop of the concave cubic bezier transition curve.
 - `notchBottomRadius: 14px` --- Convex rounded corners exposed to desktop.
-- `notchHeight: 36px` --- Idle bar height.
-- `notchHoverHeight: 42px` --- Expanded hover bar height.
-- `notchExpandedHeight: 48px` --- Height during active submenu modes (Wi-Fi, Bluetooth, Audio, Gaming, Power, Notifs).
-- `notchCollapsedWidth: 200px` --- Idle capsule width displaying clock and date (dynamically computed via clock implicitWidth + insets).
+- `notchHeight: 32px` --- Idle closed notch bar height (resting state).
+- `notchHoverHeight: 48px` --- Expanded hover bar height (reveals quick action items).
+- `notchExpandedHeight: 60px` --- Height during active submenu modes (Wi-Fi, Bluetooth, Audio, Gaming, Power, Notifs).
+- `notchCollapsedWidth: 170px-200px` --- Idle capsule width displaying clock and date (dynamically computed via clock implicitWidth + insets).
 - `notchExpandedWidth: 680px` --- Expanded bar width and LockScreen/Greeter width.
 
-## 3.4 Spacing & Padding Scale
+## 3.4 Spacing, Hyprland & Padding Scale
 
+- `gaps_in: 8px` --- Internal spacing between tiled windows in Hyprland.
+- `gaps_out: { top: 40px, right: 24px, bottom: 24px, left: 24px }` --- Hyprland authoritative outer window margins (24px side/bottom margins providing desktop wallpaper breathing space around the 8px glass frame; 40px top gap ensuring 32px closed notch + 8px inner margin).
+- `border_size: 0px` --- Window borders removed in favor of the glassmorphic shell aesthetic.
 - `spacingXs: 4px`, `spacingSm: 8px`, `spacingMd: 12px`, `spacingLg: 16px`, `spacingXl: 20px`, `spacingXxl: 24px`.
 - `contentInset: 18px` (horizontal inset inside the top notch).
 - `groupSpacing: 12px` (gap between left groups).
@@ -248,7 +253,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
   - **Aspect Ratio & Enquadramento**: Segmented Pills for `Preencher (Fill - 16:9)`, `Adaptar (Fit - Inteiro sem cortes)` e `Esticar (Stretch)`.
   - **Sponsor & Layer Suppression**: Automatic deep scanning of `scene.pkg` to detect QR Code / donation objects (`sponsor_tip_x`, `微信赞助码`, etc.) and hardware-level skip pass via `--render-debug skip-object=<id>`.
   - **Dynamic Scene Shader Properties**: Real-time interactive sliders and toggles for scene uniforms.
-  - **Performance & Audio**: 60 / 120 / 240 FPS selectors, mouse tracking toggle, and volume control.
+  - **Performance**: 60 / 120 / 240 FPS selectors, pause on visible windows, and mouse tracking toggle (strict `--silent` execution with no audio output).
 - **Direct Wallpaper Sync**:
   - Python engine in `scripts/bulldoze-wallpaper.py` syncs wallpaper image directly to `~/.cache/bulldoze/Wallpaper_greeter.png` and `/var/lib/greetd/Wallpaper_greeter.png` cleanly without capturing mouse hover states or overlay notches.
 

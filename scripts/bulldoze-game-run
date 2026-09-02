@@ -7,6 +7,7 @@
 CONFIG_FILE="$HOME/.config/bulldoze/gaming.json"
 
 USE_GAMEMODE=false
+USE_BULLDOPTIMIZER=false
 USE_GAMESCOPE=false
 USE_MANGOHUD=false
 GAMESCOPE_ARGS="-W 2560 -H 1440 -r 240 --fullscreen"
@@ -16,6 +17,7 @@ GS_HDR=false
 # 1. Carrega configurações da Central de Controle
 if [[ -f "$CONFIG_FILE" ]]; then
     USE_GAMEMODE=$(jq -r '.gamemode // false' "$CONFIG_FILE" 2>/dev/null)
+    USE_BULLDOPTIMIZER=$(jq -r '.bulldoptimizer // false' "$CONFIG_FILE" 2>/dev/null)
     USE_GAMESCOPE=$(jq -r '.gamescope // false' "$CONFIG_FILE" 2>/dev/null)
     USE_MANGOHUD=$(jq -r '.mangohud // false' "$CONFIG_FILE" 2>/dev/null)
     
@@ -102,6 +104,7 @@ fi
 # 3. Monta a lista de recursos e emite a notificação se houver perfil ativo
 ACTIVE_FEATURES=()
 [[ "$USE_GAMEMODE" == "true" ]] && ACTIVE_FEATURES+=("GameMode")
+[[ "$USE_BULLDOPTIMIZER" == "true" ]] && ACTIVE_FEATURES+=("Bulldoptimizer")
 if [[ "$USE_GAMESCOPE" == "true" ]]; then
     GS_LABEL="Gamescope"
     [[ "$GS_HDR" == "true" ]] && GS_LABEL="$GS_LABEL (HDR)"

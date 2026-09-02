@@ -6,6 +6,7 @@ Item {
     id: root
 
     property var goBack
+    property var openSettings
     property var bluetooth
 
     Theme {
@@ -154,7 +155,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.bt.pairNew()
+                    onClicked: {
+                        if (root.openSettings) root.openSettings()
+                    }
                 }
             }
 
@@ -192,7 +195,9 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: root.bt.openSettings()
+                    onClicked: {
+                        if (root.openSettings) root.openSettings()
+                    }
                 }
             }
 
