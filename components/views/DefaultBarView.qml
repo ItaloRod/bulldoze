@@ -42,7 +42,7 @@ Item {
         }
         height: 26
 
-        // Left: Spotlight Logo + Workspace Pills
+        // Left: Workspace Pills
         Row {
             id: leftGroup
             anchors {
@@ -69,11 +69,6 @@ Item {
                     easing.type: root.isExpanded ? Easing.OutBack : Easing.InCubic
                     easing.overshoot: theme.stickyOvershoot
                 }
-            }
-
-            BulldozeLogo {
-                anchors.verticalCenter: parent.verticalCenter
-                activateLauncher: root.activateLauncher
             }
 
             WorkspacePills {

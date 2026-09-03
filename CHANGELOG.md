@@ -20,6 +20,8 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 - **Notch em Linha Única com Altura Fixa (`DefaultBarView.qml`, `shell.qml`)**:
   - Reestruturação do layout da barra padrão do notch para uma única linha centralizada, com altura fixa de 32px tanto em repouso quanto em hover com o cursor.
   - Eliminação da segunda linha de controles rápidos (`QuickControls.qml`) e de expansões desnecessárias de hover.
+- **Remoção do Botão do Arch no Notch (`DefaultBarView.qml`)**:
+  - Remoção do ícone/botão do Arch (`BulldozeLogo`) do notch superior, preservando a abertura do lançador exclusivamente via atalho global de teclado. O lado esquerdo agora abriga exclusivamente as pílulas dinâmicas de workspaces (`WorkspacePills`).
 - **Reposicionamento do Modo Jogo (`Status.qml`, `GamingBarView.qml`)**:
   - Botão de Gaming Mode (``) integrado diretamente ao grupo da direita (`Status.qml`), posicionado harmonicamente entre a System Tray e as Configurações (``).
   - Cálculo dinâmico de largura ideal (`idealWidth`) e centralização simétrica das pílulas no menu do Modo Jogo (`GamingBarView`), garantindo margens e paddings perfeitamente uniformes à esquerda e à direita.

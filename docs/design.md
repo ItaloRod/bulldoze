@@ -14,7 +14,7 @@ This document defines the authoritative design system specification for the **en
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
 1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$):
    - **Single-Line Streamlined Layout**: Fixed 32px height capsule both in resting state and on hover, maintaining a sleek, non-intrusive single-row profile.
-   - **Content Layout**: Left group with Bulldoze Spotlight Logo + Workspaces pills; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
+   - **Content Layout**: Left group with Workspaces pills; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
    - **Modal Access**: Quick Settings (Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) accessed directly via Settings (``) or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
 2. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
    - Fused directly into the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave wings.
@@ -222,7 +222,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
   - **Expanded State (Hover)**: Expands horizontally to `contentExpandedWidth` (620px-680px) with `notchExpandDuration` (340ms) and `Easing.OutBack` when hovered.
   - **Dynamic Content Calculation**: Dynamic bounds (`contentExpandedWidth = leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`) guarantee zero overlap between the clock, workspace pills, and status buttons.
 - **Content Encapsulation**:
-  - **Left (revealed on expand)**: Bulldoze Logo (`""`, 16px, `textStrong`, triggers Launcher) + Dynamic Workspace Pills (active: $22 \times 6\text{px}$, inactive: $6 \times 6\text{px}$ dot, no numbers).
+  - **Left (revealed on expand)**: Dynamic Workspace Pills (active: $22 \times 6\text{px}$, inactive: $6 \times 6\text{px}$ dot, no numbers).
   - **Center (always visible)**: Single-line Clock (Time 13px DemiBold + Date 11px Medium localized in `pt-BR`, format `"ddd, dd MMM"` via `Qt.locale("pt_BR")`).
   - **Right (revealed on expand)**: Status group (`Status.qml`) with System Tray, Gaming Mode toggle (`""`), and Settings button (`""`).
   - **Redundant Items Removed**: Wi-Fi, Bluetooth, Audio, and Notifications bell removed from the notch bar to preserve clean elegance and single-line ergonomics.

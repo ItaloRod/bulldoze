@@ -61,7 +61,7 @@
 - **Cálculo Dinâmico de Espaçamento e Largura**:
   - A largura expandida e recolhida é computada dinamicamente com base no conteúdo real (`contentExpandedWidth: 620px-680px`), mantendo o relógio perfeitamente equilibrado no centro.
 - **Encapsulamento do Notch**:
-  - **Esquerda (revelada no hover)**: Logo Bulldoze (`""`, abre o Launcher inferior) + Dynamic Workspace Pills (ativa: $22 \times 6\text{px}$, inativas: $6 \times 6\text{px}$, sem numeração).
+  - **Esquerda (revelada no hover)**: Dynamic Workspace Pills (ativa: $22 \times 6\text{px}$, inativas: $6 \times 6\text{px}$, sem numeração).
   - **Centro (sempre visível)**: Relógio em linha única (Hora 13px DemiBold + Data 11px Medium em `pt-BR`).
   - **Direita (`Status.qml`)**: System Tray + Botão Modo Jogo (`""`) + Botão de Configurações (`""`).
   - **Modos Ativos Integrados**:
