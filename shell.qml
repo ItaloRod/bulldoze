@@ -61,7 +61,7 @@ ShellRoot {
         property bool ready: false
 
         onNotificationReceived: notif => {
-            if (ready && shell.activeMode === "none" && !shell.isLauncherOpen) {
+            if (ready && !shell.isLauncherOpen) {
                 shell.showNotificationOsd()
             }
         }
@@ -113,20 +113,26 @@ ShellRoot {
         }
     }
 
-    property var notificationTimer: Timer {
-        id: notificationTimer
-        interval: 5000
+    property bool isNotifOpen: false
+    property bool isNotifExpanded: false
+
+    property var notifDismissTimer: Timer {
+        id: notifDismissTimer
+        interval: 2500
         repeat: false
         onTriggered: {
-            if (shell.activeMode === "notifications") {
-                shell.activeMode = "none"
-            }
+            shell.closeNotification()
         }
     }
 
-    function resetNotificationTimer() {
-        if (shell.activeMode === "notifications") {
-            notificationTimer.restart()
+    property var notifExpandTimer: Timer {
+        id: notifExpandTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (shell.isNotifOpen && globalNotifications.count > 1) {
+                shell.isNotifExpanded = true
+            }
         }
     }
 
@@ -148,28 +154,36 @@ ShellRoot {
     }
 
     function showNotificationOsd() {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        if (shell.activeMode !== "notifications") {
-            shell.activeMode = "notifications"
-        }
-        notificationTimer.restart()
+        if (shell.isFullscreenActive) return
+        shell.isNotifExpanded = false
+        shell.isNotifOpen = true
+        notifDismissTimer.restart()
+    }
+
+    function showNotificationCorner() {
+        if (shell.isFullscreenActive) return
+        notifDismissTimer.stop()
+        shell.isNotifExpanded = false
+        shell.isNotifOpen = true
+    }
+
+    function closeNotification() {
+        notifDismissTimer.stop()
+        notifExpandTimer.stop()
+        shell.isNotifOpen = false
+        shell.isNotifExpanded = false
     }
 
     function toggleMode(mode) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        notificationTimer.stop()
         if (activeMode === mode) {
             activeMode = "none"
         } else {
             activeMode = mode
-            if (mode === "notifications") {
-                notificationTimer.restart()
-            }
         }
     }
 
     function closeActiveMode() {
-        notificationTimer.stop()
         activeMode = "none"
     }
 
@@ -225,7 +239,8 @@ ShellRoot {
         function toggleWallpaperModal() { shell.toggleWallpaperModal() }
         function toggleProfile() { shell.toggleMode("power") }
         function togglePowerMenu() { shell.toggleMode("power") }
-        function toggleNotifications() { shell.toggleMode("notifications") }
+        function toggleNotifications() { if (shell.isNotifOpen) shell.closeNotification(); else shell.showNotificationCorner() }
+        function expandNotifications() { shell.isNotifOpen = true; shell.isNotifExpanded = true }
         function toggleControlCenter() { shell.toggleMode("gaming") }
         function closeActiveMode() { shell.closeActiveMode(); shell.isLauncherOpen = false }
         function lockScreen() { shell.lockScreen() }
@@ -315,6 +330,10 @@ ShellRoot {
                     Region {
                         item: (shell.isAudioBarOpen || root.animAudioWidth > 0) ? leftAudioBarContainer : null
                     }
+
+                    Region {
+                        item: (shell.isNotifOpen || root.animNotifHeight > 0) ? (typeof bottomNotifContainer !== "undefined" ? bottomNotifContainer : null) : (typeof notifCornerTrigger !== "undefined" ? notifCornerTrigger : null)
+                    }
                 }
 
                 HyprlandFocusGrab {
@@ -348,7 +367,6 @@ ShellRoot {
                     if (shell.activeMode === "gaming-settings") return 720
                     if (shell.activeMode === "wallpaper") return 920
                     if (shell.activeMode === "settings") return 920
-                    if (shell.activeMode === "notifications") return 520
                     if (shell.activeMode === "power" || shell.activeMode === "profile") return 520
                     return root.isExpanded ? expandedWidth : collapsedWidth
                 }
@@ -357,7 +375,6 @@ ShellRoot {
                     if (shell.activeMode === "wallpaper") return 620
                     if (shell.activeMode === "settings") return 640
                     if (shell.activeMode === "gaming-settings") return 580
-                    if (shell.activeMode === "notifications") return theme.notchNotificationHeight
                     if (shell.activeMode !== "none") return theme.notchExpandedHeight
                     return theme.notchHeight
                 }
@@ -433,6 +450,51 @@ ShellRoot {
                 readonly property real audioTop: Math.round((root.height - animAudioHeight) / 2)
                 readonly property real audioBottom: audioTop + animAudioHeight
                 readonly property real audioRight: root.borderThickness + animAudioWidth
+
+                // Notification Panel geometry (bottom-right corner)
+                readonly property int notifWidth: 380
+                readonly property int notifCollapsedHeight: 64
+                readonly property int notifEmptyHeight: 56
+                property int notifExpandedHeight: {
+                    if (globalNotifications.count === 0) return notifEmptyHeight
+                    let visibleCount = Math.min(globalNotifications.count, 4)
+                    return (visibleCount * 58) + 38
+                }
+
+                property real targetNotifHeight: {
+                    if (!shell.isNotifOpen) return 0
+                    if (shell.isNotifExpanded) return notifExpandedHeight
+                    if (globalNotifications.count === 0) return notifEmptyHeight
+                    return notifCollapsedHeight
+                }
+
+                property real targetNotifWidth: {
+                    if (!shell.isNotifOpen && animNotifHeight === 0) return 0
+                    return notifWidth
+                }
+
+                property real animNotifWidth: targetNotifWidth
+                property real animNotifHeight: targetNotifHeight
+
+                Behavior on animNotifWidth {
+                    NumberAnimation {
+                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                Behavior on animNotifHeight {
+                    NumberAnimation {
+                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                property real notifRight: root.width - root.borderThickness
+                property real notifLeft: notifRight - animNotifWidth
+                property real notifTop: root.height - root.borderThickness - animNotifHeight
 
                 onAnimNotchWidthChanged: {
                     shell.notchActualWidth = animNotchWidth
@@ -556,19 +618,91 @@ ShellRoot {
                                 control2Y: root.borderThickness + (root.innerRadius * 0.5)
                             }
 
-                            // Right vertical inner border
+                            // Right vertical inner border down towards notification panel
                             PathLine {
                                 x: root.width - root.borderThickness
-                                y: root.height - root.borderThickness - root.innerRadius
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop - root.concaveWidth)
+                                   : (root.height - root.borderThickness - root.innerRadius)
                             }
 
-                            // Bottom-right inner rounded corner
+                            // Concave flare flaring left from right border into notification top ceiling
                             PathCubic {
-                                x: root.width - root.borderThickness - root.innerRadius
-                                y: root.height - root.borderThickness
+                                x: root.animNotifHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight)
+                                   : (root.width - root.borderThickness)
+                                y: root.animNotifHeight > 0
+                                   ? root.notifTop
+                                   : (root.height - root.borderThickness - root.innerRadius)
                                 control1X: root.width - root.borderThickness
-                                control1Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                                control2X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop - (root.concaveWidth * 0.5))
+                                           : (root.height - root.borderThickness - root.innerRadius)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control2Y: root.animNotifHeight > 0
+                                           ? root.notifTop
+                                           : (root.height - root.borderThickness - root.innerRadius)
+                            }
+
+                            // Top horizontal ceiling of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + root.topRadius)
+                                   : (root.width - root.borderThickness)
+                                y: root.animNotifHeight > 0
+                                   ? root.notifTop
+                                   : (root.height - root.borderThickness - root.innerRadius)
+                            }
+
+                            // Top-left convex corner (or screen's inner corner when closed)
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? root.notifLeft
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + root.topRadius)
+                                   : (root.height - root.borderThickness)
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + (root.topRadius * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control1Y: root.animNotifHeight > 0
+                                           ? root.notifTop
+                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
+                                control2X: root.animNotifHeight > 0
+                                           ? root.notifLeft
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + (root.topRadius * 0.5))
+                                           : (root.height - root.borderThickness)
+                            }
+
+                            // Left vertical edge of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? root.notifLeft
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.animNotifHeight > 0
+                                   ? (root.height - root.borderThickness - root.concaveHeight)
+                                   : (root.height - root.borderThickness)
+                            }
+
+                            // Bottom-left concave transition flaring into bottom bezel
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.height - root.borderThickness
+                                control1X: root.animNotifHeight > 0
+                                           ? root.notifLeft
+                                           : (root.width - root.borderThickness - root.innerRadius)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.height - root.borderThickness)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - root.innerRadius)
                                 control2Y: root.height - root.borderThickness
                             }
 
@@ -821,19 +955,91 @@ ShellRoot {
                                 control2Y: root.borderThickness + (root.innerRadius * 0.5)
                             }
 
-                            // Right inner vertical edge
+                            // Right vertical inner border down towards notification panel
                             PathLine {
                                 x: root.width - root.borderThickness - 0.5
-                                y: root.height - root.borderThickness - root.innerRadius - 0.5
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop - root.concaveWidth)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
                             }
 
-                            // Bottom-right inner rounded corner
+                            // Concave flare flaring left from right border into notification top ceiling
                             PathCubic {
-                                x: root.width - root.borderThickness - root.innerRadius - 0.5
-                                y: root.height - root.borderThickness - 0.5
+                                x: root.animNotifHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight - 0.5)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + 0.5)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
                                 control1X: root.width - root.borderThickness - 0.5
-                                control1Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                                control2X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop - (root.concaveWidth * 0.5))
+                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5) - 0.5)
+                                           : (root.width - root.borderThickness - 0.5)
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + 0.5)
+                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                            }
+
+                            // Top horizontal ceiling of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + root.topRadius)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + 0.5)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                            }
+
+                            // Top-left convex corner (or screen's inner corner when closed)
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + 0.5)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + root.topRadius)
+                                   : (root.height - root.borderThickness - 0.5)
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + (root.topRadius * 0.5))
+                                           : (root.width - root.borderThickness - 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + 0.5)
+                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + 0.5)
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + (root.topRadius * 0.5))
+                                           : (root.height - root.borderThickness - 0.5)
+                            }
+
+                            // Left vertical edge of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + 0.5)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.height - root.borderThickness - root.concaveHeight)
+                                   : (root.height - root.borderThickness - 0.5)
+                            }
+
+                            // Bottom-left concave transition flaring into bottom bezel
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.height - root.borderThickness - 0.5
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + 0.5)
+                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.height - root.borderThickness - 0.5)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
                                 control2Y: root.height - root.borderThickness - 0.5
                             }
 
@@ -1076,19 +1282,6 @@ ShellRoot {
                                 }
                             }
 
-                            // View 6: Notifications View
-                            NotificationBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "notifications" ? 1.0 : 0.0
-                                notifications: globalNotifications
-                                goBack: () => shell.closeActiveMode()
-                                resetTimer: () => shell.resetNotificationTimer()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
 
                             // View 7: Bulldoze Wallpaper Handler View (Full Notch Grid & Inspector)
                             WallpaperBarView {
@@ -1201,6 +1394,63 @@ ShellRoot {
                                 shell.isAudioBarOpen = false
                                 shell.audioBarTimer.stop()
                                 shell.openSettingsTab("sound")
+                            }
+                        }
+                    }
+
+                    // Interactive Bottom-Right Notification Container
+                    Item {
+                        id: bottomNotifContainer
+                        x: root.notifLeft
+                        y: root.notifTop
+                        width: root.animNotifWidth + root.borderThickness
+                        height: root.animNotifHeight + root.borderThickness
+                        clip: true
+                        visible: shell.isNotifOpen || root.animNotifHeight > 0
+
+                        HoverHandler {
+                            id: bottomNotifHover
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.notifDismissTimer.stop()
+                                    if (globalNotifications.count > 1) {
+                                        shell.notifExpandTimer.restart()
+                                    }
+                                } else {
+                                    shell.closeNotification()
+                                }
+                            }
+                        }
+
+                        NotificationBarView {
+                            anchors {
+                                fill: parent
+                                topMargin: 6
+                                bottomMargin: root.borderThickness + 4
+                                leftMargin: 12
+                                rightMargin: root.borderThickness + 6
+                            }
+                            notifications: globalNotifications
+                            isExpanded: shell.isNotifExpanded
+                            dismissAll: () => globalNotifications.dismissAll()
+                            dismissOne: notif => globalNotifications.dismiss(notif)
+                        }
+                    }
+
+                    // Bottom-Right Corner Trigger Hot Zone
+                    Item {
+                        id: notifCornerTrigger
+                        x: root.width - root.borderThickness - 48
+                        y: root.height - root.borderThickness - 48
+                        width: root.borderThickness + 48
+                        height: root.borderThickness + 48
+                        visible: !shell.isNotifOpen
+
+                        HoverHandler {
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.showNotificationCorner()
+                                }
                             }
                         }
                     }

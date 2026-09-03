@@ -4,7 +4,17 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
-## [3.5.0] - 2026-09-02
+## [3.5.0] - 2026-09
+
+### 🔔 Central de Notificações no Canto Inferior Direito & Fusão Vetorial
+- **Integração Diagonal no Canto da Moldura (`shell.qml`, `NotificationBarView.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: As notificações foram completamente removidas do Notch superior e integradas como uma extrusão orgânica ancorada diretamente no canto inferior direito da tela.
+  - **Transição Curva Diagonal Contínua**: A borda lateral direita transiciona suavemente em curva côncava para o topo da notificação, e o lado esquerdo desce em curva côncava para a borda inferior, preenchendo a quina sem frestas ou linhas indesejadas.
+  - **Exibição Popup OSD (2,5s)**: Ao receber um alerta, exibe apenas a notificação mais recente em card compacto com fechamento automático em 2,5 segundos.
+  - **Gatilho de Borda no Canto (Hot Zone)**: Passar o cursor sobre o canto inferior direito revela a notificação mais recente instantaneamente (ou *"Nenhuma notificação"* caso a fila esteja vazia). Ao sair da área, o painel fecha imediatamente.
+  - **Expansão com Dwell de 2 Segundos**: Manter o cursor sobre o painel por 2 segundos expande verticalmente a visualização para cima, exibindo a pilha de notificações.
+  - **Ordenação Bottom-to-Top & Scroll**: A notificação mais recente fica posicionada na base, com alertas anteriores empilhando-se para cima. Exibição de até 4 notificações simultâneas com rolagem via roda do mouse (*mouse wheel*) para notificações excedentes.
+  - **Ações Individuais e Limpeza Geral**: Botão de fechar individual (``) em cada card e botão de lixeira (``) na base do painel expandido para descarte de todas as notificações.
 
 ### 🎯 Otimização do Notch Superior & Atalhos do Sistema
 - **Notch em Linha Única com Altura Fixa (`DefaultBarView.qml`, `shell.qml`)**:
