@@ -14,18 +14,16 @@ Item {
 
     readonly property var game: gaming
 
+    readonly property int idealWidth: Math.round(controlsRow.implicitWidth + ((theme.contentInset + theme.notchConcaveWidth) * 2))
+
     Item {
-        anchors {
-            left: parent.left
-            leftMargin: theme.contentInset + theme.notchConcaveWidth
-            right: parent.right
-            rightMargin: theme.contentInset + theme.notchConcaveWidth
-            verticalCenter: parent.verticalCenter
-        }
+        anchors.centerIn: parent
+        width: controlsRow.implicitWidth
         height: parent.height
 
         Row {
-            anchors.fill: parent
+            id: controlsRow
+            anchors.verticalCenter: parent.verticalCenter
             spacing: theme.spacingSm
 
             // 1. Back Button (Icon only)

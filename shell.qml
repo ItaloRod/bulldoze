@@ -216,20 +216,11 @@ ShellRoot {
         target: "shell"
         function toggleLauncher() { shell.toggleLauncher() }
         function toggleSearch() { shell.toggleLauncher() }
-        function toggleWifi() { shell.toggleMode("wifi") }
-        function toggleBluetooth() { shell.toggleMode("bluetooth") }
         function toggleAudio() { shell.toggleAudioBar() }
         function toggleGaming() { shell.toggleMode("gaming") }
         function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
         function toggleSettings() { shell.toggleMode("settings") }
         function openSettings(tab: string) { shell.openSettingsTab(tab) }
-        function openWifiSettings() { shell.openSettingsTab("wifi") }
-        function openBluetoothSettings() { shell.openSettingsTab("bluetooth") }
-        function openSoundSettings() { shell.openSettingsTab("sound") }
-        function openAudioSettings() { shell.openSettingsTab("sound") }
-        function openWallpaperSettings() { shell.openSettingsTab("wallpaper") }
-        function openGamingSettings() { shell.openSettingsTab("gaming") }
-        function toggleWallpaperManager() { shell.toggleMode("settings") }
         function toggleWallpaper() { shell.toggleMode("wallpaper") }
         function toggleWallpaperModal() { shell.toggleWallpaperModal() }
         function toggleProfile() { shell.toggleMode("power") }
@@ -353,9 +344,7 @@ ShellRoot {
                 property int collapsedWidth: (defaultBarView && defaultBarView.contentCollapsedWidth > 0) ? defaultBarView.contentCollapsedWidth : 170
 
                 property int targetWidth: {
-                    if (shell.activeMode === "wifi") return 460
-                    if (shell.activeMode === "bluetooth") return 470
-                    if (shell.activeMode === "gaming") return 620
+                    if (shell.activeMode === "gaming") return (gamingView && gamingView.idealWidth > 0) ? gamingView.idealWidth : 560
                     if (shell.activeMode === "gaming-settings") return 720
                     if (shell.activeMode === "wallpaper") return 920
                     if (shell.activeMode === "settings") return 920
@@ -370,7 +359,6 @@ ShellRoot {
                     if (shell.activeMode === "gaming-settings") return 580
                     if (shell.activeMode === "notifications") return theme.notchNotificationHeight
                     if (shell.activeMode !== "none") return theme.notchExpandedHeight
-                    if (root.isHovered) return theme.notchHoverHeight
                     return theme.notchHeight
                 }
 
@@ -1043,49 +1031,17 @@ ShellRoot {
                                 visible: opacity > 0.001
                                 opacity: shell.activeMode === "none" ? 1.0 : 0.0
 
-                                network: globalNetwork
-                                bluetooth: globalBluetooth
                                 gaming: globalGaming
                                 notifications: globalNotifications
                                 userProfile: globalUserProfile
 
                                 activateLauncher: () => shell.toggleLauncher()
                                 activateWorkspace: workspaceId => shell.activateWorkspace(workspaceId)
-                                toggleWifi: () => shell.toggleMode("wifi")
-                                toggleBluetooth: () => shell.toggleMode("bluetooth")
                                 toggleGaming: () => shell.toggleMode("gaming")
                                 toggleNotifications: () => shell.toggleMode("notifications")
                                 toggleSettings: () => shell.toggleMode("settings")
                                 toggleProfile: () => shell.toggleMode("power")
                                 togglePowerMenu: () => shell.toggleMode("power")
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 1: Wi-Fi View
-                            WifiBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "wifi" ? 1.0 : 0.0
-                                network: globalNetwork
-                                openSettings: () => shell.openSettingsTab("wifi")
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 2: Bluetooth View
-                            BluetoothBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "bluetooth" ? 1.0 : 0.0
-                                bluetooth: globalBluetooth
-                                openSettings: () => shell.openSettingsTab("bluetooth")
-                                goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }

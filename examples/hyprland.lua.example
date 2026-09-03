@@ -159,9 +159,8 @@ hl.bind("ALT + D", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggle
 -- Central de Jogos & Settings
 hl.bind("ALT + G", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleGamingSettings"))
 
--- Gerenciador de Wallpapers
-hl.bind("SUPER + W", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleWallpaperManager"))
-hl.bind("ALT + W", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleWallpaperManager"))
+-- Ajustes do Sistema (Ctrl + Super + C)
+hl.bind("SUPER + CONTROL + C", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleSettings"))
 
 -- Painéis da Barra Superior (Modos Contextuais)
 hl.bind("ALT + C", hl.dsp.exec_cmd("quickshell ipc -c bulldoze call shell toggleControlCenter"))

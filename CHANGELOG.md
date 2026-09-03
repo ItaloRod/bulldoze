@@ -6,6 +6,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.0] - 2026-09-02
 
+### 🎯 Otimização do Notch Superior & Atalhos do Sistema
+- **Notch em Linha Única com Altura Fixa (`DefaultBarView.qml`, `shell.qml`)**:
+  - Reestruturação do layout da barra padrão do notch para uma única linha centralizada, com altura fixa de 32px tanto em repouso quanto em hover com o cursor.
+  - Eliminação da segunda linha de controles rápidos (`QuickControls.qml`) e de expansões desnecessárias de hover.
+- **Reposicionamento do Modo Jogo (`Status.qml`, `GamingBarView.qml`)**:
+  - Botão de Gaming Mode (``) integrado diretamente ao grupo da direita (`Status.qml`), posicionado harmonicamente entre a System Tray e as Configurações (``).
+  - Cálculo dinâmico de largura ideal (`idealWidth`) e centralização simétrica das pílulas no menu do Modo Jogo (`GamingBarView`), garantindo margens e paddings perfeitamente uniformes à esquerda e à direita.
+- **Simplificação e Remoção de Modais Redundantes**:
+  - Remoção dos botões e visualizações simplificadas de Wi-Fi e Bluetooth do Notch (`WifiBarView`, `BluetoothBarView`), concentrando todo o gerenciamento de rede nos Ajustes do Sistema.
+  - Remoção do botão de sino de notificações do notch, mantendo a visualização e daemons preservados no código para a próxima iteração.
+  - Limpeza dos comandos IPC correspondentes aos itens contidos nos Ajustes (`toggleWifi`, `toggleBluetooth`, `openWifiSettings`, etc.).
+- **Atualização de Atalhos do Hyprland (`~/.config/hypr/hyprland.lua`)**:
+  - Adicionado o atalho `Ctrl + Super + C` (`SUPER + CONTROL + C`) para abertura direta dos Ajustes do Sistema.
+  - Removido o atalho `SUPER + W` (antigo atalho do gerenciador de wallpapers).
+
 ### 🔊 Reformulação da Interface de Áudio & Dispositivos
 - **Nova Barra Lateral de Volume Simplificada Fundida à Borda (`AudioBarView.qml`, `shell.qml`)**:
   - **Fusão Vetorial Direta (`unifiedShape`)**: A barra de volume foi integrada diretamente à malha vetorial contínua da moldura perimetral esquerda de 8px, expandindo-se fluidamente para dentro da tela com curvas cúbicas suaves e borda de 1px sem costuras ou sobreposições flutuantes.

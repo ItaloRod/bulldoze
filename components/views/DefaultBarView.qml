@@ -7,16 +7,12 @@ Item {
     property bool isExpanded: false
     property var activateLauncher
     property var activateWorkspace
-    property var toggleWifi
-    property var toggleBluetooth
     property var toggleGaming
     property var toggleNotifications
     property var toggleSettings
     property var toggleProfile
     property var togglePowerMenu
 
-    property var network
-    property var bluetooth
     property var gaming
     property var notifications
     property var userProfile
@@ -29,30 +25,22 @@ Item {
     readonly property real clockContentWidth: clockItem.implicitWidth
     readonly property real rightContentWidth: rightGroup.implicitWidth
     readonly property int marginSpace: (theme.contentInset + theme.notchConcaveWidth) * 2
-    readonly property int dynamicGap: 24
+    readonly property int dynamicGap: 20
 
-    readonly property int contentExpandedWidth: Math.max(620, Math.round(Math.max(leftContentWidth, rightContentWidth) * 2 + clockContentWidth + (dynamicGap * 2) + marginSpace))
+    readonly property int contentExpandedWidth: Math.max(480, Math.round(Math.max(leftContentWidth, rightContentWidth) * 2 + clockContentWidth + (dynamicGap * 2) + marginSpace))
     readonly property int contentCollapsedWidth: Math.round(clockContentWidth + marginSpace + 16)
 
     // =========================================================================
-    // ROW 1: MAIN ROW (Spotlight + Workspaces | Clock/Date | Notif + Profile)
+    // SINGLE ROW: MAIN ROW (Spotlight + Workspaces | Clock/Date | Status)
     // =========================================================================
     Item {
         id: mainRow
         anchors {
             left: parent.left
             right: parent.right
-            top: parent.top
-            topMargin: root.isExpanded ? 7 : Math.round((parent.height - height) / 2)
+            verticalCenter: parent.verticalCenter
         }
         height: 26
-
-        Behavior on anchors.topMargin {
-            NumberAnimation {
-                duration: root.isExpanded ? theme.animDurationSticky : theme.animDurationExit
-                easing.type: Easing.OutCubic
-            }
-        }
 
         // Left: Spotlight Logo + Workspace Pills
         Row {
@@ -101,7 +89,7 @@ Item {
             isExpanded: root.isExpanded
         }
 
-        // Right: System Tray + Notifications + Profile Avatar
+        // Right: System Tray + Gaming Mode + Settings + Profile Avatar
         Status {
             id: rightGroup
             anchors {
@@ -129,53 +117,16 @@ Item {
                 }
             }
 
+            gaming: root.gaming
             notifications: root.notifications
             userProfile: root.userProfile
 
+            toggleGaming: root.toggleGaming
             toggleNotifications: root.toggleNotifications
             toggleSettings: root.toggleSettings
             toggleProfile: root.toggleProfile
             togglePowerMenu: root.togglePowerMenu
         }
-    }
-
-    // =========================================================================
-    // ROW 2: CENTERED QUICK CONTROLS (Wi-Fi, Bluetooth, Audio, Gaming)
-    // =========================================================================
-    QuickControls {
-        id: quickControlsRow
-        anchors {
-            horizontalCenter: parent.horizontalCenter
-            top: mainRow.bottom
-            topMargin: 4
-        }
-        opacity: root.isExpanded ? 1.0 : 0.0
-        scale: root.isExpanded ? 1.0 : 0.90
-        transformOrigin: Item.Center
-        visible: opacity > 0.001
-
-        Behavior on opacity {
-            NumberAnimation {
-                duration: root.isExpanded ? theme.animDurationSticky : theme.animDurationExit
-                easing.type: Easing.OutCubic
-            }
-        }
-
-        Behavior on scale {
-            NumberAnimation {
-                duration: root.isExpanded ? theme.animDurationSticky : theme.animDurationExit
-                easing.type: root.isExpanded ? Easing.OutBack : Easing.InCubic
-                easing.overshoot: theme.stickyOvershoot
-            }
-        }
-
-        network: root.network
-        bluetooth: root.bluetooth
-        gaming: root.gaming
-
-        toggleWifi: root.toggleWifi
-        toggleBluetooth: root.toggleBluetooth
-        toggleGaming: root.toggleGaming
     }
 }
 
