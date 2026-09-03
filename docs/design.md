@@ -12,19 +12,28 @@
 This document defines the authoritative design system specification for the **entire Bulldoze 3.0 desktop shell environment**.
 
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
-1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$) with dynamic parametric morphing:
-   - **Default Resting State**: Minimalist 32px height capsule with centered Clock/Date locked to physical horizontal center.
-   - **2-Level Hover Expansion (64px)**: Top row perfectly balanced (Left: Bulldoze Spotlight Logo + Workspaces; Center: Clock/Date; Right: System Tray + Notifications + User Avatar), and Bottom row centered with Quick Controls (Wi-Fi, Bluetooth, Audio, Gaming).
-   - **Segmented Control Modes**: Direct morphing into dedicated views for Wi-Fi, Bluetooth, Unified Audio, Gaming Hub, Integrated Notification View, and Unified Profile & Power Menu.
-   - **Integrated Notification Stack (FILO)**: Incoming notifications trigger the top notch bar (520x82px) with a 5-second inactivity timer.
-2. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$):
+   - **Single-Line Streamlined Layout**: Fixed 32px height capsule both in resting state and on hover, maintaining a sleek, non-intrusive single-row profile.
+   - **Content Layout**: Left group with Bulldoze Spotlight Logo + Workspaces pills; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
+   - **Modal Access**: Quick Settings (Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) accessed directly via Settings (``) or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
+2. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
+   - Fused directly into the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave wings.
+   - Minimalist vertical volume slider, click-to-mute icon, and gear button navigating directly to the Sound tab in Settings.
+   - 2-second auto-dismiss OSD triggered by keyboard volume hotkeys.
+3. **Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)**:
+   - Integrated diagonally into the bottom-right screen corner of the 8px perimeter frame in `unifiedShape` with smooth concave arcs into the right and bottom bezels.
+   - **Popup OSD (2.5s)**: Incoming notifications display only the single latest card for 2.5 seconds.
+   - **Corner Hot Zone**: Hovering on the bottom-right corner border hot zone reveals the latest notification immediately (or empty state). Closes immediately on mouse exit.
+   - **2s Dwell Expansion**: Hovering for 2 seconds expands upwards into a stacked list of up to 4 cards (BottomToTop ordering: newest at bottom, older stacked upwards) with mouse wheel scroll for >4 items.
+   - **Actions**: Individual dismiss button (``) and clear-all icon button (``) at the bottom of the expanded stack.
+4. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
    - An inverted search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$) emerging from the bottom bezel ($y = \text{height}$).
    - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
    - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
-3. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock.
-4. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$) with 8px perimeter frame.
-5. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$).
-6. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$).
+5. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock.
+6. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$) with 8px perimeter frame.
+7. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$).
+8. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$).
 
 ---
 
@@ -161,11 +170,12 @@ All components in the Bulldoze shell must consume tokens exclusively from `compo
 - `notchConcaveWidth: 16px` --- Horizontal extent of the concave cubic bezier transition curve.
 - `notchConcaveHeight: 10px` --- Vertical drop of the concave cubic bezier transition curve.
 - `notchBottomRadius: 14px` --- Convex rounded corners exposed to desktop.
-- `notchHeight: 32px` --- Idle closed notch bar height (resting state).
-- `notchHoverHeight: 48px` --- Expanded hover bar height (reveals quick action items).
-- `notchExpandedHeight: 60px` --- Height during active submenu modes (Wi-Fi, Bluetooth, Audio, Gaming, Power, Notifs).
+- `notchHeight: 32px` --- Fixed single-line notch bar height (both resting and hover states).
+- `notchExpandedHeight: 60px` --- Height during active submenu modes (Settings, Gaming Settings, Power).
 - `notchCollapsedWidth: 170px-200px` --- Idle capsule width displaying clock and date (dynamically computed via clock implicitWidth + insets).
 - `notchExpandedWidth: 680px` --- Expanded bar width and LockScreen/Greeter width.
+- `audioBarWidth: 48px`, `audioBarHeight: 230px` --- Left-docked vertical volume bar.
+- `notifWidth: 380px`, `notifCollapsedHeight: 64px`, `notifExpandedHeight: 96px-270px` --- Bottom-right corner border-fused notification panel (1 to 4 items).
 
 ## 3.4 Spacing, Hyprland & Padding Scale
 
@@ -206,65 +216,59 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 
 ## 4.1 Top Shell / Dynamic Central Glass Notch (`shell.qml`, `GlassPanel.qml`, `DefaultBarView.qml`)
 - **Bezel Docking**: Physically docked to the top monitor bezel ($y = 0$).
-- **Dynamic Geometric Scaling & Bounds**:
-  - **Collapsed State (Idle)**: Compact pill ($160\text{px} \times 36\text{px}$) displaying the central Clock and localized Date (`pt-BR`).
-  - **Expanded State (Hover)**: Expands smoothly to $680\text{px} \times 42\text{px}$ with `notchExpandDuration` (340ms) and `Easing.OutBack` whenever the user hovers over the bar or opens a menu.
-  - **Dynamic Content Calculation**: Dynamic bounds (`contentExpandedWidth = leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`) guarantee zero overlap between the clock, workspace pills, and status buttons. The clock is dynamically centered in the free middle space.
-  - **Active Submode State**: Expands to $48\text{px}$ height (`notchExpandedHeight`) with dedicated subview widths.
-- **Geometry (`GlassPanel.qml`)**: Top-left and top-right smooth concave arcs (`notchConcaveWidth: 16px`, `notchConcaveHeight: 10px`, `notchTopRadius: 12px`) flaring into the top bezel; bottom-left and bottom-right convex corners (`notchBottomRadius: 14px`).
-- **Border**: 1px subtle glass stroke (`#24FFFFFF`) drawn exclusively along the bottom and lateral edges exposed to the desktop (never across the top bezel $y=0$ and never with internal cutting lines).
+- **Single-Row Streamlined Profile**:
+  - **Fixed 32px Height**: Replaces older 2-row designs with a streamlined, ultra-clean single row of 32px fixed height both at resting idle and on hover.
+  - **Collapsed State (Idle)**: Compact pill ($160\text{px} \times 32\text{px}$) displaying the central Clock and localized Date (`pt-BR`).
+  - **Expanded State (Hover)**: Expands horizontally to `contentExpandedWidth` (620px-680px) with `notchExpandDuration` (340ms) and `Easing.OutBack` when hovered.
+  - **Dynamic Content Calculation**: Dynamic bounds (`contentExpandedWidth = leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`) guarantee zero overlap between the clock, workspace pills, and status buttons.
 - **Content Encapsulation**:
-  - **Left (revealed on expand)**: Bulldoze Logo (`""`, 16px, `textStrong`) + Dynamic Workspace Pills (active: $22 \times 6\text{px}$, inactive: $6 \times 6\text{px}$ dot, no numbers).
+  - **Left (revealed on expand)**: Bulldoze Logo (`""`, 16px, `textStrong`, triggers Launcher) + Dynamic Workspace Pills (active: $22 \times 6\text{px}$, inactive: $6 \times 6\text{px}$ dot, no numbers).
   - **Center (always visible)**: Single-line Clock (Time 13px DemiBold + Date 11px Medium localized in `pt-BR`, format `"ddd, dd MMM"` via `Qt.locale("pt_BR")`).
-  - **Right (revealed on expand)**: Status icon buttons (Wi-Fi `""`, Bluetooth `""`, Audio `""`, Gaming Hub `""`, Notifications `""`, Power `""`, System Tray).
+  - **Right (revealed on expand)**: Status group (`Status.qml`) with System Tray, Gaming Mode toggle (`""`), and Settings button (`""`).
+  - **Redundant Items Removed**: Wi-Fi, Bluetooth, Audio, and Notifications bell removed from the notch bar to preserve clean elegance and single-line ergonomics.
 
-## 4.2 Application Launcher (`Launcher.qml`)
-- **Type**: Centered modal overlay (`exclusiveZone: 0`, `focusable: true`).
-- **Layer Namespace**: `"bulldoze-launcher"`.
-- **Dimensions**: $580 \times 480\text{ px}$, centered on screen.
-- **Surface**: `radiusModal` (22px), `glassFillDark` (`#40000000`), 1px `glassBorder` (`#24FFFFFF`).
-- **Search Header**:
-  - Search icon `""` in `textSubtle` + `TextInput` (20px, `textStrong`, placeholder in `textSubtle`).
-  - 1px horizontal separator line (`#1AFFFFFF`).
-- **App List (`DesktopEntries.applications`)**:
-  - Rows: 48px height, `radiusItem` (12px), smooth hover transition (`hoverFill`).
-  - App Icon (`Quickshell.Widgets.IconImage`, 24px com fallback para o glifo do Arch `""`) + Name (`textMedium`, 15px) + Subtitle/GenericName (`textMuted`, 11px).
-  - Keyboard navigation with Arrow keys (Up/Down) and Enter to launch, Escape to dismiss, click-outside to close.
+## 4.2 Application Launcher (`BottomLauncher.qml`, `shell.qml`)
+- **Type**: Bottom-docked search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$).
+- **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
+- **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
 
-## 4.3 Control Center / Quick Settings Submodes (`components/views/`)
-- **Submode Views in Top Notch Bar**:
-  - **Wi-Fi View (`WifiBarView.qml`, 460x48px)**: SSID display, scan/refresh, settings launcher, and power toggle.
-  - **Bluetooth View (`BluetoothBarView.qml`, 470x48px)**: Connected device name, pair button, manager launcher, and power toggle.
-  - **Audio View (`AudioBarView.qml`, 380x48px)**: Mute toggle, smooth volume slider, percentage indicator, and auto-dismiss OSD integration.
-  - **Gaming Hub View (`GamingBarView.qml`, 480x48px)**: Quick toggles for **GameMode**, **MangoHud**, and **Gamescope**, with gear button `""` opening `GamingSettingsModal.qml`.
-  - **Power & Profile View (`PowerBarView.qml`, 490x48px)**: Masked avatar ($26\text{px}$), username with Privacy Blur toggle (`""`/`""`), and 4 quick actions (Lock, Logout, Reboot, Poweroff).
+## 4.3 Control Center / Unified Settings & Gaming (`SettingsBarView.qml`, `GamingBarView.qml`)
+- **Unified Settings View (`SettingsBarView.qml`, 920x640px)**:
+  - Accessible via Settings button (``) in notch or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
+  - **Sidebar Categories**: Wi-Fi, Bluetooth, Som (Sound), Wallpapers, Gaming.
+  - **Sound Tab (`Som`)**: Full PipeWire audio manager with horizontal volume slider, real-time percentage, mute toggle, and interactive list of all audio sinks (Speakers, HDMI, Bluetooth headphones) with instant switching via `wpctl set-default <id>`.
+  - **Wi-Fi & Bluetooth Tabs**: Complete network scanner, connection manager, and power controls.
+- **Gaming Hub View (`GamingBarView.qml`, compact 68px height)**:
+  - Dynamically centered with symmetric padding via `idealWidth`. Quick toggles for **GameMode**, **MangoHud**, and **Gamescope**, with gear button opening `GamingSettingsModal.qml`.
 
-## 4.4 Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`, `modules/WallpaperEngine.qml`)
-- **Type**: Centered modal overlay (`exclusiveZone: 0`, `focusable: true`, `WlrKeyboardFocus.OnDemand`).
-- **Shortcut Trigger**: Global keybinding `ALT + W` (`hyprland.lua`).
-- **Layer Namespace**: `"bulldoze-wallpaper-manager"`.
-- **Dimensions**: $920 \times 640\text{ px}$, centered on screen.
-- **Surface**: `radiusModal` (22px), `glassFillDark` (`#40000000`), 1px `glassBorder` (`#24FFFFFF`).
-- **Left Gallery Column (54% Width)**:
-  - Real-time Steam Workshop reader scanning `~/.local/share/Steam/steamapps/workshop/content/431960/` with multi-format preview caching in `~/.cache/bulldoze/wallpapers/`.
-  - Search Header with instant filtering by title, ID, or tags.
-  - Interactive cards with rounded high-res thumbnail masks (`radiusSmall`), active wallpaper indicator badge (` ATIVO`), and type badge (`CENA` / `VÍDEO`).
-- **Right Configuration Panel (46% Width)**:
-  - **Aspect Ratio & Enquadramento**: Segmented Pills for `Preencher (Fill - 16:9)`, `Adaptar (Fit - Inteiro sem cortes)` e `Esticar (Stretch)`.
-  - **Sponsor & Layer Suppression**: Automatic deep scanning of `scene.pkg` to detect QR Code / donation objects (`sponsor_tip_x`, `微信赞助码`, etc.) and hardware-level skip pass via `--render-debug skip-object=<id>`.
-  - **Dynamic Scene Shader Properties**: Real-time interactive sliders and toggles for scene uniforms.
-  - **Performance**: 60 / 120 / 240 FPS selectors, pause on visible windows, and mouse tracking toggle (strict `--silent` execution with no audio output).
-- **Direct Wallpaper Sync**:
-  - Python engine in `scripts/bulldoze-wallpaper.py` syncs wallpaper image directly to `~/.cache/bulldoze/Wallpaper_greeter.png` and `/var/lib/greetd/Wallpaper_greeter.png` cleanly without capturing mouse hover states or overlay notches.
+## 4.4 Left-Docked Volume Bar (`AudioBarView.qml`, `shell.qml`)
+- **Fused Left Bezel Notch**: Physically extruded from the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave arcs.
+- **Vertical Minimalist Controls**:
+  - Top: Interactive volume icon with click-to-mute.
+  - Middle: Sleek vertical slider for precise volume control.
+  - Bottom: Gear button (``) opening directly into the Sound tab of the Settings modal.
+- **Auto-Dismiss OSD**: Automatically displays for 2 seconds on volume key presses (`raiseVolume`, `lowerVolume`, `toggleMute`), with timer paused on mouse hover.
 
-## 4.5 Integrated Notification System (`NotificationBarView.qml`, `NotificationCenter.qml`, `modules/Notifications.qml`)
-- **Top Notch Notification Bar View (`NotificationBarView.qml`)**:
-  - Dimensions: $520 \times 82\text{ px}$ (`notchNotificationHeight: 82`) integrated directly into the top notch bar.
-  - **Stack (FILO - First In, Last Out)**: Notifications form a stack of up to 7 items max, displaying the newest notification on top with an indicator badge (e.g., `(3)`).
-  - **Inactivity Timer (5s)**: Inactivity auto-dismiss timer of 5 seconds automatically collapses the bar to default. The timer resets dynamically on mouse hover or when popping a notification via ``.
-  - Controls: App icon with Arch fallback `""`, app name + stack count badge, notification title & message body, and direct dismiss button `` that pops the current notification and immediately exposes the previous one in the stack until empty.
-- **Auxiliary Toast Center (`NotificationCenter.qml`)**:
-  - Background module queue tracking all system notifications.
+## 4.5 Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)
+- **Diagonal Corner Fusion (`unifiedShape`)**:
+  - Extruded directly into the bottom-right corner of the screen from the 8px perimeter frame, eliminating detached floating cards and awkward gaps.
+  - The right screen border transitions smoothly via a concave arc into the top ceiling of the notification panel.
+  - The left edge transitions smoothly via a concave arc into the bottom screen border.
+  - Single continuous 1px glass border (`#24FFFFFF`) with zero internal cutting lines.
+- **Popup OSD (2.5s Auto-Dismiss)**:
+  - Incoming alerts display only the single latest notification card for 2.5 seconds before smoothly retracting into the corner.
+- **Corner Hot Zone Trigger**:
+  - Hovering over the bottom-right corner hot zone instantly reveals the latest notification (or *"Nenhuma notificação"* empty state).
+  - Closes immediately when the mouse leaves the area.
+- **2-Second Dwell Expansion**:
+  - Holding the mouse over the notification card for 2 seconds expands the view vertically upwards into a stacked list of up to 4 notifications ($380 \times 96\text{px}$ to $380 \times 270\text{px}$).
+- **Stack Ordering & Mouse Scroll**:
+  - **BottomToTop Layout**: The newest notification is positioned at the bottom; older alerts stack upwards.
+  - For stacks greater than 4 items, native mouse wheel scrolling navigates older alerts smoothly.
+- **Actions & Discard**:
+  - Individual dismiss button (``) on each card.
+  - Clear-all icon button (``) located at the bottom of the stack, visible strictly when expanded.
+  - Clean card typography: app icon, app name with timestamp, bold summary, and body text.
 
 ## 4.6 On-Screen Display / OSD (`Osd.qml`, `BottomGlassPanel.qml`)
 - **Type**: Bottom-docked glass notch (physically attached to bottom screen bezel $y = \text{screen.height}$).
