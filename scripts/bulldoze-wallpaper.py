@@ -305,7 +305,8 @@ def apply_wallpaper(wp_id=None, overrides=None):
         "--scaling", scaling,
         "--clamp", clamp,
         "--fps", str(fps),
-        "--silent"
+        "--silent",
+        "--no-audio-processing"
     ]
 
     if not mouse:
@@ -328,9 +329,14 @@ def apply_wallpaper(wp_id=None, overrides=None):
 
     save_config(cfg)
 
+    wp_env = os.environ.copy()
+    wp_env["SDL_AUDIODRIVER"] = "dummy"
+    wp_env["ALSOFT_DRIVERS"] = "dummy"
+
     # Launch daemon in background detached
     subprocess.Popen(
         cmd,
+        env=wp_env,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         start_new_session=True
@@ -419,6 +425,7 @@ def generate_clean_snapshot(wp_id=None):
         "--fps", "60",
         "--disable-mouse",
         "--silent",
+        "--no-audio-processing",
         "--screenshot", temp_snap,
         "--screenshot-delay", "25"
     ]
@@ -435,7 +442,11 @@ def generate_clean_snapshot(wp_id=None):
     for eff_id in sorted(skip_effects):
         cmd.extend(["--render-debug", f"skip-effect={eff_id}"])
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    wp_env = os.environ.copy()
+    wp_env["SDL_AUDIODRIVER"] = "dummy"
+    wp_env["ALSOFT_DRIVERS"] = "dummy"
+
+    proc = subprocess.Popen(cmd, env=wp_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     
     # Wait for engine screenshot to be created
     start_time = time.time()

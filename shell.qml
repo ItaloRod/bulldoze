@@ -61,7 +61,7 @@ ShellRoot {
         property bool ready: false
 
         onNotificationReceived: notif => {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
+            if (ready && shell.activeMode === "none" && !shell.isLauncherOpen) {
                 shell.showNotificationOsd()
             }
         }
@@ -81,14 +81,14 @@ ShellRoot {
         property bool ready: false
 
         onVolumeChanged: {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
-                shell.showAudioOsd()
+            if (ready && !(shell.activeMode === "settings" && shell.activeSettingsTab === "sound") && !shell.isLauncherOpen) {
+                shell.showAudioBar()
             }
         }
 
         onMutedChanged: {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
-                shell.showAudioOsd()
+            if (ready && !(shell.activeMode === "settings" && shell.activeSettingsTab === "sound") && !shell.isLauncherOpen) {
+                shell.showAudioBar()
             }
         }
 
@@ -102,17 +102,14 @@ ShellRoot {
         }
     }
 
-    property bool audioTriggeredByOsd: false
+    property bool isAudioBarOpen: false
 
-    property var audioOsdTimer: Timer {
-        id: audioOsdTimer
-        interval: 3000
+    property var audioBarTimer: Timer {
+        id: audioBarTimer
+        interval: 2000
         repeat: false
         onTriggered: {
-            if (shell.audioTriggeredByOsd && shell.activeMode === "audio") {
-                shell.activeMode = "none"
-                shell.audioTriggeredByOsd = false
-            }
+            shell.isAudioBarOpen = false
         }
     }
 
@@ -133,20 +130,25 @@ ShellRoot {
         }
     }
 
-    function showAudioOsd() {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        notificationTimer.stop()
-        if (shell.activeMode !== "audio") {
-            shell.activeMode = "audio"
+    function showAudioBar() {
+        if (shell.isFullscreenActive) return
+        if (shell.activeMode === "settings" && shell.activeSettingsTab === "sound") return
+        shell.isAudioBarOpen = true
+        audioBarTimer.restart()
+    }
+
+    function toggleAudioBar() {
+        if (shell.isAudioBarOpen) {
+            shell.isAudioBarOpen = false
+            audioBarTimer.stop()
+        } else {
+            shell.isAudioBarOpen = true
+            audioBarTimer.restart()
         }
-        shell.audioTriggeredByOsd = true
-        audioOsdTimer.restart()
     }
 
     function showNotificationOsd() {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        audioOsdTimer.stop()
-        shell.audioTriggeredByOsd = false
         if (shell.activeMode !== "notifications") {
             shell.activeMode = "notifications"
         }
@@ -155,9 +157,7 @@ ShellRoot {
 
     function toggleMode(mode) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        audioOsdTimer.stop()
         notificationTimer.stop()
-        shell.audioTriggeredByOsd = false
         if (activeMode === mode) {
             activeMode = "none"
         } else {
@@ -169,9 +169,7 @@ ShellRoot {
     }
 
     function closeActiveMode() {
-        audioOsdTimer.stop()
         notificationTimer.stop()
-        shell.audioTriggeredByOsd = false
         activeMode = "none"
     }
 
@@ -190,6 +188,8 @@ ShellRoot {
 
     function openSettingsTab(tab) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
+        shell.isAudioBarOpen = false
+        shell.audioBarTimer.stop()
         shell.activeSettingsTab = tab || "wifi"
         shell.activeMode = "settings"
     }
@@ -218,13 +218,15 @@ ShellRoot {
         function toggleSearch() { shell.toggleLauncher() }
         function toggleWifi() { shell.toggleMode("wifi") }
         function toggleBluetooth() { shell.toggleMode("bluetooth") }
-        function toggleAudio() { shell.toggleMode("audio") }
+        function toggleAudio() { shell.toggleAudioBar() }
         function toggleGaming() { shell.toggleMode("gaming") }
         function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
         function toggleSettings() { shell.toggleMode("settings") }
         function openSettings(tab: string) { shell.openSettingsTab(tab) }
         function openWifiSettings() { shell.openSettingsTab("wifi") }
         function openBluetoothSettings() { shell.openSettingsTab("bluetooth") }
+        function openSoundSettings() { shell.openSettingsTab("sound") }
+        function openAudioSettings() { shell.openSettingsTab("sound") }
         function openWallpaperSettings() { shell.openSettingsTab("wallpaper") }
         function openGamingSettings() { shell.openSettingsTab("gaming") }
         function toggleWallpaperManager() { shell.toggleMode("settings") }
@@ -236,9 +238,9 @@ ShellRoot {
         function toggleControlCenter() { shell.toggleMode("gaming") }
         function closeActiveMode() { shell.closeActiveMode(); shell.isLauncherOpen = false }
         function lockScreen() { shell.lockScreen() }
-        function raiseVolume() { globalAudio.stepVolume(0.05) }
-        function lowerVolume() { globalAudio.stepVolume(-0.05) }
-        function toggleMute() { globalAudio.toggleMute() }
+        function raiseVolume() { globalAudio.stepVolume(0.05); shell.showAudioBar() }
+        function lowerVolume() { globalAudio.stepVolume(-0.05); shell.showAudioBar() }
+        function toggleMute() { globalAudio.toggleMute(); shell.showAudioBar() }
     }
 
     // Static Desktop Wallpaper for GameMode (Zero-GPU Mode)
@@ -318,6 +320,10 @@ ShellRoot {
 
                 mask: Region {
                     item: shell.isLauncherOpen ? fullscreenOverlay : notchContainer
+
+                    Region {
+                        item: (shell.isAudioBarOpen || root.animAudioWidth > 0) ? leftAudioBarContainer : null
+                    }
                 }
 
                 HyprlandFocusGrab {
@@ -349,7 +355,6 @@ ShellRoot {
                 property int targetWidth: {
                     if (shell.activeMode === "wifi") return 460
                     if (shell.activeMode === "bluetooth") return 470
-                    if (shell.activeMode === "audio") return 380
                     if (shell.activeMode === "gaming") return 620
                     if (shell.activeMode === "gaming-settings") return 720
                     if (shell.activeMode === "wallpaper") return 920
@@ -415,6 +420,31 @@ ShellRoot {
                 readonly property real launcherLeft: Math.round((root.width - animLauncherWidth) / 2)
                 readonly property real launcherRight: launcherLeft + animLauncherWidth
                 readonly property real launcherTop: root.height - root.borderThickness - animLauncherHeight
+
+                // Left Audio Bar Morphing Properties
+                property int audioTargetWidth: shell.isAudioBarOpen ? 48 : 0
+                property int audioTargetHeight: shell.isAudioBarOpen ? 230 : 0
+                property real animAudioWidth: audioTargetWidth
+                property real animAudioHeight: audioTargetHeight
+
+                Behavior on animAudioWidth {
+                    NumberAnimation {
+                        duration: shell.isAudioBarOpen ? theme.animDurationSlow : theme.animDurationExit
+                        easing.type: shell.isAudioBarOpen ? Easing.OutBack : Easing.InQuad
+                        easing.overshoot: 1.15
+                    }
+                }
+
+                Behavior on animAudioHeight {
+                    NumberAnimation {
+                        duration: shell.isAudioBarOpen ? theme.animDurationSlow : theme.animDurationExit
+                        easing.type: shell.isAudioBarOpen ? Easing.OutBack : Easing.InQuad
+                    }
+                }
+
+                readonly property real audioTop: Math.round((root.height - animAudioHeight) / 2)
+                readonly property real audioBottom: audioTop + animAudioHeight
+                readonly property real audioRight: root.borderThickness + animAudioWidth
 
                 onAnimNotchWidthChanged: {
                     shell.notchActualWidth = animNotchWidth
@@ -634,7 +664,69 @@ ShellRoot {
                                 control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
                             }
 
-                            // Left vertical inner border
+                            // Line from bottom-left corner up to audioBottom
+                            PathLine {
+                                x: root.borderThickness
+                                y: root.audioBottom
+                            }
+
+                            // Bottom concave transition flaring into left audio panel
+                            PathCubic {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.borderThickness
+                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Bottom-right convex corner
+                            PathLine {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+                            PathCubic {
+                                x: root.audioRight
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Right vertical edge of left audio panel
+                            PathLine {
+                                x: root.audioRight
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top-right convex corner
+                            PathCubic {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top horizontal ceiling of left audio panel
+                            PathLine {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top concave transition flaring into left screen bezel
+                            PathCubic {
+                                x: root.borderThickness
+                                y: root.audioTop
+                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness
+                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Left vertical inner border continuing to top-left corner
                             PathLine {
                                 x: root.borderThickness
                                 y: root.borderThickness + root.innerRadius
@@ -837,7 +929,71 @@ ShellRoot {
                                 control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
                             }
 
-                            // Left inner vertical edge
+                            // Line from bottom-left corner up to audioBottom
+                            PathLine {
+                                x: root.borderThickness + 0.5
+                                y: root.audioBottom
+                            }
+
+                            // Bottom concave transition
+                            PathCubic {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.borderThickness + 0.5
+                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Bottom horizontal line towards audioRight
+                            PathLine {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
+                            }
+
+                            // Bottom-right convex corner
+                            PathCubic {
+                                x: root.audioRight + 0.5
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
+                                control2X: root.audioRight + 0.5
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Right vertical edge of left audio panel
+                            PathLine {
+                                x: root.audioRight + 0.5
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top-right convex corner
+                            PathCubic {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control1X: root.audioRight + 0.5
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                            }
+
+                            // Top horizontal ceiling of left audio panel
+                            PathLine {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                            }
+
+                            // Top concave transition
+                            PathCubic {
+                                x: root.borderThickness + 0.5
+                                y: root.audioTop
+                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control2X: root.borderThickness + 0.5
+                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Left vertical inner border
                             PathLine {
                                 x: root.borderThickness + 0.5
                                 y: root.borderThickness + root.innerRadius + 0.5
@@ -889,7 +1045,6 @@ ShellRoot {
 
                                 network: globalNetwork
                                 bluetooth: globalBluetooth
-                                audio: globalAudio
                                 gaming: globalGaming
                                 notifications: globalNotifications
                                 userProfile: globalUserProfile
@@ -898,7 +1053,6 @@ ShellRoot {
                                 activateWorkspace: workspaceId => shell.activateWorkspace(workspaceId)
                                 toggleWifi: () => shell.toggleMode("wifi")
                                 toggleBluetooth: () => shell.toggleMode("bluetooth")
-                                toggleAudio: () => shell.toggleMode("audio")
                                 toggleGaming: () => shell.toggleMode("gaming")
                                 toggleNotifications: () => shell.toggleMode("notifications")
                                 toggleSettings: () => shell.toggleMode("settings")
@@ -931,19 +1085,6 @@ ShellRoot {
                                 opacity: shell.activeMode === "bluetooth" ? 1.0 : 0.0
                                 bluetooth: globalBluetooth
                                 openSettings: () => shell.openSettingsTab("bluetooth")
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 3: Audio View
-                            AudioBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "audio" ? 1.0 : 0.0
-                                audio: globalAudio
                                 goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
@@ -1019,7 +1160,7 @@ ShellRoot {
                                 }
                             }
 
-                            // View 9: Unified Settings View (WiFi + Bluetooth + Wallpapers + Gaming)
+                            // View 9: Unified Settings View (WiFi + Bluetooth + Som + Wallpapers + Gaming)
                             SettingsBarView {
                                 id: settingsView
                                 anchors.fill: parent
@@ -1028,6 +1169,7 @@ ShellRoot {
                                 activeCategory: shell.activeSettingsTab
                                 network: globalNetwork
                                 bluetooth: globalBluetooth
+                                audio: globalAudio
                                 gaming: globalGaming
                                 wallpaperEngine: globalWallpaper
                                 goBack: () => shell.closeActiveMode()
@@ -1066,6 +1208,46 @@ ShellRoot {
                             closeLauncher: () => shell.isLauncherOpen = false
                         }
                     }
+
+                    // Interactive Left Audio Bar Container (integrated with left border)
+                    Item {
+                        id: leftAudioBarContainer
+                        x: 0
+                        y: root.audioTop
+                        width: root.animAudioWidth + root.borderThickness
+                        height: root.animAudioHeight
+                        clip: true
+                        visible: shell.isAudioBarOpen || root.animAudioWidth > 0
+
+                        HoverHandler {
+                            id: sideBarHover
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.audioBarTimer.stop()
+                                } else {
+                                    if (shell.isAudioBarOpen) {
+                                        shell.audioBarTimer.restart()
+                                    }
+                                }
+                            }
+                        }
+
+                        AudioBarView {
+                            anchors {
+                                left: parent.left
+                                leftMargin: root.borderThickness
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
+                            width: 48
+                            audio: globalAudio
+                            openSettings: () => {
+                                shell.isAudioBarOpen = false
+                                shell.audioBarTimer.stop()
+                                shell.openSettingsTab("sound")
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -1079,4 +1261,5 @@ ShellRoot {
         notifications: globalNotifications
     }
 }
+
 

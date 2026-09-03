@@ -5,189 +5,161 @@ import ".."
 Item {
     id: root
 
-    property var goBack
     property var audio
+    property var openSettings
+
+    readonly property var aud: audio
 
     Theme {
         id: theme
     }
 
-    readonly property var aud: audio
+    Column {
+        anchors.fill: parent
+        anchors.topMargin: theme.notchConcaveWidth + 2
+        anchors.bottomMargin: theme.notchConcaveWidth + 2
+        anchors.leftMargin: 2
+        anchors.rightMargin: 4
+        spacing: theme.spacingSm
 
-    Item {
-        anchors {
-            left: parent.left
-            leftMargin: theme.contentInset + theme.notchConcaveWidth
-            right: parent.right
-            rightMargin: theme.contentInset + theme.notchConcaveWidth
-            verticalCenter: parent.verticalCenter
+        // 1. Mute / Volume Icon Toggle Button (Top)
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 32
+            height: 32
+            radius: theme.radiusSmall
+            color: muteMouse.containsMouse ? theme.hoverFill : "transparent"
+            border.width: 1
+            border.color: muteMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+            scale: muteMouse.pressed ? 0.90 : (muteMouse.containsMouse ? 1.15 : 1.0)
+
+            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: theme.animDurationFast
+                    easing.type: Easing.OutBack
+                    easing.overshoot: theme.buttonOvershoot
+                }
+            }
+
+            Text {
+                anchors.centerIn: parent
+                text: root.aud ? root.aud.icon : ""
+                color: root.aud && root.aud.muted ? theme.indicatorInactive : (muteMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                font.pixelSize: theme.iconSizeMd
+            }
+
+            MouseArea {
+                id: muteMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: if (root.aud) root.aud.toggleMute()
+            }
         }
-        height: parent.height
 
-        Row {
-            anchors.fill: parent
-            spacing: theme.spacingSm
+        // 2. Vertical Volume Slider (Middle)
+        Item {
+            id: sliderTrack
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 28
+            height: parent.height - 32 - 32 - (theme.spacingSm * 2)
 
-            // 1. Back Button (Icon only)
+            // Vertical Track Line
             Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 32
-                height: 32
-                radius: theme.radiusSmall
-                color: backMouse.containsMouse ? theme.hoverFill : "transparent"
+                anchors.centerIn: parent
+                width: 6
+                height: parent.height
+                radius: 3
+                color: theme.glassFillDark
                 border.width: 1
-                border.color: backMouse.containsMouse ? theme.glassBorderStrong : "transparent"
-                scale: backMouse.pressed ? 0.90 : (backMouse.containsMouse ? 1.12 : 1.0)
-                transformOrigin: Item.Center
+                border.color: theme.glassBorderSubtle
 
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: theme.animDurationFast
-                        easing.type: Easing.OutBack
-                        easing.overshoot: theme.buttonOvershoot
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
-                    font.pixelSize: theme.iconSizeSm
-                }
-
-                MouseArea {
-                    id: backMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.goBack) root.goBack()
-                }
-            }
-
-            // 2. Vertical Separator
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 1
-                height: 20
-                color: theme.separator
-            }
-
-            // 3. Mute / Audio Icon Toggle Button
-            Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 34
-                height: 34
-                radius: theme.radiusSmall
-                color: muteMouse.containsMouse ? theme.hoverFill : (root.aud.muted ? theme.activeFill : "transparent")
-                border.width: 1
-                border.color: root.aud.muted ? theme.glassBorderStrong : (muteMouse.containsMouse ? theme.glassBorderStrong : "transparent")
-                scale: muteMouse.pressed ? 0.90 : (muteMouse.containsMouse ? 1.12 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale {
-                    NumberAnimation {
-                        duration: theme.animDurationFast
-                        easing.type: Easing.OutBack
-                        easing.overshoot: theme.buttonOvershoot
-                    }
-                }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: root.aud.icon
-                    color: root.aud.muted ? theme.indicatorInactive : (muteMouse.containsMouse ? theme.textStrong : theme.textMedium)
-                    font.pixelSize: theme.iconSizeLg
-                }
-
-                MouseArea {
-                    id: muteMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.aud.toggleMute()
-                }
-            }
-
-            // 4. Volume Slider Track (Flexible Width)
-            Item {
-                id: sliderTrack
-                anchors.verticalCenter: parent.verticalCenter
-                width: parent.width - 32 - 1 - 34 - 52 - (theme.spacingSm * 4)
-                height: 24
-
-                // Track Background
+                // Fill Bar (from bottom up)
                 Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: parent.width
-                    height: 6
+                    anchors {
+                        left: parent.left
+                        right: parent.right
+                        bottom: parent.bottom
+                    }
+                    height: Math.max(0, Math.min(parent.height, parent.height * (root.aud ? root.aud.volumeRatio : 0)))
                     radius: 3
-                    color: theme.glassFillDark
-                    border.width: 1
-                    border.color: theme.glassBorderSubtle
+                    color: root.aud && root.aud.muted ? theme.indicatorInactive : theme.textStrong
 
-                    // Fill Bar
-                    Rectangle {
-                        anchors {
-                            left: parent.left
-                            top: parent.top
-                            bottom: parent.bottom
-                        }
-                        width: Math.max(0, Math.min(parent.width, parent.width * root.aud.volumeRatio))
-                        radius: 3
-                        color: root.aud.muted ? theme.indicatorInactive : theme.textStrong
-
-                        Behavior on width {
-                            NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                        }
-                    }
-                }
-
-                // Thumb Handle
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    x: Math.max(0, Math.min(sliderTrack.width - width, (sliderTrack.width - width) * root.aud.volumeRatio))
-                    width: 16
-                    height: 16
-                    radius: 8
-                    color: theme.textStrong
-                    border.width: 1
-                    border.color: theme.glassFillDark
-
-                    Behavior on x {
+                    Behavior on height {
                         NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
                     }
                 }
+            }
 
-                MouseArea {
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
+            // Slider Thumb
+            Rectangle {
+                anchors.horizontalCenter: parent.horizontalCenter
+                y: Math.max(0, Math.min(sliderTrack.height - height, (sliderTrack.height - height) * (1.0 - (root.aud ? root.aud.volumeRatio : 0))))
+                width: 14
+                height: 14
+                radius: 7
+                color: theme.textStrong
+                border.width: 1
+                border.color: theme.glassFillDark
 
-                    function updateVolume(mouseX) {
-                        const ratio = Math.max(0, Math.min(1.0, mouseX / sliderTrack.width))
-                        root.aud.setVolume(ratio)
-                    }
-
-                    onClicked: mouse => updateVolume(mouse.x)
-                    onPositionChanged: mouse => {
-                        if (pressed) updateVolume(mouse.x)
-                    }
+                Behavior on y {
+                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
                 }
             }
 
-            // 5. Volume Percentage Text
+            MouseArea {
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+
+                function updateVolume(mouseY) {
+                    const ratio = Math.max(0, Math.min(1.0, 1.0 - (mouseY / sliderTrack.height)))
+                    if (root.aud) root.aud.setVolume(ratio)
+                }
+
+                onClicked: mouse => updateVolume(mouse.y)
+                onPositionChanged: mouse => {
+                    if (pressed) updateVolume(mouse.y)
+                }
+            }
+        }
+
+        // 3. Settings Gear Icon (Bottom)
+        Rectangle {
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: 32
+            height: 32
+            radius: theme.radiusSmall
+            color: gearMouse.containsMouse ? theme.hoverFill : "transparent"
+            border.width: 1
+            border.color: gearMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+            scale: gearMouse.pressed ? 0.90 : (gearMouse.containsMouse ? 1.15 : 1.0)
+
+            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+            Behavior on scale {
+                NumberAnimation {
+                    duration: theme.animDurationFast
+                    easing.type: Easing.OutBack
+                    easing.overshoot: theme.buttonOvershoot
+                }
+            }
+
             Text {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 52
-                horizontalAlignment: Text.AlignRight
-                text: root.aud.volume + "%"
-                color: root.aud.muted ? theme.textMuted : theme.textStrong
-                font.pixelSize: theme.fontSizeSubmenuTitle
-                font.weight: Font.Bold
+                anchors.centerIn: parent
+                text: ""
+                color: gearMouse.containsMouse ? theme.textStrong : theme.textMedium
+                font.pixelSize: theme.iconSizeSm
+            }
+
+            MouseArea {
+                id: gearMouse
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: if (root.openSettings) root.openSettings()
             }
         }
     }

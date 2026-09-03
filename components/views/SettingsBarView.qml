@@ -11,10 +11,11 @@ Item {
     property var goBack
     property var network
     property var bluetooth
+    property var audio
     property var gaming
     property var wallpaperEngine
 
-    // Sidebar Category: "wifi" | "bluetooth" | "wallpaper" | "gaming"
+    // Sidebar Category: "wifi" | "bluetooth" | "sound" | "wallpaper" | "gaming"
     property string activeCategory: "wifi"
     property string activeGamingTab: "bulldoptimizer"
 
@@ -24,6 +25,7 @@ Item {
 
     readonly property var net: network
     readonly property var bt: bluetooth
+    readonly property var aud: audio
     readonly property var game: gaming
     readonly property var wp: wallpaperEngine
 
@@ -37,6 +39,7 @@ Item {
             root.wifiPasswordInput = ""
             if (root.net && root.net.enabled) root.net.scanNetworks(true)
             if (root.bt && root.bt.enabled) root.bt.refresh()
+            if (root.aud) root.aud.refreshSinks()
             if (root.game) root.game.loadConfig()
             if (root.wp) {
                 root.wp.loadWallpapers()
@@ -54,6 +57,8 @@ Item {
             root.net.scanNetworks(true)
         } else if (activeCategory === "bluetooth" && root.bt && root.bt.enabled) {
             root.bt.refresh()
+        } else if (activeCategory === "sound" && root.aud) {
+            root.aud.refreshSinks()
         } else if (activeCategory === "wallpaper" && root.wp) {
             root.wp.loadWallpapers()
             root.wp.loadConfig()
@@ -264,6 +269,7 @@ Item {
                         text: {
                             if (root.activeCategory === "wifi") return "Rede sem fio & Conexões Wi-Fi"
                             if (root.activeCategory === "bluetooth") return "Dispositivos & Conexões Bluetooth"
+                            if (root.activeCategory === "sound") return "Dispositivos de Áudio & Volume"
                             if (root.activeCategory === "wallpaper") return "Gerenciador de Wallpapers & Visuais"
                             return "Jogos & Otimização de Performance"
                         }
@@ -315,7 +321,7 @@ Item {
             height: parent.height - 38 - 1 - theme.spacingMd * 2
             spacing: theme.spacingLg
 
-            // SIDEBAR: (1. Wifi, 2. Bluetooth, 3. Wallpaper, 4. Gaming)
+            // SIDEBAR: (1. Wifi, 2. Bluetooth, 3. Som, 4. Wallpaper, 5. Gaming)
             Column {
                 width: 190
                 height: parent.height
@@ -402,6 +408,48 @@ Item {
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
                         onClicked: root.activeCategory = "bluetooth"
+                    }
+                }
+
+                // 3. Som
+                Rectangle {
+                    width: parent.width
+                    height: 40
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                    border.width: 1
+                    border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+
+                    Row {
+                        anchors.fill: parent
+                        anchors.leftMargin: theme.spacingSm
+                        anchors.rightMargin: theme.spacingSm
+                        spacing: theme.spacingSm
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: ""
+                            color: root.activeCategory === "sound" ? theme.textStrong : theme.textMuted
+                            font.pixelSize: theme.fontSizeMd
+                        }
+
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "Som"
+                            color: root.activeCategory === "sound" ? theme.textStrong : theme.textMedium
+                            font.pixelSize: theme.fontSizeSm
+                            font.weight: root.activeCategory === "sound" ? Font.DemiBold : Font.Normal
+                        }
+                    }
+
+                    MouseArea {
+                        id: catSoundMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "sound"
                     }
                 }
 
@@ -1243,6 +1291,266 @@ Item {
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
                                     topPadding: 4
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // =============================================================
+                // TAB CONTENT: SOUND SETTINGS
+                // =============================================================
+                Column {
+                    anchors.fill: parent
+                    visible: root.activeCategory === "sound"
+                    spacing: theme.spacingMd
+
+                    // Card 1: Master Volume Slider
+                    Rectangle {
+                        width: parent.width
+                        height: 72
+                        radius: theme.radiusItem
+                        color: theme.itemFill
+                        border.width: 1
+                        border.color: theme.glassBorderSubtle
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: theme.spacingMd
+                            spacing: theme.spacingSm
+
+                            Row {
+                                width: parent.width
+                                spacing: theme.spacingSm
+
+                                Rectangle {
+                                    width: 26
+                                    height: 26
+                                    radius: theme.radiusSmall
+                                    color: soundMuteBtnMouse.containsMouse ? theme.hoverFill : "transparent"
+                                    border.width: 1
+                                    border.color: soundMuteBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                                    scale: soundMuteBtnMouse.pressed ? 0.90 : 1.0
+
+                                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack } }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: root.aud ? root.aud.icon : ""
+                                        color: root.aud && root.aud.muted ? theme.indicatorInactive : theme.textStrong
+                                        font.pixelSize: theme.fontSizeMd
+                                    }
+
+                                    MouseArea {
+                                        id: soundMuteBtnMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: if (root.aud) root.aud.toggleMute()
+                                    }
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Volume de Saída"
+                                    color: theme.textStrong
+                                    font.pixelSize: theme.fontSizeSm
+                                    font.weight: Font.DemiBold
+                                }
+
+                                Item {
+                                    width: Math.max(10, parent.width - 26 - 120 - 50 - (theme.spacingSm * 3))
+                                    height: 1
+                                }
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 50
+                                    horizontalAlignment: Text.AlignRight
+                                    text: (root.aud ? root.aud.volume : 0) + "%"
+                                    color: root.aud && root.aud.muted ? theme.textMuted : theme.textStrong
+                                    font.pixelSize: theme.fontSizeSubmenuTitle
+                                    font.weight: Font.Bold
+                                }
+                            }
+
+                            // Slider Bar
+                            Item {
+                                id: mainVolumeSlider
+                                width: parent.width
+                                height: 20
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: parent.width
+                                    height: 6
+                                    radius: 3
+                                    color: theme.glassFillDark
+                                    border.width: 1
+                                    border.color: theme.glassBorderSubtle
+
+                                    Rectangle {
+                                        anchors {
+                                            left: parent.left
+                                            top: parent.top
+                                            bottom: parent.bottom
+                                        }
+                                        width: Math.max(0, Math.min(parent.width, parent.width * (root.aud ? root.aud.volumeRatio : 0)))
+                                        radius: 3
+                                        color: root.aud && root.aud.muted ? theme.indicatorInactive : theme.textStrong
+
+                                        Behavior on width {
+                                            NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                                        }
+                                    }
+                                }
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    x: Math.max(0, Math.min(mainVolumeSlider.width - width, (mainVolumeSlider.width - width) * (root.aud ? root.aud.volumeRatio : 0)))
+                                    width: 16
+                                    height: 16
+                                    radius: 8
+                                    color: theme.textStrong
+                                    border.width: 1
+                                    border.color: theme.glassFillDark
+
+                                    Behavior on x {
+                                        NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+
+                                    function updateVolume(mouseX) {
+                                        const ratio = Math.max(0, Math.min(1.0, mouseX / mainVolumeSlider.width))
+                                        if (root.aud) root.aud.setVolume(ratio)
+                                    }
+
+                                    onClicked: mouse => updateVolume(mouse.x)
+                                    onPositionChanged: mouse => {
+                                        if (pressed) updateVolume(mouse.x)
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Section 2: Output Devices
+                    SectionHeader { title: "Dispositivos de Saída" }
+
+                    Flickable {
+                        width: parent.width
+                        height: parent.height - 72 - 22 - (theme.spacingMd * 2)
+                        contentWidth: width
+                        contentHeight: soundDevicesCol.implicitHeight + 20
+                        clip: true
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        Column {
+                            id: soundDevicesCol
+                            width: parent.width
+                            spacing: 6
+
+                            Repeater {
+                                model: root.aud ? root.aud.availableSinks : []
+
+                                delegate: Rectangle {
+                                    required property var modelData
+                                    width: soundDevicesCol.width
+                                    height: 52
+                                    radius: theme.radiusSmall
+                                    color: modelData.isDefault ? theme.activeFill : (sinkItemMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                    border.width: modelData.isDefault ? 2 : 1
+                                    border.color: modelData.isDefault ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+
+                                    Item {
+                                        anchors.fill: parent
+                                        anchors.leftMargin: theme.spacingMd
+                                        anchors.rightMargin: theme.spacingMd
+
+                                        Row {
+                                            anchors.left: parent.left
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: theme.spacingMd
+
+                                            Text {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: modelData.icon || ""
+                                                color: modelData.isDefault ? theme.textStrong : theme.textMedium
+                                                font.pixelSize: theme.fontSizeLg
+                                            }
+
+                                            Column {
+                                                width: 380
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 2
+
+                                                Text {
+                                                    width: parent.width
+                                                    text: modelData.name
+                                                    color: theme.textStrong
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: modelData.isDefault ? Font.Bold : Font.Medium
+                                                    elide: Text.ElideRight
+                                                }
+
+                                                Text {
+                                                    text: modelData.isDefault ? "Saída de áudio padrão ativa" : "Disponível para reprodução"
+                                                    color: theme.textMuted
+                                                    font.pixelSize: theme.fontSizeXs
+                                                }
+                                            }
+                                        }
+
+                                        Rectangle {
+                                            anchors.right: parent.right
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: modelData.isDefault ? 94 : 80
+                                            height: 28
+                                            radius: theme.radiusSmall
+                                            color: modelData.isDefault ? theme.activeFill : (sinkItemMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                            border.width: 1
+                                            border.color: modelData.isDefault ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 4
+
+                                                Text {
+                                                    visible: modelData.isDefault
+                                                    text: ""
+                                                    color: theme.textStrong
+                                                    font.pixelSize: 10
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: modelData.isDefault ? "Padrão" : "Selecionar"
+                                                    color: theme.textStrong
+                                                    font.pixelSize: theme.fontSizeXs
+                                                    font.weight: Font.DemiBold
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    MouseArea {
+                                        id: sinkItemMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: {
+                                            if (root.aud) root.aud.setDefaultSink(modelData.id)
+                                        }
+                                    }
                                 }
                             }
                         }

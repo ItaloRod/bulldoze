@@ -6,7 +6,37 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.0] - 2026-09-02
 
+### 🔊 Reformulação da Interface de Áudio & Dispositivos
+- **Nova Barra Lateral de Volume Simplificada Fundida à Borda (`AudioBarView.qml`, `shell.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: A barra de volume foi integrada diretamente à malha vetorial contínua da moldura perimetral esquerda de 8px, expandindo-se fluidamente para dentro da tela com curvas cúbicas suaves e borda de 1px sem costuras ou sobreposições flutuantes.
+  - **Controle Minimalista Vertical**:
+    - Topo: Ícone dinâmico de volume com alternância instantânea de mudo/desmudo ao clicar.
+    - Centro: Slider vertical fino com suporte completo a clique e arrasto para controle de volume.
+    - Base: Botão de engrenagem (``) para transição direta até a aba de Som nos Ajustes do Sistema.
+  - **Temporizador Inteligente & OSD**:
+    - Exibição automática por 2 segundos ao utilizar atalhos de volume do teclado (`raiseVolume`, `lowerVolume`, `toggleMute`).
+    - Pausa automática do temporizador de fechamento quando o cursor do mouse estiver sobre a barra.
+    - Ocultação automática em modo de tela cheia (`isFullscreenActive`) e quando a aba de Som dos Ajustes estiver ativa.
+    - Suporte a acionamento manual via IPC (`quickshell ipc call shell toggleAudio`).
+
+- **Interface Completa de Áudio nos Ajustes do Sistema (`SettingsBarView.qml`)**:
+  - **Nova Categoria "Som" na Barra Lateral de Configurações**:
+    - Slider horizontal de volume principal com porcentagem em tempo real e botão de mudo integrado.
+    - Listagem dinâmica e reativa de todas as saídas de áudio disponíveis (Alto-falantes, HDMI, Fones Bluetooth, DACs USB).
+    - Identificação visual de dispositivos através de ícones contextuais e badges de saída padrão.
+    - Alternância instantânea de saída de som via PipeWire (`wpctl set-default <id>`).
+    - Padronização visual em vidro translúcido monocromático (`theme.activeFill`, `theme.glassBorderStrong`), espelhando a identidade refinada da aba de Wi-Fi.
+
+- **Simplificação dos Controles Rápidos do Notch (`QuickControls.qml`, `DefaultBarView.qml`)**:
+  - Remoção do botão de áudio dos controles rápidos centrais do notch superior, mantendo o foco do notch em Wi-Fi, Bluetooth e Modo Jogo.
+
+- **Helper Assíncrono de Áudio (`scripts/bulldoze-audio.py`, `modules/Audio.qml`)**:
+  - Adicionado script utilitário para inspeção estruturada em JSON das saídas de som do PipeWire e troca de dispositivo padrão.
+
 ### ⚡ Performance & Otimizações do Sistema
+- **Isolamento de Áudio do Wallpaper Engine (`scripts/bulldoze-wallpaper.py`)**:
+  - Desacoplamento total do `linux-wallpaperengine` do subsistema PipeWire utilizando `SDL_AUDIODRIVER=dummy`, `ALSOFT_DRIVERS=dummy` e `--no-audio-processing`.
+  - **Correção de Deadlock com Bluetooth & YouTube**: Evita que o congelamento do wallpaper via `SIGSTOP` (recurso de economia de GPU com janelas abertas) trave o grafo de renegociação do PipeWire (`[negotiating]`) ao conectar fones/caixas Bluetooth (ex: JBL Go) ou alterar dispositivos de som, eliminando congelamentos de vídeos no YouTube e navegadores.
 - **Integração de Agendamento em Tempo Real (`ananicy-cpp` + `cachyos-ananicy-rules`)**:
   - Priorização automática e contínua de processos com baixa latência para o compositor Hyprland, Quickshell e jogos.
   - Rebaixamento automático de I/O e prioridade de CPU para processos em segundo plano (atualizadores, compiladores), eliminando micro-stutters.

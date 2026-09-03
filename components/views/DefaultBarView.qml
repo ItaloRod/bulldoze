@@ -9,7 +9,6 @@ Item {
     property var activateWorkspace
     property var toggleWifi
     property var toggleBluetooth
-    property var toggleAudio
     property var toggleGaming
     property var toggleNotifications
     property var toggleSettings
@@ -18,7 +17,6 @@ Item {
 
     property var network
     property var bluetooth
-    property var audio
     property var gaming
     property var notifications
     property var userProfile
@@ -173,12 +171,10 @@ Item {
 
         network: root.network
         bluetooth: root.bluetooth
-        audio: root.audio
         gaming: root.gaming
 
         toggleWifi: root.toggleWifi
         toggleBluetooth: root.toggleBluetooth
-        toggleAudio: root.toggleAudio
         toggleGaming: root.toggleGaming
     }
 }
