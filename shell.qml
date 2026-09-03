@@ -113,6 +113,35 @@ ShellRoot {
         }
     }
 
+    property bool wsReady: false
+    property var currentFocusedWorkspace: Hyprland.focusedWorkspace
+    onCurrentFocusedWorkspaceChanged: {
+        if (shell.wsReady) {
+            if (shell.isLauncherOpen) {
+                shell.isLauncherOpen = false
+            }
+            shell.showWorkspaceBar(2000)
+        }
+    }
+
+    property var wsReadyTimer: Timer {
+        id: wsReadyTimer
+        interval: 1000
+        running: true
+        onTriggered: shell.wsReady = true
+    }
+
+    property bool isWorkspaceOpen: false
+
+    property var workspaceBarTimer: Timer {
+        id: workspaceBarTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            shell.isWorkspaceOpen = false
+        }
+    }
+
     property bool isNotifOpen: false
     property bool isNotifExpanded: false
 
@@ -174,6 +203,23 @@ ShellRoot {
         shell.isNotifExpanded = false
     }
 
+    function showWorkspaceBar(timeout) {
+        if (shell.isFullscreenActive) return
+        if (shell.isLauncherOpen) return
+        shell.isWorkspaceOpen = true
+        if (timeout > 0) {
+            workspaceBarTimer.interval = timeout
+            workspaceBarTimer.restart()
+        } else {
+            workspaceBarTimer.stop()
+        }
+    }
+
+    function closeWorkspaceBar() {
+        workspaceBarTimer.stop()
+        shell.isWorkspaceOpen = false
+    }
+
     function toggleMode(mode) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
         if (activeMode === mode) {
@@ -191,6 +237,7 @@ ShellRoot {
         if (shell.isLauncherOpen) {
             shell.isLauncherOpen = false
         } else {
+            shell.closeWorkspaceBar()
             shell.closeActiveMode()
             shell.isLauncherOpen = true
         }
@@ -213,6 +260,7 @@ ShellRoot {
     }
 
     function activateWorkspace(id) {
+        if (shell.isLauncherOpen) shell.isLauncherOpen = false
         for (const workspace of Hyprland.workspaces.values) {
             if (workspace.id === id) {
                 workspace.activate()
@@ -230,6 +278,8 @@ ShellRoot {
         target: "shell"
         function toggleLauncher() { shell.toggleLauncher() }
         function toggleSearch() { shell.toggleLauncher() }
+        function toggleWorkspaces() { if (shell.isWorkspaceOpen) shell.closeWorkspaceBar(); else shell.showWorkspaceBar(2000) }
+        function showWorkspaces() { shell.showWorkspaceBar(2000) }
         function toggleAudio() { shell.toggleAudioBar() }
         function toggleGaming() { shell.toggleMode("gaming") }
         function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
@@ -334,6 +384,12 @@ ShellRoot {
                     Region {
                         item: (shell.isNotifOpen || root.animNotifHeight > 0) ? (typeof bottomNotifContainer !== "undefined" ? bottomNotifContainer : null) : (typeof notifCornerTrigger !== "undefined" ? notifCornerTrigger : null)
                     }
+
+                    Region {
+                        item: (shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0)
+                            ? (typeof bottomLauncherContainer !== "undefined" ? bottomLauncherContainer : null)
+                            : (typeof workspaceBottomTrigger !== "undefined" ? workspaceBottomTrigger : null)
+                    }
                 }
 
                 HyprlandFocusGrab {
@@ -401,24 +457,38 @@ ShellRoot {
                 readonly property real notchLeft: Math.round((root.width - animNotchWidth) / 2)
                 readonly property real notchRight: notchLeft + animNotchWidth
 
-                // Bottom Morphing Launcher Properties
-                property int launcherTargetHeight: shell.isLauncherOpen ? 480 : 0
-                property int launcherTargetWidth: shell.isLauncherOpen ? 640 : 0
+                // Bottom Morphing Dock (Launcher & Workspace View)
+                readonly property int workspaceCount: {
+                    let count = 0
+                    for (const ws of Hyprland.workspaces.values) {
+                        if (ws && ws.id > 0) count++
+                    }
+                    return Math.max(1, count)
+                }
+                readonly property int workspacePillsWidth: 22 + (12 * (workspaceCount - 1))
+                property int workspaceTargetWidth: Math.max(80, workspacePillsWidth + (theme.contentInset * 2) + (root.concaveWidth * 2))
+                property int launcherTargetHeight: shell.isLauncherOpen ? 480 : (shell.isWorkspaceOpen ? 32 : 0)
+                property int launcherTargetWidth: shell.isLauncherOpen ? 640 : root.workspaceTargetWidth
                 property real animLauncherHeight: launcherTargetHeight
                 property real animLauncherWidth: launcherTargetWidth
 
+                readonly property real dockCurveFactor: Math.min(1.0, Math.max(0.0, animLauncherHeight / (concaveHeight + topRadius)))
+                readonly property real dockConcaveHeight: concaveHeight * dockCurveFactor
+                readonly property real dockConcaveWidth: concaveWidth * dockCurveFactor
+                readonly property real dockTopRadius: topRadius * dockCurveFactor
+
                 Behavior on animLauncherHeight {
                     NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : theme.animDurationExit
-                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.InQuad
+                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
+                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
                         easing.overshoot: 1.15
                     }
                 }
 
                 Behavior on animLauncherWidth {
                     NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : theme.animDurationExit
-                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.InQuad
+                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
+                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
                     }
                 }
 
@@ -712,61 +782,61 @@ ShellRoot {
                                 y: root.height - root.borderThickness
                             }
 
-                            // Bottom-right concave transition flaring into bottom launcher
+                            // Bottom-right concave transition flaring into bottom dock
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherRight - (root.concaveWidth * 0.5)
+                                x: root.launcherRight - root.dockConcaveWidth
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
+                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
                                 control1Y: root.height - root.borderThickness
-                                control2X: root.launcherRight - root.concaveWidth
-                                control2Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherRight - root.dockConcaveWidth
+                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
                             }
 
-                            // Right vertical edge of bottom launcher
+                            // Right vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherRight - root.concaveWidth
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth
+                                y: root.launcherTop + root.dockTopRadius
                             }
 
                             // Top-right convex corner
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
                                 y: root.launcherTop
-                                control1X: root.launcherRight - root.concaveWidth
-                                control1Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherRight - root.concaveWidth - (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control1X: root.launcherRight - root.dockConcaveWidth
+                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
+                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
                                 control2Y: root.launcherTop
                             }
 
-                            // Top horizontal ceiling of bottom launcher
+                            // Top horizontal ceiling of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
                                 y: root.launcherTop
                             }
 
                             // Top-left convex corner
                             PathCubic {
-                                x: root.launcherLeft + root.concaveWidth
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherLeft + root.concaveWidth + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth
+                                y: root.launcherTop + root.dockTopRadius
+                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
                                 control1Y: root.launcherTop
-                                control2X: root.launcherLeft + root.concaveWidth
-                                control2Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherLeft + root.dockConcaveWidth
+                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
                             }
 
-                            // Left vertical edge of bottom launcher
+                            // Left vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
                             }
 
                             // Bottom-left concave transition flaring into bottom bezel
                             PathCubic {
                                 x: root.launcherLeft
                                 y: root.height - root.borderThickness
-                                control1X: root.launcherLeft + root.concaveWidth
-                                control1Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherLeft + (root.concaveWidth * 0.5)
+                                control1X: root.launcherLeft + root.dockConcaveWidth
+                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
+                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
                                 control2Y: root.height - root.borderThickness
                             }
 
@@ -1049,61 +1119,61 @@ ShellRoot {
                                 y: root.height - root.borderThickness - 0.5
                             }
 
-                            // Bottom-right concave transition flaring into bottom launcher
+                            // Bottom-right concave transition flaring into bottom dock
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - 0.5
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherRight - (root.concaveWidth * 0.5)
+                                x: root.launcherRight - root.dockConcaveWidth - 0.5
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
+                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
                                 control1Y: root.height - root.borderThickness - 0.5
-                                control2X: root.launcherRight - root.concaveWidth - 0.5
-                                control2Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherRight - root.dockConcaveWidth - 0.5
+                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
                             }
 
-                            // Right vertical edge of bottom launcher
+                            // Right vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherRight - root.concaveWidth - 0.5
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - 0.5
+                                y: root.launcherTop + root.dockTopRadius
                             }
 
                             // Top-right convex corner
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
                                 y: root.launcherTop + 0.5
-                                control1X: root.launcherRight - root.concaveWidth - 0.5
-                                control1Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherRight - root.concaveWidth - (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control1X: root.launcherRight - root.dockConcaveWidth - 0.5
+                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
+                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
                                 control2Y: root.launcherTop + 0.5
                             }
 
-                            // Top horizontal ceiling of bottom launcher
+                            // Top horizontal ceiling of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
                                 y: root.launcherTop + 0.5
                             }
 
                             // Top-left convex corner
                             PathCubic {
-                                x: root.launcherLeft + root.concaveWidth + 0.5
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherLeft + root.concaveWidth + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                y: root.launcherTop + root.dockTopRadius
+                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
                                 control1Y: root.launcherTop + 0.5
-                                control2X: root.launcherLeft + root.concaveWidth + 0.5
-                                control2Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
                             }
 
-                            // Left vertical edge of bottom launcher
+                            // Left vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + 0.5
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
                             }
 
                             // Bottom-left concave transition flaring into bottom bezel
                             PathCubic {
                                 x: root.launcherLeft
                                 y: root.height - root.borderThickness - 0.5
-                                control1X: root.launcherLeft + root.concaveWidth + 0.5
-                                control1Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherLeft + (root.concaveWidth * 0.5)
+                                control1X: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
+                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
                                 control2Y: root.height - root.borderThickness - 0.5
                             }
 
@@ -1339,7 +1409,7 @@ ShellRoot {
                         onClicked: shell.isLauncherOpen = false
                     }
 
-                    // Interactive Bottom Launcher Container
+                    // Interactive Bottom Launcher / Workspace Container
                     Item {
                         id: bottomLauncherContainer
                         x: root.launcherLeft
@@ -1347,14 +1417,75 @@ ShellRoot {
                         width: root.animLauncherWidth
                         height: root.animLauncherHeight + root.borderThickness
                         clip: true
-                        visible: shell.isLauncherOpen || root.animLauncherHeight > 0
+                        visible: shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0
                         focus: shell.isLauncherOpen
                         z: 100
 
                         BottomLauncher {
                             anchors.fill: parent
+                            visible: shell.isLauncherOpen
                             open: shell.isLauncherOpen
                             closeLauncher: () => shell.isLauncherOpen = false
+                        }
+
+                        // Minimalist Bottom Workspace View
+                        Item {
+                            id: bottomWorkspaceView
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                right: parent.right
+                                bottom: parent.bottom
+                                bottomMargin: root.borderThickness
+                            }
+                            visible: !shell.isLauncherOpen && (shell.isWorkspaceOpen || root.animLauncherHeight > 0)
+                            opacity: (!shell.isLauncherOpen && shell.isWorkspaceOpen) ? 1.0 : 0.0
+
+                            Behavior on opacity {
+                                NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                            }
+
+                            HoverHandler {
+                                id: bottomWorkspaceHover
+                                onHoveredChanged: {
+                                    if (hovered) {
+                                        shell.workspaceBarTimer.stop()
+                                    } else {
+                                        if (shell.isWorkspaceOpen) {
+                                            shell.closeWorkspaceBar()
+                                        }
+                                    }
+                                }
+                            }
+
+                            WorkspacePills {
+                                id: bottomWorkspacePills
+                                anchors.centerIn: parent
+                                activateWorkspace: workspaceId => {
+                                    shell.activateWorkspace(workspaceId)
+                                    if (!bottomWorkspaceHover.hovered) {
+                                        shell.closeWorkspaceBar()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom Center Workspace Trigger Hot Zone (Screen Bezel)
+                    Item {
+                        id: workspaceBottomTrigger
+                        x: Math.round((root.width - Math.max(240, root.workspaceTargetWidth)) / 2)
+                        y: root.height - root.borderThickness - 16
+                        width: Math.max(240, root.workspaceTargetWidth)
+                        height: root.borderThickness + 16
+                        visible: !shell.isWorkspaceOpen && !shell.isLauncherOpen
+
+                        HoverHandler {
+                            onHoveredChanged: {
+                                if (hovered && !shell.isLauncherOpen) {
+                                    shell.showWorkspaceBar(0)
+                                }
+                            }
                         }
                     }
 

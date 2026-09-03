@@ -42,39 +42,16 @@ Item {
         }
         height: 26
 
-        // Left: Workspace Pills
-        Row {
+        // Left: Empty placeholder matching rightGroup width to maintain centered clock
+        Item {
             id: leftGroup
             anchors {
                 left: parent.left
                 leftMargin: theme.contentInset + theme.notchConcaveWidth
                 verticalCenter: parent.verticalCenter
             }
-            spacing: theme.groupSpacing
-            opacity: root.isExpanded ? 1.0 : 0.0
-            scale: root.isExpanded ? 1.0 : 0.90
-            transformOrigin: Item.Left
-            visible: opacity > 0.001
-
-            Behavior on opacity {
-                NumberAnimation {
-                    duration: root.isExpanded ? theme.animDurationSticky : theme.animDurationExit
-                    easing.type: Easing.OutCubic
-                }
-            }
-
-            Behavior on scale {
-                NumberAnimation {
-                    duration: root.isExpanded ? theme.animDurationSticky : theme.animDurationExit
-                    easing.type: root.isExpanded ? Easing.OutBack : Easing.InCubic
-                    easing.overshoot: theme.stickyOvershoot
-                }
-            }
-
-            WorkspacePills {
-                anchors.verticalCenter: parent.verticalCenter
-                activateWorkspace: root.activateWorkspace
-            }
+            width: rightGroup.implicitWidth
+            height: parent.height
         }
 
         // Center: Clock & Date (Always locked to the physical horizontal center of the notch)

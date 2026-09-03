@@ -14,19 +14,24 @@ This document defines the authoritative design system specification for the **en
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
 1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$):
    - **Single-Line Streamlined Layout**: Fixed 32px height capsule both in resting state and on hover, maintaining a sleek, non-intrusive single-row profile.
-   - **Content Layout**: Left group with Workspaces pills; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
+   - **Content Layout**: Left empty spacer preserving symmetrical rightGroup width; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
    - **Modal Access**: Quick Settings (Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) accessed directly via Settings (``) or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
-2. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
+2. **Bottom-Docked Minimalist Workspace Bar (`WorkspacePills.qml`, `shell.qml`)**:
+   - Fused directly into the bottom 8px perimeter frame in `unifiedShape` with continuous curvilinear scaling (`dockCurveFactor`), 32px height, and responsive width based on active workspaces.
+   - **Keyboard Trigger (Auto-hide 2s)**: Switching workspaces via keyboard hotkeys (`SUPER + 1..9`, navigation keys) reveals the dock for 2 seconds before smoothly retracting into the bezel.
+   - **Bottom Bezel Hot Zone (Hover)**: 240x24px detection area mapped to Wayland `mask: Region` on the bottom center border reveals the workspace dock immediately. Stays open while cursor is inside; retracts immediately on mouse exit.
+   - **Minimalist Layout**: Exclusively presents dynamic workspace pills ($22 \times 6\text{px}$ active, $6 \times 6\text{px}$ inactive dots).
+3. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
    - Fused directly into the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave wings.
    - Minimalist vertical volume slider, click-to-mute icon, and gear button navigating directly to the Sound tab in Settings.
    - 2-second auto-dismiss OSD triggered by keyboard volume hotkeys.
-3. **Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)**:
+4. **Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)**:
    - Integrated diagonally into the bottom-right screen corner of the 8px perimeter frame in `unifiedShape` with smooth concave arcs into the right and bottom bezels.
    - **Popup OSD (2.5s)**: Incoming notifications display only the single latest card for 2.5 seconds.
    - **Corner Hot Zone**: Hovering on the bottom-right corner border hot zone reveals the latest notification immediately (or empty state). Closes immediately on mouse exit.
    - **2s Dwell Expansion**: Hovering for 2 seconds expands upwards into a stacked list of up to 4 cards (BottomToTop ordering: newest at bottom, older stacked upwards) with mouse wheel scroll for >4 items.
    - **Actions**: Individual dismiss button (``) and clear-all icon button (``) at the bottom of the expanded stack.
-4. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+5. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
    - An inverted search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$) emerging from the bottom bezel ($y = \text{height}$).
    - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
    - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
@@ -222,12 +227,25 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
   - **Expanded State (Hover)**: Expands horizontally to `contentExpandedWidth` (620px-680px) with `notchExpandDuration` (340ms) and `Easing.OutBack` when hovered.
   - **Dynamic Content Calculation**: Dynamic bounds (`contentExpandedWidth = leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`) guarantee zero overlap between the clock, workspace pills, and status buttons.
 - **Content Encapsulation**:
-  - **Left (revealed on expand)**: Dynamic Workspace Pills (active: $22 \times 6\text{px}$, inactive: $6 \times 6\text{px}$ dot, no numbers).
+  - **Left (revealed on expand)**: Empty placeholder item matching `rightGroup.implicitWidth`, preserving symmetrical weight so the central clock remains perfectly balanced.
   - **Center (always visible)**: Single-line Clock (Time 13px DemiBold + Date 11px Medium localized in `pt-BR`, format `"ddd, dd MMM"` via `Qt.locale("pt_BR")`).
   - **Right (revealed on expand)**: Status group (`Status.qml`) with System Tray, Gaming Mode toggle (`""`), and Settings button (`""`).
-  - **Redundant Items Removed**: Wi-Fi, Bluetooth, Audio, and Notifications bell removed from the notch bar to preserve clean elegance and single-line ergonomics.
+  - **Redundant Items Removed**: Arch logo, Workspaces, Wi-Fi, Bluetooth, Audio, and Notifications bell removed from the notch bar to preserve clean elegance and single-line ergonomics.
 
-## 4.2 Application Launcher (`BottomLauncher.qml`, `shell.qml`)
+## 4.2 Bottom-Docked Minimalist Workspace Bar (`WorkspacePills.qml`, `shell.qml`)
+- **Direct Perimeter Fusion (`unifiedShape`)**:
+  - Extruded directly into the bottom-center of the screen from the 8px perimeter frame, sharing the bottom morphing dock geometry.
+  - Continuous scaling curves (`dockCurveFactor`): concave transitions and convex corners scale smoothly with height from 0 to 32px, eliminating detached wings or distortion during animation.
+- **Geometrical Profile**:
+  - **Fixed 32px Height**: Exactly matches the top notch's 32px vertical height for visual rhythm and harmony.
+  - **Responsive Width**: Dynamically calculated based on the count of active workspaces (`workspaceCount`), with 18px lateral content inset padding (`theme.contentInset`).
+- **Interaction Model**:
+  - **Keyboard Command Trigger**: Every workspace switch event from Hyprland triggers a 2-second temporary reveal (`showWorkspaceBar(2000)`).
+  - **Bottom Border Hover**: Cursor touching the 240x24px bottom center border hot zone (registered in `mask: Region`) reveals the dock immediately with no auto-close timeout.
+  - **Hover Persistence**: Stays open while cursor is inside; closes immediately when cursor leaves the area.
+  - **Spotlight Coexistence**: Closes instantly when Spotlight (`SUPER + D`) opens; switching workspaces while Spotlight is open closes Spotlight and shows the workspace bar for 2 seconds.
+
+## 4.3 Application Launcher (`BottomLauncher.qml`, `shell.qml`)
 - **Type**: Bottom-docked search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$).
 - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
 - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.

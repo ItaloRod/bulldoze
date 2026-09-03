@@ -6,7 +6,21 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.0] - 2026-09
 
-### 🔔 Central de Notificações no Canto Inferior Direito & Fusão Vetorial
+### 🗂️ Reformulação da Visualização de Workspaces (Dock Inferior Minimalista & Fusão Vetorial)
+- **Remoção dos Workspaces do Notch Superior (`DefaultBarView.qml`)**:
+  - As pílulas de workspaces foram completamente removidas do notch superior.
+  - Foi mantido um espaçador simétrico à esquerda com largura equivalente ao grupo de status da direita, garantindo que o relógio permaneça rigorosamente travado no centro horizontal físico da tela.
+- **Nova Barra de Workspaces na Borda Inferior Central (`shell.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na base central da moldura perimetral com curvas côncavas e convexas fluidas com traço de 1px contínuo, integrando-se perfeitamente ao ecossistema de docks do Bulldoze.
+  - **Escalonamento Curvilíneo Contínuo (`dockCurveFactor`)**: Raios côncavos e convexos escalam proporcionalmente à altura de elevação da view, garantindo que a barra surja e recolha com tangência perfeita, sem "asas" ou arestas antecipadas.
+  - **Geometria Responsiva**: Altura fixa de 32px (mesma altura do notch) e largura adaptativa proporcional à quantidade de workspaces ativos (`workspaceCount`), com padding interno de 18px (`theme.contentInset`).
+  - **Gatilho por Comandos / Mudança de Workspace (2s)**: Toda alternância de workspace via atalhos globais (`SUPER + 1..9`, etc.) aciona a exibição do dock por 2 segundos com recolhimento automático suave.
+  - **Gatilho de Hover na Borda Inferior (Hot Zone)**: Zona de detecção de 240px de largura e 24px de altura na base da tela, devidamente mapeada na máscara de entrada Wayland (`mask: Region`). Ao aproximar o mouse, o dock abre instantaneamente, permanecendo aberto enquanto o mouse estiver sobre a área e fechando imediatamente ao sair.
+  - **Coexistência com Spotlight (`BottomLauncher.qml`)**:
+    - Acionar comandos de workspace com o Spotlight aberto fecha o Spotlight e exibe a barra de workspaces por 2 segundos.
+    - Acionar o Spotlight com a barra de workspaces aberta fecha a barra e abre o Spotlight imediatamente.
+    - Hover na base da tela com o Spotlight aberto não aciona a barra de workspaces.
+  - **Controle IPC**: Adicionados comandos `toggleWorkspaces` e `showWorkspaces` ao `IpcHandler`.
 - **Integração Diagonal no Canto da Moldura (`shell.qml`, `NotificationBarView.qml`)**:
   - **Fusão Vetorial Direta (`unifiedShape`)**: As notificações foram completamente removidas do Notch superior e integradas como uma extrusão orgânica ancorada diretamente no canto inferior direito da tela.
   - **Transição Curva Diagonal Contínua**: A borda lateral direita transiciona suavemente em curva côncava para o topo da notificação, e o lado esquerdo desce em curva côncava para a borda inferior, preenchendo a quina sem frestas ou linhas indesejadas.

@@ -61,7 +61,7 @@
 - **Cálculo Dinâmico de Espaçamento e Largura**:
   - A largura expandida e recolhida é computada dinamicamente com base no conteúdo real (`contentExpandedWidth: 620px-680px`), mantendo o relógio perfeitamente equilibrado no centro.
 - **Encapsulamento do Notch**:
-  - **Esquerda (revelada no hover)**: Dynamic Workspace Pills (ativa: $22 \times 6\text{px}$, inativas: $6 \times 6\text{px}$, sem numeração).
+  - **Esquerda (revelada no hover)**: Espaçador simétrico equivalente à largura do grupo de status da direita, mantendo o relógio rigorosamente equilibrado no centro.
   - **Centro (sempre visível)**: Relógio em linha única (Hora 13px DemiBold + Data 11px Medium em `pt-BR`).
   - **Direita (`Status.qml`)**: System Tray + Botão Modo Jogo (`""`) + Botão de Configurações (`""`).
   - **Modos Ativos Integrados**:
@@ -69,7 +69,16 @@
     - **Modo Perfil & Menu de Energia (`PowerBarView.qml`)**: Avatar circular ($26\text{px}$), nome de usuário com Privacy Blur e 4 ações de energia (Bloquear, Deslogar, Reiniciar, Desligar).
     - **Ajustes Unificados (`SettingsBarView.qml`, 920x640px)**: Central de controle completa com abas para Wi-Fi, Bluetooth, Som (gerenciamento total de saídas PipeWire), Wallpapers e Jogos.
 
-### 3.2 Lançador de Aplicativos Inferior (`BottomLauncher.qml`, `shell.qml`)
+### 3.2 Barra Minimalista de Workspaces na Borda Inferior (`WorkspacePills.qml`, `shell.qml`)
+- **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na base da moldura perimetral, compartilhando o sistema de morphing do dock inferior.
+- **Escalonamento Curvilíneo Contínuo (`dockCurveFactor`)**: Os côncavos e cantos convexos escalam dinamicamente e proporcionalmente à altura de elevação da barra, garantindo transições perfeitamente contínuas e sem "asas" prematuras.
+- **Geometria & Ergonomia**: Altura fixa de 32px (mesma altura do notch) e largura adaptativa ao número de workspaces ativos (`workspaceCount`), com padding interno simétrico de 18px.
+- **Gatilhos & Comportamentos**:
+  - **Comandos de Workspace**: Toda troca de workspace ativa a exibição temporária da barra por 2 segundos.
+  - **Hover na Borda Inferior**: Zona de toque de 240x24px na base da tela (registrada em `mask: Region`) aciona a barra imediatamente. Permanece visível enquanto o cursor estiver dentro; fecha imediatamente ao sair.
+  - **Coexistência com Spotlight**: Ao abrir o Spotlight (`SUPER + D`), a barra de workspaces fecha imediatamente. Ao trocar de workspace com o Spotlight aberto, o Spotlight fecha e a barra é exibida por 2 segundos.
+
+### 3.3 Lançador de Aplicativos Inferior (`BottomLauncher.qml`, `shell.qml`)
 - **Dock de Pesquisa Invertido**: Fisicamente fundido à borda inferior de 8px em `unifiedShape` ($640 \times 480\text{px}$).
 - **Hierarquia Invertida**: Barra de busca com autofoco na base e lista de aplicativos expandindo-se para cima com navegação por teclado e visual translúcido.
 
