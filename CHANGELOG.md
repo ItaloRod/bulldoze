@@ -6,6 +6,46 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.0] - 2026-09
 
+### 🚀 Redesign do Launcher Central e Expansão de Hotspot (`LauncherBarView.qml`, `shell.qml`)
+- **Ampliação do Hotspot de Acionamento Superior**:
+  - A área de gatilho do hover no topo da tela foi expandida para 920px de largura (idêntica à largura total do launcher), centralizada no topo e registrada na máscara de entrada do Wayland (`mask: Region`). O acionamento via mouse agora ocorre de forma imediata e ergonômica em toda a extensão do launcher.
+- **Transição de "Ajustes" para Launcher Central (`LauncherBarView.qml`)**:
+  - O arquivo foi renomeado de `SettingsBarView.qml` para `LauncherBarView.qml`.
+  - O termo "Ajustes do Sistema" e o botão de fechar ("X") foram completamente eliminados da view.
+  - O fechamento da view ocorre exclusivamente por hover-out ou pelo atalho global `SUPER + H`.
+- **Barra de Categorias Horizontal no Topo**:
+  - A antiga barra lateral vertical de 48px foi substituída por uma linha horizontal centralizada no topo, contendo as 6 categorias (Início, Wi-Fi, Bluetooth, Som, Wallpaper e Jogos) de forma fixa e independente da rolagem.
+  - Toda a área de conteúdo abaixo passa a usufruir de 100% da largura útil da janela.
+- **Banner de Boas-Vindas com 180px e Ajuste Fino de Corte**:
+  - Altura do banner aumentada de 136px para 180px.
+  - Cantos superiores arredondados com `theme.radiusItem` acompanhando organicamente o contorno do card de boas-vindas, mascarados via `MultiEffect` para prevenir qualquer vazamento visual do blur.
+  - Enquadramento inicial alterado para exibir o topo da imagem (0%).
+  - Novo botão de canetinha (`""`) no canto superior esquerdo do banner com popover e slider vertical para ajuste fino do enquadramento (0% a 100%), salvo automaticamente em `~/.config/bulldoze/banner_crop.json`.
+  - Recarregamento reativo instantâneo do banner (`Wallpaper_greeter.png`) sempre que o wallpaper do sistema for alterado.
+- **Blocos em 100% da Largura (Data/Hora e Central de Jogos)**:
+  - Substituída a antiga divisão 60%/40% por blocos empilhados ocupando 100% da largura.
+  - **Data, Hora e Calendário**: Relógio digital ampliado para 48px com badge destacando o dia da semana por extenso, data completa e calendário mensal em largura total.
+  - **Central de Jogos & Performance**: Atalhos para GameMode, Bulldoptimizer, MangoHud e Gamescope reorganizados em uma única linha horizontal com 4 botões proporcionais.
+- **Identificação do SO na Barra Inferior**:
+  - O nome do computador na parte inferior esquerda foi substituído por `" Arch Linux"`, mantendo o `@bulldoze` no card superior.
+
+### 📥 Nova Visualização da System Tray (Borda Superior Direita & Fusão Vetorial)
+- **Remoção da System Tray do Notch Central (`Status.qml`)**:
+  - A bandeja do sistema (`Tray`) foi completamente removida do notch superior, desacoplando os ícones de aplicativos em segundo plano da barra de status central.
+  - O grupo da direita do notch (`Status.qml`) mantém os botões de Modo Jogo (``), Configurações (``) e Avatar, preservando a simetria e o equilíbrio central do relógio.
+- **Novo Painel de System Tray Fundido à Borda Superior Direita (`shell.qml`, `TrayBarView.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na moldura perimetral superior direita da tela, espelhando a geometria do painel de notificações com curvas côncavas e convexas contínuas e borda sutil de 1px (`theme.glassBorderSubtle`).
+  - **Perfil e Geometria Harmoniosa**: Altura fixa de 32px (`theme.notchHeight`), alinhada visualmente com a altura do notch superior e da barra de workspaces.
+  - **Largura Responsiva**: Cálculo dinâmico baseado na contagem de ícones ativos da bandeja (`SystemTray.items`), com tiles individuais de 26x26px, espaçamento de 6px e insets do Design System.
+  - **Tiles Interativos & Feedback Táctil**: Cada ícone é encapsulado em um tile de 26x26px com cantos arredondados de 6px (`theme.radiusSmall`), feedback de hover (`theme.hoverFill`), micro-escala táctil e ícone centralizado de 16x16px idêntico aos botões do notch.
+  - **Gatilho de Hover na Borda (Hot Zone 48x48px)**: Passar o cursor sobre a zona sensível de 48x48px no canto superior direito revela a visualização da bandeja instantaneamente.
+  - **Fechamento Instantâneo**: Recolhimento imediato com animação fluida ao remover o mouse da área da view ou interagir com o workspace.
+  - **Suporte a Menus de Contexto SNI/DBus (`QsMenuAnchor`)**:
+    - Clique esquerdo ativa o aplicativo (`modelData.activate()`).
+    - Clique direito abre o menu de contexto nativo do aplicativo via `QsMenuAnchor` / SNI.
+    - O painel permanece aberto e fixado enquanto qualquer menu de contexto estiver em exibição.
+  - **Pegada Zero quando Vazia**: Quando não houver nenhum ícone ativo na bandeja (`trayItemCount === 0`), tanto o gatilho de hover quanto o container da view são completamente removidos da máscara do Wayland (`mask: Region`), permitindo cliques 100% transparentes sobre janelas subjacentes do workspace.
+
 ### 🗂️ Reformulação da Visualização de Workspaces (Dock Inferior Minimalista & Fusão Vetorial)
 - **Remoção dos Workspaces do Notch Superior (`DefaultBarView.qml`)**:
   - As pílulas de workspaces foram completamente removidas do notch superior.
@@ -75,6 +115,23 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Adicionado script utilitário para inspeção estruturada em JSON das saídas de som do PipeWire e troca de dispositivo padrão.
 
 ### ⚡ Performance & Otimizações do Sistema
+- **Otimizações para GPU AMD Radeon no Bulldoptimizer (`modules/Gaming.qml`, `LauncherBarView.qml`, `GamingSettingsBarView.qml`, `scripts/bulldoze-game-run`)**:
+  - Transição de suporte de GPU da NVIDIA para a arquitetura AMD Radeon (foco na RX 9070 XT).
+  - **AMD DPM Performance (Max Clocks)**: Trava o clock da GPU Core e da VRAM em performance máxima (`power_dpm_force_performance_level = high`, `pp_power_profile_mode = 1` [3D_FULL_SCREEN]), prevenindo downclocking repentino e frametime spikes.
+  - **AMD RADV Anti-Lag & Shader Boost**: Injeção automática de variáveis de ambiente de alta performance no inicializador de jogos (`bulldoze-game-run`):
+    - `AMD_VULKAN_ICD="RADV"`: Força o driver Vulkan da Valve/Mesa com compilador ACO.
+    - `RADV_PERFTEST="aco,anti_lag"`: Ativa o compilador ACO e o AMD Anti-Lag para redução drástica de latência de entrada.
+    - `MESA_SHADER_CACHE_MAX_SIZE="50G"`: Cache de shaders ampliado para 50GB, eliminando micro-travadas por recompilação.
+    - `vk_xwayland_wait_ready=false`: Bypassa esperas artificiais de sincronização no XWayland.
+    - `MESA_VK_WSI_PRESENT_MODE="mailbox"`: Apresentação imediata de quadros sem tearing e com menor latência.
+    - `mesa_glthread=true`: Multi-threading assíncrono para jogos legados e títulos OpenGL.
+  - Aplicação e reversão automáticas ao alternar o Bulldoptimizer ou sair dos jogos.
+- **Auto-Pause do Wallpaper Exclusivo para Tela Cheia (`scripts/bulldoze-hypr-events.py`)**:
+  - Ajustada a regra de suspensão do motor do Wallpaper Engine para considerar apenas janelas em tela cheia (`has_fs`) em vez de qualquer janela aberta (`win_count > 0`).
+  - Permite que papéis de parede animados continuem em execução fluida durante o uso normal do desktop com janelas parciais/lado a lado, suspendendo e liberando 100% de VRAM e GPU apenas ao executar jogos em tela cheia.
+- **Captura Assíncrona e Instantânea de Wallpaper Snapshots (`scripts/bulldoze-wallpaper.py`, `shell.qml`)**:
+  - Pipeline otimizado em duas fases: geração instantânea via preview/textura do workshop (`snapshot`) e renderização em segundo plano da captura nativa 1440p limpa do engine (`snapshot-hires`).
+  - Atualização imediata do banner do Launcher e da tela de login (`Wallpaper_greeter.png`), com notificação reativa via IPC (`reloadWallpaperSnapshot`), extinguindo congelamentos de interface ao alternar papéis de parede.
 - **Isolamento de Áudio do Wallpaper Engine (`scripts/bulldoze-wallpaper.py`)**:
   - Desacoplamento total do `linux-wallpaperengine` do subsistema PipeWire utilizando `SDL_AUDIODRIVER=dummy`, `ALSOFT_DRIVERS=dummy` e `--no-audio-processing`.
   - **Correção de Deadlock com Bluetooth & YouTube**: Evita que o congelamento do wallpaper via `SIGSTOP` (recurso de economia de GPU com janelas abertas) trave o grafo de renegociação do PipeWire (`[negotiating]`) ao conectar fones/caixas Bluetooth (ex: JBL Go) ou alterar dispositivos de som, eliminando congelamentos de vídeos no YouTube e navegadores.

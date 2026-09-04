@@ -21,7 +21,7 @@
 - `hoverFill`: `#1CFFFFFF` (realce suave de hover).
 - `activeFill`: `#33FFFFFF` (realce de toggle ativo).
 - `separator`: `#1AFFFFFF` (linha divisória de 1px).
-- `accent`: `#5294E2` (azul de destaque para indicadores, foco e spinners de carregamento).
+- `accent`: `#FFFFFF` (branco de destaque para indicadores, foco e spinners de carregamento).
 - `textStrong`: `#F2FFFFFF` (títulos, hora, ícones principais).
 - `textMedium`: `#DFFFFFFF` (corpo, nomes de app, workspaces ativos).
 - `textMuted`: `#BFFFFFFF` (data, descrições secundárias, subtítulos).
@@ -67,7 +67,7 @@
   - **Modos Ativos Integrados**:
     - **Modo Jogo (`GamingBarView.qml`)**: Altura compacta (68px) com centralização simétrica e largura ideal calculada dinamicamente (`idealWidth`), contendo toggles para **GameMode**, **MangoHud**, e **Gamescope**, além de acesso aos ajustes avançados.
     - **Modo Perfil & Menu de Energia (`PowerBarView.qml`)**: Avatar circular ($26\text{px}$), nome de usuário com Privacy Blur e 4 ações de energia (Bloquear, Deslogar, Reiniciar, Desligar).
-    - **Ajustes Unificados (`SettingsBarView.qml`, 920x640px)**: Central de controle completa com abas para Wi-Fi, Bluetooth, Som (gerenciamento total de saídas PipeWire), Wallpapers e Jogos.
+    - **Launcher Central do Sistema (`LauncherBarView.qml`, 920x640px)**: Central de controle e lançador unificado acionado via hover no topo (hotspot de 920px) ou `SUPER + H`. Possui barra horizontal de categorias no topo, banner responsivo de 180px com ajuste fino de corte/enquadramento, blocos empilhados de Data/Hora (relógio 48px e calendário) e Central de Jogos em 100% da largura, além de abas para Wi-Fi, Bluetooth, Som, Wallpapers e Jogos.
 
 ### 3.2 Barra Minimalista de Workspaces na Borda Inferior (`WorkspacePills.qml`, `shell.qml`)
 - **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na base da moldura perimetral, compartilhando o sistema de morphing do dock inferior.

@@ -327,20 +327,33 @@ Item {
                         }
                     }
 
-                    SectionHeader { title: "Hardware & Driver GPU" }
+                    SectionHeader { title: "Hardware & Driver GPU (AMD Radeon)" }
 
                     SettingToggleRow {
                         iconGlyph: ""
-                        title: "NVIDIA PowerMizer Performance"
-                        subtitle: "Trava a GPU em modo de desempenho máximo (Seguro: ignora em GPUs AMD/Intel)"
-                        checked: root.game ? root.game.boPowerMizer : false
+                        title: "AMD DPM Performance (Max Clocks)"
+                        subtitle: "Trava GPU Core e VRAM em clocks de alto desempenho para eliminar oscilações e micro-stutters"
+                        checked: root.game ? root.game.boAmdDpm : true
                         onToggled: {
                             if (root.game) {
-                                root.game.boPowerMizer = !root.game.boPowerMizer
+                                root.game.boAmdDpm = !root.game.boAmdDpm
                                 root.game.saveConfig()
                                 if (root.game.bulldoptimizerEnabled) {
                                     root.game.applyBulldoptimizer(true)
                                 }
+                            }
+                        }
+                    }
+
+                    SettingToggleRow {
+                        iconGlyph: "⚡"
+                        title: "AMD RADV Anti-Lag & Shader Boost"
+                        subtitle: "Ativa compilador ACO, AMD Anti-Lag, cache de shaders de 50GB e XWayland sem esperas"
+                        checked: root.game ? root.game.boRadvOptimizations : true
+                        onToggled: {
+                            if (root.game) {
+                                root.game.boRadvOptimizations = !root.game.boRadvOptimizations
+                                root.game.saveConfig()
                             }
                         }
                     }

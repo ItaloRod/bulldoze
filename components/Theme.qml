@@ -15,7 +15,7 @@ QtObject {
     readonly property color hoverFill: "#1CFFFFFF"           // ~11% alpha white (hover state)
     readonly property color activeFill: "#33FFFFFF"          // ~20% alpha white (active/selected toggle)
     readonly property color separator: "#1AFFFFFF"           // ~10% alpha white (subtle divider)
-    readonly property color accent: "#5294E2"                // Accent blue for indicators and spinners
+    readonly property color accent: "#FFFFFF"                // White highlight for indicators and spinners
 
     // -------------------------------------------------------------------------
     // 2. Typography & Contrast Tokens

@@ -14,10 +14,11 @@ QtObject {
     property bool mangohudEnabled: false
     property bool gamescopeEnabled: false
 
-    // Bulldoptimizer Advanced Options
+    // Bulldoptimizer Advanced Options (AMD Radeon Tuning)
     property bool boWallpaperStatic: true
     property bool boHyprlandEffects: true
-    property bool boPowerMizer: false
+    property bool boAmdDpm: true
+    property bool boRadvOptimizations: true
 
     // Gamescope Advanced Options
     property bool gsHdr: false
@@ -219,15 +220,15 @@ QtObject {
             if (boHyprlandEffects) {
                 hyprOptProc.exec(["sh", "-c", "hyprctl keyword decoration:blur:enabled false && hyprctl keyword decoration:shadow:enabled false && hyprctl keyword animations:enabled false && hyprctl keyword render:direct_scanout 1 2>/dev/null || true"])
             }
-            if (boPowerMizer) {
-                gpuOptProc.exec(["sh", "-c", "command -v nvidia-settings &>/dev/null && nvidia-settings -a '[gpu:0]/GpuPowerMizerMode=1' 2>/dev/null; command -v nvidia-smi &>/dev/null && nvidia-smi -pm 1 2>/dev/null || true"])
+            if (boAmdDpm) {
+                gpuOptProc.exec(["sh", "-c", "for f in /sys/class/drm/card*/device/power_dpm_force_performance_level; do [ -w \"$f\" ] && echo high > \"$f\"; done; for p in /sys/class/drm/card*/device/pp_power_profile_mode; do [ -w \"$p\" ] && echo 1 > \"$p\"; done || true"])
             }
         } else {
             if (boHyprlandEffects) {
                 hyprOptProc.exec(["sh", "-c", "hyprctl keyword decoration:blur:enabled true && hyprctl keyword decoration:shadow:enabled true && hyprctl keyword animations:enabled true 2>/dev/null || true"])
             }
-            if (boPowerMizer) {
-                gpuOptProc.exec(["sh", "-c", "command -v nvidia-settings &>/dev/null && nvidia-settings -a '[gpu:0]/GpuPowerMizerMode=0' 2>/dev/null || true"])
+            if (boAmdDpm) {
+                gpuOptProc.exec(["sh", "-c", "for f in /sys/class/drm/card*/device/power_dpm_force_performance_level; do [ -w \"$f\" ] && echo auto > \"$f\"; done; for p in /sys/class/drm/card*/device/pp_power_profile_mode; do [ -w \"$p\" ] && echo 0 > \"$p\"; done || true"])
             }
         }
     }
@@ -251,7 +252,8 @@ QtObject {
             "bulldoptimizer_config": {
                 "wallpaper_static": boWallpaperStatic,
                 "hyprland_effects": boHyprlandEffects,
-                "powermizer": boPowerMizer
+                "amd_dpm": boAmdDpm,
+                "radv_optimizations": boRadvOptimizations
             },
             "gamescope_args": buildGamescopeArgs(),
             "gamescope_config": {
@@ -325,7 +327,8 @@ QtObject {
                         const bc = parsed.bulldoptimizer_config
                         root.boWallpaperStatic = bc.wallpaper_static !== undefined ? !!bc.wallpaper_static : true
                         root.boHyprlandEffects = bc.hyprland_effects !== undefined ? !!bc.hyprland_effects : true
-                        root.boPowerMizer = !!bc.powermizer
+                        root.boAmdDpm = bc.amd_dpm !== undefined ? !!bc.amd_dpm : true
+                        root.boRadvOptimizations = bc.radv_optimizations !== undefined ? !!bc.radv_optimizations : true
                     }
                     
                     if (root.bulldoptimizerEnabled) {

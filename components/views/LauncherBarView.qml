@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Widgets
+import Quickshell.Io
 import "../../modules"
 import ".."
 
@@ -14,9 +15,14 @@ Item {
     property var audio
     property var gaming
     property var wallpaperEngine
+    property var userProfile
+    property var lockScreen
 
-    // Sidebar Category: "wifi" | "bluetooth" | "sound" | "wallpaper" | "gaming"
-    property string activeCategory: "wifi"
+    focus: true
+    Keys.onEscapePressed: if (root.goBack) root.goBack()
+
+    // Sidebar Category: "home" | "wifi" | "bluetooth" | "sound" | "wallpaper" | "gaming"
+    property string activeCategory: "home"
     property string activeGamingTab: "bulldoptimizer"
 
     Theme {
@@ -28,15 +34,68 @@ Item {
     readonly property var aud: audio
     readonly property var game: gaming
     readonly property var wp: wallpaperEngine
+    readonly property var prof: userProfile
+
+    Process {
+        id: proc
+    }
 
     property string selectedWifiSsid: ""
     property string wifiPasswordInput: ""
     property bool showPasswordText: false
 
+    property real bannerCropOffset: 0.0
+    property bool isCropAdjustOpen: false
+    property string cropConfigPath: Quickshell.env("HOME") + "/.config/bulldoze/banner_crop.json"
+    property real wpVersion: 0
+
+    Connections {
+        target: root.wp
+        function onSnapshotVersionChanged() {
+            root.wpVersion = Date.now()
+        }
+        function onActiveIdChanged() {
+            root.wpVersion = Date.now()
+        }
+    }
+
+    Process {
+        id: cropReadProc
+        command: ["sh", "-c", "cat " + root.cropConfigPath + " 2>/dev/null || echo '{\"crop\":0.0}'"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    const parsed = JSON.parse(data.trim())
+                    if (typeof parsed.crop === "number") {
+                        root.bannerCropOffset = Math.max(0.0, Math.min(1.0, parsed.crop))
+                    }
+                } catch(e) {}
+            }
+        }
+    }
+
+    Process {
+        id: cropWriteProc
+    }
+
+    function loadCropConfig() {
+        if (!cropReadProc.running) cropReadProc.running = true
+    }
+
+    function saveCropConfig() {
+        const jsonStr = JSON.stringify({ crop: root.bannerCropOffset })
+        cropWriteProc.exec(["sh", "-c", "mkdir -p ~/.config/bulldoze && echo '" + jsonStr + "' > " + root.cropConfigPath])
+    }
+
+    Component.onCompleted: root.loadCropConfig()
+
     onVisibleChanged: {
         if (visible) {
             root.selectedWifiSsid = ""
             root.wifiPasswordInput = ""
+            root.wpVersion = Date.now()
+            root.loadCropConfig()
+            if (root.prof) root.prof.refresh()
             if (root.net && root.net.enabled) root.net.scanNetworks(true)
             if (root.bt && root.bt.enabled) root.bt.refresh()
             if (root.aud) root.aud.refreshSinks()
@@ -46,6 +105,7 @@ Item {
                 root.wp.loadConfig()
             }
         } else {
+            root.isCropAdjustOpen = false
             if (root.bt) root.bt.stopScan()
         }
     }
@@ -53,7 +113,10 @@ Item {
     onActiveCategoryChanged: {
         root.selectedWifiSsid = ""
         root.wifiPasswordInput = ""
-        if (activeCategory === "wifi" && root.net && root.net.enabled) {
+        if (activeCategory === "home") {
+            if (root.prof) root.prof.refresh()
+            if (root.game) root.game.loadConfig()
+        } else if (activeCategory === "wifi" && root.net && root.net.enabled) {
             root.net.scanNetworks(true)
         } else if (activeCategory === "bluetooth" && root.bt && root.bt.enabled) {
             root.bt.refresh()
@@ -226,85 +289,195 @@ Item {
         anchors.margins: theme.spacingXxl
         spacing: theme.spacingMd
 
-        // 1. TOP HEADER
+        // 1. TOP HORIZONTAL CATEGORY BAR (Centralizada e independente do scroll)
         Row {
-            width: parent.width
-            height: 38
+            anchors.horizontalCenter: parent.horizontalCenter
+            height: 42
             spacing: theme.spacingMd
 
-            Row {
-                anchors.verticalCenter: parent.verticalCenter
-                spacing: theme.spacingSm
-                width: parent.width - 44
-
-                Rectangle {
-                    anchors.verticalCenter: parent.verticalCenter
-                    width: 32
-                    height: 32
-                    radius: theme.radiusSmall
-                    color: theme.itemFill
-                    border.width: 1
-                    border.color: theme.glassBorderSubtle
-
-                    Text {
-                        anchors.centerIn: parent
-                        text: ""
-                        color: theme.textStrong
-                        font.pixelSize: theme.fontSizeMd
-                    }
-                }
-
-                Column {
-                    anchors.verticalCenter: parent.verticalCenter
-                    spacing: 1
-
-                    Text {
-                        text: "Ajustes do Sistema"
-                        color: theme.textStrong
-                        font.pixelSize: theme.fontSizeLg
-                        font.weight: Font.DemiBold
-                    }
-
-                    Text {
-                        text: {
-                            if (root.activeCategory === "wifi") return "Rede sem fio & Conexões Wi-Fi"
-                            if (root.activeCategory === "bluetooth") return "Dispositivos & Conexões Bluetooth"
-                            if (root.activeCategory === "sound") return "Dispositivos de Áudio & Volume"
-                            if (root.activeCategory === "wallpaper") return "Gerenciador de Wallpapers & Visuais"
-                            return "Jogos & Otimização de Performance"
-                        }
-                        color: theme.textMuted
-                        font.pixelSize: theme.fontSizeXs
-                    }
-                }
-            }
-
+            // 0. Home
             Rectangle {
-                anchors.verticalCenter: parent.verticalCenter
-                width: 32
-                height: 32
+                width: 42
+                height: 42
                 radius: theme.radiusSmall
-                color: closeMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                color: root.activeCategory === "home" ? theme.activeFill : (catHomeMouse.containsMouse ? theme.hoverFill : "transparent")
                 border.width: 1
-                border.color: closeMouse.containsMouse ? theme.glassBorderStrong : theme.glassBorderSubtle
-                scale: closeMouse.pressed ? 0.92 : 1.0
+                border.color: root.activeCategory === "home" ? theme.glassBorderStrong : (catHomeMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catHomeMouse.pressed ? 0.90 : (catHomeMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
 
                 Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
 
                 Text {
                     anchors.centerIn: parent
-                    text: ""
-                    color: theme.textStrong
-                    font.pixelSize: theme.fontSizeSm
+                    text: ""
+                    color: root.activeCategory === "home" ? theme.textStrong : (catHomeMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
                 }
 
                 MouseArea {
-                    id: closeMouse
+                    id: catHomeMouse
                     anchors.fill: parent
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: if (root.goBack) root.goBack()
+                    onClicked: root.activeCategory = "home"
+                }
+            }
+
+            // 1. Wi-Fi
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "wifi" ? theme.activeFill : (catWifiMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "wifi" ? theme.glassBorderStrong : (catWifiMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catWifiMouse.pressed ? 0.90 : (catWifiMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "wifi" ? theme.textStrong : (catWifiMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                }
+
+                MouseArea {
+                    id: catWifiMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "wifi"
+                }
+            }
+
+            // 2. Bluetooth
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "bluetooth" ? theme.activeFill : (catBtMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "bluetooth" ? theme.glassBorderStrong : (catBtMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catBtMouse.pressed ? 0.90 : (catBtMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "bluetooth" ? theme.textStrong : (catBtMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                }
+
+                MouseArea {
+                    id: catBtMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "bluetooth"
+                }
+            }
+
+            // 3. Som
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : (catSoundMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catSoundMouse.pressed ? 0.90 : (catSoundMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "sound" ? theme.textStrong : (catSoundMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                }
+
+                MouseArea {
+                    id: catSoundMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "sound"
+                }
+            }
+
+            // 4. Wallpaper
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "wallpaper" ? theme.activeFill : (catWpMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "wallpaper" ? theme.glassBorderStrong : (catWpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catWpMouse.pressed ? 0.90 : (catWpMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "wallpaper" ? theme.textStrong : (catWpMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                }
+
+                MouseArea {
+                    id: catWpMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "wallpaper"
+                }
+            }
+
+            // 5. Gaming
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "gaming" ? theme.activeFill : (catGamingMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "gaming" ? theme.glassBorderStrong : (catGamingMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catGamingMouse.pressed ? 0.90 : (catGamingMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "gaming" ? theme.textStrong : (catGamingMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                }
+
+                MouseArea {
+                    id: catGamingMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "gaming"
                 }
             }
         }
@@ -315,239 +488,1436 @@ Item {
             color: theme.separator
         }
 
-        // 2. MAIN SPLIT BODY
-        Row {
+        // 2. CONTENT CONTAINER (Largura total)
+        Item {
             width: parent.width
-            height: parent.height - 38 - 1 - theme.spacingMd * 2
-            spacing: theme.spacingLg
+            height: parent.height - 42 - 1 - theme.spacingMd * 2
 
-            // SIDEBAR: (1. Wifi, 2. Bluetooth, 3. Som, 4. Wallpaper, 5. Gaming)
-            Column {
-                width: 190
-                height: parent.height
-                spacing: theme.spacingSm
+                // =============================================================
+                // TAB CONTENT 0: HOME SETTINGS
+                // =============================================================
+                Item {
+                    id: homeTabContent
+                    anchors.fill: parent
+                    visible: root.activeCategory === "home"
 
-                // 1. Wi-Fi
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    radius: theme.radiusSmall
-                    color: root.activeCategory === "wifi" ? theme.activeFill : (catWifiMouse.containsMouse ? theme.hoverFill : theme.itemFill)
-                    border.width: 1
-                    border.color: root.activeCategory === "wifi" ? theme.glassBorderStrong : theme.glassBorderSubtle
+                    property var currentTime: new Date()
+                    property int currentDay: currentTime.getDate()
+                    property string uptimeStr: "0m"
+                    property string kernelStr: ""
+                    property string pendingAction: ""
+                    property string confirmTitle: ""
+                    property string confirmDesc: ""
 
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Timer {
+                        interval: 1000
+                        running: homeTabContent.visible
+                        repeat: true
+                        onTriggered: homeTabContent.currentTime = new Date()
+                    }
 
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: theme.spacingSm
-                        anchors.rightMargin: theme.spacingSm
-                        spacing: theme.spacingSm
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            color: root.activeCategory === "wifi" ? theme.textStrong : theme.textMuted
-                            font.pixelSize: theme.fontSizeMd
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Rede & Wi-Fi"
-                            color: root.activeCategory === "wifi" ? theme.textStrong : theme.textMedium
-                            font.pixelSize: theme.fontSizeSm
-                            font.weight: root.activeCategory === "wifi" ? Font.DemiBold : Font.Normal
+                    Process {
+                        id: uptimeProc
+                        command: ["sh", "-c", "cat /proc/uptime | awk '{print int($1)}'"]
+                        stdout: SplitParser {
+                            onRead: data => {
+                                const sec = parseInt(data.trim())
+                                if (!isNaN(sec)) {
+                                    const h = Math.floor(sec / 3600)
+                                    const m = Math.floor((sec % 3600) / 60)
+                                    if (h > 0) homeTabContent.uptimeStr = h + "h " + m + "m"
+                                    else homeTabContent.uptimeStr = m + "m"
+                                }
+                            }
                         }
                     }
 
-                    MouseArea {
-                        id: catWifiMouse
+                    Process {
+                        id: kernelProc
+                        command: ["sh", "-c", "cat /proc/sys/kernel/osrelease 2>/dev/null || uname -r"]
+                        running: true
+                        stdout: SplitParser {
+                            onRead: data => {
+                                const k = data.trim()
+                                if (k) homeTabContent.kernelStr = k
+                            }
+                        }
+                    }
+
+                    Timer {
+                        interval: 30000
+                        running: homeTabContent.visible
+                        repeat: true
+                        triggeredOnStart: true
+                        onTriggered: if (!uptimeProc.running) uptimeProc.running = true
+                    }
+
+                    function getCalendarDays(d) {
+                        if (!d) return []
+                        const year = d.getFullYear()
+                        const month = d.getMonth()
+                        const todayDate = d.getDate()
+                        const firstDay = new Date(year, month, 1).getDay()
+                        const daysInMonth = new Date(year, month + 1, 0).getDate()
+                        const daysInPrevMonth = new Date(year, month, 0).getDate()
+
+                        let days = []
+                        for (let i = firstDay - 1; i >= 0; i--) {
+                            days.push({ day: daysInPrevMonth - i, isCurrent: false, isToday: false })
+                        }
+                        for (let i = 1; i <= daysInMonth; i++) {
+                            days.push({ day: i, isCurrent: true, isToday: (i === todayDate) })
+                        }
+                        const totalCells = days.length > 35 ? 42 : 35
+                        const remaining = totalCells - days.length
+                        for (let i = 1; i <= remaining; i++) {
+                            days.push({ day: i, isCurrent: false, isToday: false })
+                        }
+                        return days
+                    }
+
+                    property var calendarDays: getCalendarDays(currentTime)
+                    onCurrentDayChanged: calendarDays = getCalendarDays(currentTime)
+
+                    readonly property string greetingPrefix: {
+                        const h = homeTabContent.currentTime.getHours()
+                        if (h >= 6 && h < 12) {
+                            return "Bom dia,"
+                        } else if (h >= 12 && h < 18) {
+                            return "Boa tarde,"
+                        } else if (h >= 18 && h <= 23) {
+                            return "Boa noite,"
+                        } else {
+                            return "Vai dormir,"
+                        }
+                    }
+
+                    readonly property string greetingSuffix: {
+                        const h = homeTabContent.currentTime.getHours()
+                        if (h >= 6 && h < 12) {
+                            return "! ☀️"
+                        } else if (h >= 12 && h < 18) {
+                            return "! 🌇"
+                        } else if (h >= 18 && h <= 23) {
+                            return "! 🌙"
+                        } else {
+                            return "! 💤"
+                        }
+                    }
+
+                    // 1. Fixed Top-Left Crop Button (Canetinha para ajuste de enquadramento)
+                    Rectangle {
+                        id: homeCropBtn
+                        anchors {
+                            top: parent.top
+                            left: parent.left
+                        }
+                        width: 28
+                        height: 28
+                        radius: theme.radiusSmall
+                        color: hcMouse.containsMouse ? theme.hoverFill : (root.isCropAdjustOpen ? theme.activeFill : "transparent")
+                        border.width: 1
+                        border.color: root.isCropAdjustOpen ? theme.glassBorderStrong : (hcMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                        scale: hcMouse.pressed ? 0.90 : (hcMouse.containsMouse ? 1.10 : 1.0)
+                        transformOrigin: Item.Center
+                        z: 25
+
+                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                        Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: theme.animDurationFast
+                                easing.type: Easing.OutBack
+                                easing.overshoot: theme.buttonOvershoot
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: ""
+                            color: root.isCropAdjustOpen ? theme.textStrong : (hcMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                            font.pixelSize: theme.iconSizeSm
+                        }
+
+                        MouseArea {
+                            id: hcMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root.isCropAdjustOpen = !root.isCropAdjustOpen
+                        }
+                    }
+
+                    // Popup do Slider Vertical de Enquadramento
+                    Rectangle {
+                        id: cropAdjustPopup
+                        anchors {
+                            top: homeCropBtn.bottom
+                            topMargin: 6
+                            left: homeCropBtn.left
+                        }
+                        width: 140
+                        height: 180
+                        radius: theme.radiusItem
+                        color: theme.glassFillDark
+                        border.width: 1
+                        border.color: theme.glassBorderStrong
+                        visible: root.isCropAdjustOpen
+                        z: 30
+
+                        Column {
+                            anchors.fill: parent
+                            anchors.margins: theme.spacingSm
+                            spacing: 6
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: "Enquadramento"
+                                color: theme.textStrong
+                                font.pixelSize: 10
+                                font.weight: Font.DemiBold
+                            }
+
+                            // Slider Vertical
+                            Item {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: 32
+                                height: 96
+
+                                Rectangle {
+                                    anchors.centerIn: parent
+                                    width: 6
+                                    height: parent.height
+                                    radius: 3
+                                    color: theme.itemFill
+                                    border.width: 1
+                                    border.color: theme.glassBorderSubtle
+                                }
+
+                                Rectangle {
+                                    id: sliderThumb
+                                    width: 18
+                                    height: 18
+                                    radius: 9
+                                    color: theme.textStrong
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    y: root.bannerCropOffset * (parent.height - height)
+
+                                    Behavior on y {
+                                        enabled: !sliderMouse.drag.active
+                                        NumberAnimation { duration: theme.animDurationFast }
+                                    }
+                                }
+
+                                MouseArea {
+                                    id: sliderMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    preventStealing: true
+
+                                    function updateFromPos(mouseY) {
+                                        const clampedY = Math.max(0, Math.min(mouseY - 9, parent.height - 18))
+                                        const val = clampedY / (parent.height - 18)
+                                        root.bannerCropOffset = Math.max(0.0, Math.min(1.0, val))
+                                        root.saveCropConfig()
+                                    }
+
+                                    onPositionChanged: mouse => {
+                                        if (pressed) updateFromPos(mouse.y)
+                                    }
+                                    onPressed: mouse => updateFromPos(mouse.y)
+                                }
+                            }
+
+                            Text {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                text: Math.round(root.bannerCropOffset * 100) + "%"
+                                color: theme.textMuted
+                                font.pixelSize: 10
+                                font.weight: Font.Medium
+                            }
+
+                            Rectangle {
+                                anchors.horizontalCenter: parent.horizontalCenter
+                                width: parent.width - 8
+                                height: 20
+                                radius: theme.radiusSmall
+                                color: topResetMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                                border.width: 1
+                                border.color: theme.glassBorderSubtle
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: "Início (0%)"
+                                    color: theme.textStrong
+                                    font.pixelSize: 9
+                                    font.weight: Font.Medium
+                                }
+
+                                MouseArea {
+                                    id: topResetMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.bannerCropOffset = 0.0
+                                        root.saveCropConfig()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 1. Fixed Top-Right Privacy Button
+                    Rectangle {
+                        id: homePrivacyBtn
+                        anchors {
+                            top: parent.top
+                            right: parent.right
+                        }
+                        width: 28
+                        height: 28
+                        radius: theme.radiusSmall
+                        color: hpMouse.containsMouse ? theme.hoverFill : ((root.prof && root.prof.privacyMode) ? theme.activeFill : "transparent")
+                        border.width: 1
+                        border.color: (root.prof && root.prof.privacyMode) ? theme.glassBorderStrong : (hpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                        scale: hpMouse.pressed ? 0.90 : (hpMouse.containsMouse ? 1.10 : 1.0)
+                        transformOrigin: Item.Center
+                        z: 20
+
+                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                        Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                        Behavior on scale {
+                            NumberAnimation {
+                                duration: theme.animDurationFast
+                                easing.type: Easing.OutBack
+                                easing.overshoot: theme.buttonOvershoot
+                            }
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: (root.prof && root.prof.privacyMode) ? "" : ""
+                            color: (root.prof && root.prof.privacyMode) ? theme.textStrong : (hpMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                            font.pixelSize: theme.iconSizeSm
+                        }
+
+                        MouseArea {
+                            id: hpMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: if (root.prof) root.prof.togglePrivacy()
+                        }
+                    }
+
+                    // 2. Scrollable Home Area (Flickable)
+                    Flickable {
+                        id: homeFlickable
+                        anchors {
+                            top: parent.top
+                            bottom: homeBottomBar.top
+                            bottomMargin: theme.spacingSm
+                            left: parent.left
+                            right: parent.right
+                        }
+                        clip: true
+                        contentWidth: width
+                        contentHeight: homeScrollCol.implicitHeight
+
+                        Column {
+                            id: homeScrollCol
+                            width: parent.width
+                            spacing: theme.spacingMd
+
+                            // =========================================================
+                            // TOP: WELCOME CARD COM BANNER EM UMA LINHA SÓ
+                            // =========================================================
+                            Rectangle {
+                                id: welcomeCard
+                                width: parent.width
+                                implicitHeight: welcomeContentCol.implicitHeight + 16
+                                radius: theme.radiusItem
+                                color: theme.itemFill
+                                border.width: 1
+                                border.color: theme.glassBorderSubtle
+
+                                Column {
+                                    id: welcomeContentCol
+                                    width: parent.width
+                                    spacing: 0
+
+                                    // Banner com Avatar Sobreposto
+                                    Item {
+                                        id: bannerContainer
+                                        width: parent.width
+                                        height: bannerBox.height + 40
+
+                                        // Banner com cantos superiores arredondados e blur pré-aplicado
+                                        Item {
+                                            id: bannerBox
+                                            anchors {
+                                                top: parent.top
+                                                left: parent.left
+                                                right: parent.right
+                                            }
+                                            height: 180
+                                            layer.enabled: true
+                                            layer.effect: MultiEffect {
+                                                maskEnabled: true
+                                                maskSource: bannerMask
+                                            }
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                color: theme.glassFillDark
+                                            }
+
+                                            Item {
+                                                anchors.fill: parent
+                                                clip: true
+
+                                                Image {
+                                                    id: bannerImg
+                                                    source: "file://" + Quickshell.env("HOME") + "/.cache/bulldoze/Wallpaper_greeter.png?v=" + root.wpVersion
+                                                    asynchronous: true
+                                                    cache: false
+                                                    readonly property real scaleRatio: (implicitWidth > 0 && implicitHeight > 0)
+                                                        ? Math.max(parent.width / implicitWidth, parent.height / implicitHeight)
+                                                        : 1.0
+                                                    width: implicitWidth > 0 ? implicitWidth * scaleRatio : parent.width
+                                                    height: implicitHeight > 0 ? implicitHeight * scaleRatio : parent.height
+                                                    x: (parent.width - width) / 2
+                                                    y: -(height - parent.height) * root.bannerCropOffset
+
+                                                    onStatusChanged: {
+                                                        if (status === Image.Error) {
+                                                            source = "file:///var/lib/greetd/Wallpaper_greeter.png?v=" + root.wpVersion
+                                                        }
+                                                    }
+                                                }
+                                            }
+
+                                            // Fallback se imagem indisponível
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                color: "#25000000"
+                                                visible: !bannerImg.visible
+                                            }
+                                        }
+
+                                        // Máscara com cantos superiores arredondados
+                                        Item {
+                                            id: bannerMask
+                                            anchors.fill: bannerBox
+                                            visible: false
+                                            layer.enabled: true
+
+                                            Rectangle {
+                                                width: parent.width
+                                                height: parent.height + theme.radiusItem
+                                                radius: theme.radiusItem
+                                                color: "black"
+                                            }
+                                        }
+
+                                        // Avatar 80x80 Centralizado Horizontalmente e Sobreposto na Borda Inferior
+                                        Item {
+                                            id: avatarOverBanner
+                                            width: 80
+                                            height: 80
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            y: bannerBox.height - 40
+
+                                            Rectangle {
+                                                anchors.fill: parent
+                                                radius: 40
+                                                color: theme.glassFillDark
+                                                border.width: 3
+                                                border.color: theme.glassBorderStrong
+                                            }
+
+                                            Image {
+                                                id: bigAvatarImg
+                                                anchors.fill: parent
+                                                anchors.margins: 3
+                                                fillMode: Image.PreserveAspectCrop
+                                                source: (root.prof && root.prof.hasAvatar && root.prof.avatarPath !== "") ? ("file://" + root.prof.avatarPath) : ""
+                                                visible: Boolean(root.prof && root.prof.hasAvatar && status === Image.Ready)
+                                                asynchronous: true
+                                                cache: false
+
+                                                layer.enabled: true
+                                                layer.effect: MultiEffect {
+                                                    maskEnabled: true
+                                                    maskSource: bigAvatarMask
+                                                }
+                                            }
+
+                                            Item {
+                                                id: bigAvatarMask
+                                                anchors.fill: parent
+                                                visible: false
+                                                layer.enabled: true
+
+                                                Rectangle {
+                                                    anchors.fill: parent
+                                                    radius: 40
+                                                    color: "black"
+                                                }
+                                            }
+
+                                            Text {
+                                                anchors.centerIn: parent
+                                                visible: !bigAvatarImg.visible
+                                                text: (root.prof && root.prof.initial) ? root.prof.initial : "U"
+                                                color: theme.textStrong
+                                                font.pixelSize: 28
+                                                font.weight: Font.Bold
+                                            }
+                                        }
+                                    }
+
+                                    // Espaçamento abaixo do avatar
+                                    Item { width: 1; height: 12 }
+
+                                    // Saudação em uma linha só + Blur no displayName
+                                    Column {
+                                        width: parent.width
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        spacing: 4
+
+                                        Row {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            spacing: 6
+
+                                            Text {
+                                                text: homeTabContent.greetingPrefix
+                                                color: theme.textStrong
+                                                font.pixelSize: 22
+                                                font.weight: Font.Bold
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+
+                                            Item {
+                                                width: nameText.implicitWidth
+                                                height: nameText.implicitHeight
+                                                anchors.verticalCenter: parent.verticalCenter
+
+                                                layer.enabled: true
+                                                layer.effect: MultiEffect {
+                                                    blurEnabled: root.prof && root.prof.privacyBlur > 0.001
+                                                    blur: root.prof ? root.prof.privacyBlur : 0.0
+                                                    blurMax: 48
+                                                    blurMultiplier: 2.5
+                                                }
+
+                                                Text {
+                                                    id: nameText
+                                                    anchors.centerIn: parent
+                                                    text: (root.prof && root.prof.displayName) ? root.prof.displayName : "Usuário"
+                                                    color: theme.textStrong
+                                                    font.pixelSize: 22
+                                                    font.weight: Font.Bold
+                                                }
+                                            }
+
+                                            Text {
+                                                text: homeTabContent.greetingSuffix
+                                                color: theme.textStrong
+                                                font.pixelSize: 22
+                                                font.weight: Font.Bold
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+                                        }
+
+                                        // Hostname com privacy blur
+                                        Item {
+                                            width: hostRow.implicitWidth
+                                            height: 20
+                                            anchors.horizontalCenter: parent.horizontalCenter
+
+                                            layer.enabled: true
+                                            layer.effect: MultiEffect {
+                                                blurEnabled: root.prof && root.prof.privacyBlur > 0.001
+                                                blur: root.prof ? root.prof.privacyBlur : 0.0
+                                                blurMax: 48
+                                                blurMultiplier: 2.5
+                                            }
+
+                                            Row {
+                                                id: hostRow
+                                                anchors.centerIn: parent
+                                                spacing: 4
+
+                                                Text {
+                                                    text: ""
+                                                    color: theme.textMuted
+                                                    font.pixelSize: 11
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: "@" + (root.prof ? root.prof.hostName : "bulldoze")
+                                                    color: theme.textMuted
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    Item { width: 1; height: 14 }
+                                }
+                            }
+
+                            // =========================================================
+                            // DATA, HORA E CALENDÁRIO (100% DA LARGURA)
+                            // =========================================================
+                            Rectangle {
+                                id: dateTimeCalendarCard
+                                width: parent.width
+                                implicitHeight: dtCalCol.implicitHeight + theme.spacingLg * 2
+                                radius: theme.radiusItem
+                                color: theme.itemFill
+                                border.width: 1
+                                border.color: theme.glassBorderSubtle
+
+                                Column {
+                                    id: dtCalCol
+                                    anchors {
+                                        top: parent.top
+                                        left: parent.left
+                                        right: parent.right
+                                        margins: theme.spacingLg
+                                    }
+                                    spacing: theme.spacingMd
+
+                                    // Top Row: Big Clock (48px) + Day of Week Highlight + Full Date
+                                    Row {
+                                        width: parent.width
+                                        spacing: theme.spacingLg
+
+                                        // Big Clock (Aumentado para 48px)
+                                        Text {
+                                            text: Qt.formatTime(homeTabContent.currentTime, "hh:mm")
+                                            color: theme.textStrong
+                                            font.pixelSize: 48
+                                            font.weight: Font.Bold
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Rectangle {
+                                            width: 1
+                                            height: 46
+                                            color: theme.separator
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        // Day of Week & Date Column
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 5
+
+                                            // Highlighted Day of Week Badge + Date
+                                            Row {
+                                                spacing: theme.spacingSm
+
+                                                Rectangle {
+                                                    height: 24
+                                                    implicitWidth: dayBadgeText.implicitWidth + 16
+                                                    radius: theme.radiusSmall
+                                                    color: theme.activeFill
+                                                    border.width: 1
+                                                    border.color: theme.glassBorderStrong
+                                                    anchors.verticalCenter: parent.verticalCenter
+
+                                                    Text {
+                                                        id: dayBadgeText
+                                                        anchors.centerIn: parent
+                                                        text: {
+                                                            const d = homeTabContent.currentTime
+                                                            const str = d.toLocaleDateString(Qt.locale("pt_BR"), "dddd")
+                                                            return str.toUpperCase()
+                                                        }
+                                                        color: theme.textStrong
+                                                        font.pixelSize: theme.fontSizeSm
+                                                        font.weight: Font.Bold
+                                                    }
+                                                }
+
+                                                Text {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    text: {
+                                                        const d = homeTabContent.currentTime
+                                                        return d.toLocaleDateString(Qt.locale("pt_BR"), "dd 'de' MMMM 'de' yyyy")
+                                                    }
+                                                    color: theme.textMedium
+                                                    font.pixelSize: theme.fontSizeMd
+                                                    font.weight: Font.Medium
+                                                }
+                                            }
+
+                                            Text {
+                                                text: "Dia " + homeTabContent.currentTime.getDate() + " do mês • " + (root.prof ? root.prof.loginUser : "usuario") + "@archlinux"
+                                                color: theme.textMuted
+                                                font.pixelSize: theme.fontSizeXs
+                                            }
+                                        }
+                                    }
+
+                                    // Divisor
+                                    Rectangle {
+                                        width: parent.width
+                                        height: 1
+                                        color: theme.separator
+                                    }
+
+                                    // Calendário em Largura Total
+                                    Column {
+                                        width: parent.width
+                                        spacing: 8
+
+                                        // Título do Mês
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: {
+                                                const m = homeTabContent.currentTime.toLocaleDateString(Qt.locale("pt_BR"), "MMMM yyyy")
+                                                return m.charAt(0).toUpperCase() + m.slice(1)
+                                            }
+                                            color: theme.textStrong
+                                            font.pixelSize: theme.fontSizeSm
+                                            font.weight: Font.Bold
+                                        }
+
+                                        // Cabeçalho dos Dias da Semana
+                                        Row {
+                                            width: parent.width
+                                            Repeater {
+                                                model: ["DOM", "SEG", "TER", "QUA", "QUI", "SEX", "SÁB"]
+                                                Item {
+                                                    width: parent.width / 7
+                                                    height: 18
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: modelData
+                                                        color: theme.textSubtle
+                                                        font.pixelSize: 10
+                                                        font.weight: Font.DemiBold
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Divisor
+                                        Rectangle {
+                                            width: parent.width
+                                            height: 1
+                                            color: theme.separator
+                                        }
+
+                                        // Grade de Dias
+                                        Grid {
+                                            id: calGrid
+                                            width: parent.width
+                                            columns: 7
+                                            rowSpacing: 2
+                                            columnSpacing: 0
+
+                                            Repeater {
+                                                model: homeTabContent.calendarDays
+
+                                                Item {
+                                                    width: calGrid.width / 7
+                                                    height: 26
+
+                                                    Rectangle {
+                                                        anchors.centerIn: parent
+                                                        width: 24
+                                                        height: 24
+                                                        radius: 12
+                                                        color: modelData.isToday ? theme.textStrong : "transparent"
+
+                                                        Text {
+                                                            anchors.centerIn: parent
+                                                            text: modelData.day
+                                                            color: modelData.isToday
+                                                                ? theme.glassFillDark
+                                                                : (modelData.isCurrent ? theme.textStrong : theme.textSubtle)
+                                                            font.pixelSize: 11
+                                                            font.weight: modelData.isToday ? Font.Bold : (modelData.isCurrent ? Font.Medium : Font.Normal)
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+
+                            // =========================================================
+                            // CENTRAL DE JOGOS & OTIMIZAÇÃO (100% DA LARGURA EM UMA LINHA)
+                            // =========================================================
+                            Rectangle {
+                                id: gamingRowCard
+                                width: parent.width
+                                implicitHeight: homeGamingRowCol.implicitHeight + theme.spacingMd * 2
+                                radius: theme.radiusItem
+                                color: theme.itemFill
+                                border.width: 1
+                                border.color: theme.glassBorderSubtle
+
+                                Column {
+                                    id: homeGamingRowCol
+                                    anchors {
+                                        top: parent.top
+                                        left: parent.left
+                                        right: parent.right
+                                        margins: theme.spacingMd
+                                    }
+                                    spacing: theme.spacingSm
+
+                                    Row {
+                                        width: parent.width
+                                        spacing: theme.spacingSm
+
+                                        Text {
+                                            text: ""
+                                            color: theme.textMuted
+                                            font.pixelSize: theme.fontSizeXs
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Text {
+                                            text: "Central de Jogos & Performance"
+                                            color: theme.textSubtle
+                                            font.pixelSize: 11
+                                            font.weight: Font.DemiBold
+                                            font.capitalization: Font.AllUppercase
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+                                    }
+
+                                    // 4 Toggles em Linha Horizontal ocupando a largura total
+                                    Row {
+                                        id: gamingControlsRow
+                                        width: parent.width
+                                        spacing: theme.spacingSm
+
+                                        readonly property real itemWidth: (width - (theme.spacingSm * 3)) / 4
+
+                                        // 1. GameMode
+                                        Rectangle {
+                                            width: gamingControlsRow.itemWidth
+                                            height: 44
+                                            radius: theme.radiusSmall
+                                            color: (root.game && root.game.gamemodeEnabled) ? theme.activeFill : (gmMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                            border.width: 1
+                                            border.color: (root.game && root.game.gamemodeEnabled) ? theme.glassBorderStrong : (gmMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                                            scale: gmMouse.pressed ? 0.94 : (gmMouse.containsMouse ? 1.02 : 1.0)
+                                            transformOrigin: Item.Center
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 8
+
+                                                Text {
+                                                    text: ""
+                                                    color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.iconSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: "GameMode"
+                                                    color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: (root.game && root.game.gamemodeEnabled) ? Font.Bold : Font.Normal
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                anchors {
+                                                    right: parent.right
+                                                    rightMargin: 8
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                width: 6
+                                                height: 6
+                                                radius: 3
+                                                color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : theme.itemFill
+                                                border.width: 1
+                                                border.color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : theme.glassBorderSubtle
+                                            }
+
+                                            MouseArea {
+                                                id: gmMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: if (root.game) root.game.toggleGamemode()
+                                            }
+                                        }
+
+                                        // 2. Bulldoptimizer
+                                        Rectangle {
+                                            width: gamingControlsRow.itemWidth
+                                            height: 44
+                                            radius: theme.radiusSmall
+                                            color: (root.game && root.game.bulldoptimizerEnabled) ? theme.activeFill : (boMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                            border.width: 1
+                                            border.color: (root.game && root.game.bulldoptimizerEnabled) ? theme.glassBorderStrong : (boMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                                            scale: boMouse.pressed ? 0.94 : (boMouse.containsMouse ? 1.02 : 1.0)
+                                            transformOrigin: Item.Center
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 8
+
+                                                Text {
+                                                    text: ""
+                                                    color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.iconSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: "Bulldoptimizer"
+                                                    color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: (root.game && root.game.bulldoptimizerEnabled) ? Font.Bold : Font.Normal
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                anchors {
+                                                    right: parent.right
+                                                    rightMargin: 8
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                width: 6
+                                                height: 6
+                                                radius: 3
+                                                color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : theme.itemFill
+                                                border.width: 1
+                                                border.color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : theme.glassBorderSubtle
+                                            }
+
+                                            MouseArea {
+                                                id: boMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: if (root.game) root.game.toggleBulldoptimizer()
+                                            }
+                                        }
+
+                                        // 3. MangoHud
+                                        Rectangle {
+                                            width: gamingControlsRow.itemWidth
+                                            height: 44
+                                            radius: theme.radiusSmall
+                                            color: (root.game && root.game.mangohudEnabled) ? theme.activeFill : (mhMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                            border.width: 1
+                                            border.color: (root.game && root.game.mangohudEnabled) ? theme.glassBorderStrong : (mhMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                                            scale: mhMouse.pressed ? 0.94 : (mhMouse.containsMouse ? 1.02 : 1.0)
+                                            transformOrigin: Item.Center
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 8
+
+                                                Text {
+                                                    text: ""
+                                                    color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.iconSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: "MangoHud"
+                                                    color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: (root.game && root.game.mangohudEnabled) ? Font.Bold : Font.Normal
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                anchors {
+                                                    right: parent.right
+                                                    rightMargin: 8
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                width: 6
+                                                height: 6
+                                                radius: 3
+                                                color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : theme.itemFill
+                                                border.width: 1
+                                                border.color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : theme.glassBorderSubtle
+                                            }
+
+                                            MouseArea {
+                                                id: mhMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: if (root.game) root.game.toggleMangohud()
+                                            }
+                                        }
+
+                                        // 4. Gamescope
+                                        Rectangle {
+                                            width: gamingControlsRow.itemWidth
+                                            height: 44
+                                            radius: theme.radiusSmall
+                                            color: (root.game && root.game.gamescopeEnabled) ? theme.activeFill : (gsMouse.containsMouse ? theme.hoverFill : theme.itemFill)
+                                            border.width: 1
+                                            border.color: (root.game && root.game.gamescopeEnabled) ? theme.glassBorderStrong : (gsMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                                            scale: gsMouse.pressed ? 0.94 : (gsMouse.containsMouse ? 1.02 : 1.0)
+                                            transformOrigin: Item.Center
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                            Row {
+                                                anchors.centerIn: parent
+                                                spacing: 8
+
+                                                Text {
+                                                    text: ""
+                                                    color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.iconSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Text {
+                                                    text: "Gamescope"
+                                                    color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: (root.game && root.game.gamescopeEnabled) ? Font.Bold : Font.Normal
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+                                            }
+
+                                            Rectangle {
+                                                anchors {
+                                                    right: parent.right
+                                                    rightMargin: 8
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                width: 6
+                                                height: 6
+                                                radius: 3
+                                                color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : theme.itemFill
+                                                border.width: 1
+                                                border.color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : theme.glassBorderSubtle
+                                            }
+
+                                            MouseArea {
+                                                id: gsMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: if (root.game) root.game.toggleGamescope()
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 3. Fixed Bottom Bar (Energy + System Info + Kernel)
+                    Item {
+                        id: homeBottomBar
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            bottom: parent.bottom
+                        }
+                        height: 40
+                        z: 20
+
+                        Rectangle {
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                right: parent.right
+                            }
+                            height: 1
+                            color: theme.separator
+                        }
+
+                        // Left: OS Info + Kernel Info + Uptime
+                        Row {
+                            anchors {
+                                left: parent.left
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: theme.spacingSm
+
+                            // OS Name (Arch Linux)
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 5
+
+                                Text {
+                                    text: ""
+                                    color: theme.textStrong
+                                    font.pixelSize: theme.fontSizeSm
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "Arch Linux"
+                                    color: theme.textStrong
+                                    font.pixelSize: theme.fontSizeXs
+                                    font.weight: Font.DemiBold
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 1
+                                height: 14
+                                color: theme.separator
+                            }
+
+                            // Kernel Linux
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 4
+                                visible: homeTabContent.kernelStr !== ""
+
+                                Text {
+                                    text: ""
+                                    color: theme.textMuted
+                                    font.pixelSize: theme.fontSizeXs
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "Kernel " + homeTabContent.kernelStr
+                                    color: theme.textMuted
+                                    font.pixelSize: theme.fontSizeXs
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+
+                            Rectangle {
+                                anchors.verticalCenter: parent.verticalCenter
+                                width: 1
+                                height: 14
+                                color: theme.separator
+                                visible: homeTabContent.kernelStr !== ""
+                            }
+
+                            // Uptime
+                            Row {
+                                anchors.verticalCenter: parent.verticalCenter
+                                spacing: 4
+
+                                Text {
+                                    text: ""
+                                    color: theme.textMuted
+                                    font.pixelSize: theme.fontSizeXs
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+
+                                Text {
+                                    text: "Atividade: " + homeTabContent.uptimeStr
+                                    color: theme.textMuted
+                                    font.pixelSize: theme.fontSizeXs
+                                    anchors.verticalCenter: parent.verticalCenter
+                                }
+                            }
+                        }
+
+                        // Right: Power Action Buttons (Bloquear, Encerrar sessão, Reiniciar, Desligar)
+                        Row {
+                            anchors {
+                                right: parent.right
+                                verticalCenter: parent.verticalCenter
+                            }
+                            spacing: theme.spacingSm
+
+                            // 1. Bloquear
+                            Rectangle {
+                                width: 32
+                                height: 32
+                                radius: theme.radiusSmall
+                                color: lockBtnMouse.containsMouse ? theme.hoverFill : "transparent"
+                                border.width: 1
+                                border.color: lockBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                                scale: lockBtnMouse.pressed ? 0.90 : (lockBtnMouse.containsMouse ? 1.15 : 1.0)
+                                transformOrigin: Item.Center
+
+                                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    color: lockBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
+                                    font.pixelSize: theme.iconSizeMd
+                                }
+
+                                MouseArea {
+                                    id: lockBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        if (root.lockScreen) root.lockScreen()
+                                    }
+                                }
+                            }
+
+                            // 2. Encerrar Sessão
+                            Rectangle {
+                                width: 32
+                                height: 32
+                                radius: theme.radiusSmall
+                                color: logoutBtnMouse.containsMouse ? theme.hoverFill : "transparent"
+                                border.width: 1
+                                border.color: logoutBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                                scale: logoutBtnMouse.pressed ? 0.90 : (logoutBtnMouse.containsMouse ? 1.15 : 1.0)
+                                transformOrigin: Item.Center
+
+                                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    color: logoutBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
+                                    font.pixelSize: theme.iconSizeMd
+                                }
+
+                                MouseArea {
+                                    id: logoutBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        homeTabContent.confirmTitle = "Encerrar Sessão"
+                                        homeTabContent.confirmDesc = "Deseja realmente encerrar a sessão do usuário?"
+                                        homeTabContent.pendingAction = "hyprctl dispatch exit || loginctl terminate-user $USER"
+                                    }
+                                }
+                            }
+
+                            // 3. Reiniciar
+                            Rectangle {
+                                width: 32
+                                height: 32
+                                radius: theme.radiusSmall
+                                color: rebootBtnMouse.containsMouse ? theme.hoverFill : "transparent"
+                                border.width: 1
+                                border.color: rebootBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                                scale: rebootBtnMouse.pressed ? 0.90 : (rebootBtnMouse.containsMouse ? 1.15 : 1.0)
+                                transformOrigin: Item.Center
+
+                                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    color: rebootBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
+                                    font.pixelSize: theme.iconSizeMd
+                                }
+
+                                MouseArea {
+                                    id: rebootBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        homeTabContent.confirmTitle = "Reiniciar Sistema"
+                                        homeTabContent.confirmDesc = "Deseja realmente reiniciar o computador?"
+                                        homeTabContent.pendingAction = "systemctl reboot"
+                                    }
+                                }
+                            }
+
+                            // 4. Desligar
+                            Rectangle {
+                                width: 32
+                                height: 32
+                                radius: theme.radiusSmall
+                                color: poweroffBtnMouse.containsMouse ? theme.hoverFill : "transparent"
+                                border.width: 1
+                                border.color: poweroffBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
+                                scale: poweroffBtnMouse.pressed ? 0.90 : (poweroffBtnMouse.containsMouse ? 1.15 : 1.0)
+                                transformOrigin: Item.Center
+
+                                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                                Text {
+                                    anchors.centerIn: parent
+                                    text: ""
+                                    color: poweroffBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
+                                    font.pixelSize: theme.iconSizeMd
+                                }
+
+                                MouseArea {
+                                    id: poweroffBtnMouse
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        homeTabContent.confirmTitle = "Desligar Sistema"
+                                        homeTabContent.confirmDesc = "Deseja realmente desligar o computador agora?"
+                                        homeTabContent.pendingAction = "systemctl poweroff"
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // 4. Confirmation Dialog Modal
+                    Rectangle {
+                        id: confirmOverlay
                         anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeCategory = "wifi"
+                        color: "#90000000"
+                        visible: homeTabContent.pendingAction !== ""
+                        z: 50
+
+                        MouseArea {
+                            anchors.fill: parent
+                            onClicked: homeTabContent.pendingAction = ""
+                        }
+
+                        Rectangle {
+                            anchors.centerIn: parent
+                            width: 380
+                            height: 170
+                            radius: theme.radiusItem
+                            color: theme.glassFillDark
+                            border.width: 1
+                            border.color: theme.glassBorderStrong
+
+                            Column {
+                                anchors.fill: parent
+                                anchors.margins: theme.spacingLg
+                                spacing: theme.spacingMd
+
+                                Row {
+                                    spacing: theme.spacingSm
+                                    Text {
+                                        text: ""
+                                        color: theme.textStrong
+                                        font.pixelSize: theme.fontSizeXl
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                    Text {
+                                        text: homeTabContent.confirmTitle
+                                        color: theme.textStrong
+                                        font.pixelSize: theme.fontSizeLg
+                                        font.weight: Font.Bold
+                                        anchors.verticalCenter: parent.verticalCenter
+                                    }
+                                }
+
+                                Text {
+                                    width: parent.width
+                                    text: homeTabContent.confirmDesc
+                                    color: theme.textMedium
+                                    font.pixelSize: theme.fontSizeSm
+                                    wrapMode: Text.WordWrap
+                                }
+
+                                Item { width: 1; height: 1 }
+
+                                Row {
+                                    anchors.right: parent.right
+                                    spacing: theme.spacingSm
+
+                                    // Cancelar
+                                    Rectangle {
+                                        width: 90
+                                        height: 32
+                                        radius: theme.radiusSmall
+                                        color: cancelMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                                        border.width: 1
+                                        border.color: theme.glassBorderSubtle
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "Cancelar"
+                                            color: theme.textMedium
+                                            font.pixelSize: theme.fontSizeXs
+                                            font.weight: Font.Medium
+                                        }
+
+                                        MouseArea {
+                                            id: cancelMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: homeTabContent.pendingAction = ""
+                                        }
+                                    }
+
+                                    // Confirmar
+                                    Rectangle {
+                                        width: 90
+                                        height: 32
+                                        radius: theme.radiusSmall
+                                        color: confirmMouse.containsMouse ? theme.hoverFill : theme.activeFill
+                                        border.width: 1
+                                        border.color: theme.glassBorderStrong
+
+                                        Text {
+                                            anchors.centerIn: parent
+                                            text: "Confirmar"
+                                            color: theme.textStrong
+                                            font.pixelSize: theme.fontSizeXs
+                                            font.weight: Font.Bold
+                                        }
+
+                                        MouseArea {
+                                            id: confirmMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                const act = homeTabContent.pendingAction
+                                                homeTabContent.pendingAction = ""
+                                                if (root.goBack) root.goBack()
+                                                proc.exec(["sh", "-c", act])
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
-
-                // 2. Bluetooth
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    radius: theme.radiusSmall
-                    color: root.activeCategory === "bluetooth" ? theme.activeFill : (catBtMouse.containsMouse ? theme.hoverFill : theme.itemFill)
-                    border.width: 1
-                    border.color: root.activeCategory === "bluetooth" ? theme.glassBorderStrong : theme.glassBorderSubtle
-
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: theme.spacingSm
-                        anchors.rightMargin: theme.spacingSm
-                        spacing: theme.spacingSm
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            color: root.activeCategory === "bluetooth" ? theme.textStrong : theme.textMuted
-                            font.pixelSize: theme.fontSizeMd
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Bluetooth"
-                            color: root.activeCategory === "bluetooth" ? theme.textStrong : theme.textMedium
-                            font.pixelSize: theme.fontSizeSm
-                            font.weight: root.activeCategory === "bluetooth" ? Font.DemiBold : Font.Normal
-                        }
-                    }
-
-                    MouseArea {
-                        id: catBtMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeCategory = "bluetooth"
-                    }
-                }
-
-                // 3. Som
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    radius: theme.radiusSmall
-                    color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : theme.itemFill)
-                    border.width: 1
-                    border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : theme.glassBorderSubtle
-
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: theme.spacingSm
-                        anchors.rightMargin: theme.spacingSm
-                        spacing: theme.spacingSm
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            color: root.activeCategory === "sound" ? theme.textStrong : theme.textMuted
-                            font.pixelSize: theme.fontSizeMd
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Som"
-                            color: root.activeCategory === "sound" ? theme.textStrong : theme.textMedium
-                            font.pixelSize: theme.fontSizeSm
-                            font.weight: root.activeCategory === "sound" ? Font.DemiBold : Font.Normal
-                        }
-                    }
-
-                    MouseArea {
-                        id: catSoundMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeCategory = "sound"
-                    }
-                }
-
-                // 3. Wallpaper Handler
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    radius: theme.radiusSmall
-                    color: root.activeCategory === "wallpaper" ? theme.activeFill : (catWpMouse.containsMouse ? theme.hoverFill : theme.itemFill)
-                    border.width: 1
-                    border.color: root.activeCategory === "wallpaper" ? theme.glassBorderStrong : theme.glassBorderSubtle
-
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: theme.spacingSm
-                        anchors.rightMargin: theme.spacingSm
-                        spacing: theme.spacingSm
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            color: root.activeCategory === "wallpaper" ? theme.textStrong : theme.textMuted
-                            font.pixelSize: theme.fontSizeMd
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Wallpapers & Efeitos"
-                            color: root.activeCategory === "wallpaper" ? theme.textStrong : theme.textMedium
-                            font.pixelSize: theme.fontSizeSm
-                            font.weight: root.activeCategory === "wallpaper" ? Font.DemiBold : Font.Normal
-                        }
-                    }
-
-                    MouseArea {
-                        id: catWpMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeCategory = "wallpaper"
-                    }
-                }
-
-                // 4. Gaming Mode
-                Rectangle {
-                    width: parent.width
-                    height: 40
-                    radius: theme.radiusSmall
-                    color: root.activeCategory === "gaming" ? theme.activeFill : (catGamingMouse.containsMouse ? theme.hoverFill : theme.itemFill)
-                    border.width: 1
-                    border.color: root.activeCategory === "gaming" ? theme.glassBorderStrong : theme.glassBorderSubtle
-
-                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-
-                    Row {
-                        anchors.fill: parent
-                        anchors.leftMargin: theme.spacingSm
-                        anchors.rightMargin: theme.spacingSm
-                        spacing: theme.spacingSm
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: ""
-                            color: root.activeCategory === "gaming" ? theme.textStrong : theme.textMuted
-                            font.pixelSize: theme.fontSizeMd
-                        }
-
-                        Text {
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Jogos & Performance"
-                            color: root.activeCategory === "gaming" ? theme.textStrong : theme.textMedium
-                            font.pixelSize: theme.fontSizeSm
-                            font.weight: root.activeCategory === "gaming" ? Font.DemiBold : Font.Normal
-                        }
-                    }
-
-                    MouseArea {
-                        id: catGamingMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: root.activeCategory = "gaming"
-                    }
-                }
-            }
-
-            Rectangle {
-                width: 1
-                height: parent.height
-                color: theme.separator
-            }
-
-            // CONTENT CONTAINER
-            Item {
-                width: parent.width - 190 - 1 - theme.spacingLg * 2
-                height: parent.height
 
                 // =============================================================
                 // TAB CONTENT 1: WI-FI SETTINGS
@@ -2180,20 +3550,33 @@ Item {
                                     }
                                 }
 
-                                SectionHeader { title: "Hardware & Driver GPU" }
+                                SectionHeader { title: "Hardware & Driver GPU (AMD Radeon)" }
 
                                 SettingToggleRow {
                                     iconGlyph: ""
-                                    title: "NVIDIA PowerMizer Performance"
-                                    subtitle: "Trava a GPU em modo de desempenho máximo (Seguro: ignora em GPUs AMD/Intel)"
-                                    checked: root.game ? root.game.boPowerMizer : false
+                                    title: "AMD DPM Performance (Max Clocks)"
+                                    subtitle: "Trava GPU Core e VRAM em clocks de alto desempenho para eliminar oscilações e micro-stutters"
+                                    checked: root.game ? root.game.boAmdDpm : true
                                     onToggled: {
                                         if (root.game) {
-                                            root.game.boPowerMizer = !root.game.boPowerMizer
+                                            root.game.boAmdDpm = !root.game.boAmdDpm
                                             root.game.saveConfig()
                                             if (root.game.bulldoptimizerEnabled) {
                                                 root.game.applyBulldoptimizer(true)
                                             }
+                                        }
+                                    }
+                                }
+
+                                SettingToggleRow {
+                                    iconGlyph: "⚡"
+                                    title: "AMD RADV Anti-Lag & Shader Boost"
+                                    subtitle: "Ativa compilador ACO, AMD Anti-Lag, cache de shaders de 50GB e XWayland sem esperas"
+                                    checked: root.game ? root.game.boRadvOptimizations : true
+                                    onToggled: {
+                                        if (root.game) {
+                                            root.game.boRadvOptimizations = !root.game.boRadvOptimizations
+                                            root.game.saveConfig()
                                         }
                                     }
                                 }
@@ -2696,8 +4079,6 @@ Item {
                         }
                     }
                 }
-
             }
         }
     }
-}

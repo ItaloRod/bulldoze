@@ -13,32 +13,38 @@ This document defines the authoritative design system specification for the **en
 
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
 1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$):
-   - **Single-Line Streamlined Layout**: Fixed 32px height capsule both in resting state and on hover, maintaining a sleek, non-intrusive single-row profile.
-   - **Content Layout**: Left empty spacer preserving symmetrical rightGroup width; Center with dynamically balanced Clock/Date (`pt-BR`); Right group (`Status.qml`) with System Tray, Gaming Mode button (``), and Settings button (``).
-   - **Modal Access**: Quick Settings (Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) accessed directly via Settings (``) or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
-2. **Bottom-Docked Minimalist Workspace Bar (`WorkspacePills.qml`, `shell.qml`)**:
+   - **Resting Capsule Profile**: Fixed 32px height compact capsule (~170px width) displaying purely the centered digital Clock and localized Date (`pt-BR`).
+   - **Hover-to-Open Central Launcher**: Moving the mouse over the top resting hotspot (expanded to 920px matching the launcher width) directly morphs it into the full Central Launcher (`LauncherBarView.qml`, 920x640px) displaying the **Home** view by default. Moving the mouse out smoothly collapses it back to the resting notch.
+   - **Shortcut Access**: Quick Launcher & Controls (Home, Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) can also be toggled via global shortcut `Super + H` (`SUPER + H`).
+2. **Top-Right Corner Border-Fused System Tray (`TrayBarView.qml`, `shell.qml`)**:
+   - Integrated directly into the top-right corner of the 8px perimeter frame in `unifiedShape` as an organic mirror to the bottom-right notification panel.
+   - **Fixed 32px Height**: Exactly matches the top notch's 32px vertical profile.
+   - **Responsive Width**: Dynamically calculated based on the count of active tray icons ($26 \times 26\text{px}$ tiles with $6\text{px}$ spacing and design system paddings).
+   - **Hover Activation (Corner Hot Zone)**: Touching the $48 \times 48\text{px}$ top-right hot zone instantly reveals the tray view. Retracts immediately on mouse exit; remains visible while an SNI context menu is active.
+   - **Zero Footprint When Empty**: When no tray icons are registered, the hot zone and panel are completely removed from Wayland `mask: Region`, remaining 100% click-through.
+3. **Bottom-Docked Minimalist Workspace Bar (`WorkspacePills.qml`, `shell.qml`)**:
    - Fused directly into the bottom 8px perimeter frame in `unifiedShape` with continuous curvilinear scaling (`dockCurveFactor`), 32px height, and responsive width based on active workspaces.
    - **Keyboard Trigger (Auto-hide 2s)**: Switching workspaces via keyboard hotkeys (`SUPER + 1..9`, navigation keys) reveals the dock for 2 seconds before smoothly retracting into the bezel.
    - **Bottom Bezel Hot Zone (Hover)**: 240x24px detection area mapped to Wayland `mask: Region` on the bottom center border reveals the workspace dock immediately. Stays open while cursor is inside; retracts immediately on mouse exit.
    - **Minimalist Layout**: Exclusively presents dynamic workspace pills ($22 \times 6\text{px}$ active, $6 \times 6\text{px}$ inactive dots).
-3. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
+4. **Left-Docked Morphing Volume Bar (`AudioBarView.qml`, `shell.qml`)**:
    - Fused directly into the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave wings.
    - Minimalist vertical volume slider, click-to-mute icon, and gear button navigating directly to the Sound tab in Settings.
    - 2-second auto-dismiss OSD triggered by keyboard volume hotkeys.
-4. **Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)**:
+5. **Bottom-Right Corner Border-Fused Notification System (`NotificationBarView.qml`, `shell.qml`)**:
    - Integrated diagonally into the bottom-right screen corner of the 8px perimeter frame in `unifiedShape` with smooth concave arcs into the right and bottom bezels.
    - **Popup OSD (2.5s)**: Incoming notifications display only the single latest card for 2.5 seconds.
    - **Corner Hot Zone**: Hovering on the bottom-right corner border hot zone reveals the latest notification immediately (or empty state). Closes immediately on mouse exit.
    - **2s Dwell Expansion**: Hovering for 2 seconds expands upwards into a stacked list of up to 4 cards (BottomToTop ordering: newest at bottom, older stacked upwards) with mouse wheel scroll for >4 items.
    - **Actions**: Individual dismiss button (``) and clear-all icon button (``) at the bottom of the expanded stack.
-5. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
+6. **Bottom-Docked Morphing Spotlight Launcher (`BottomLauncher.qml`, `shell.qml`)**:
    - An inverted search dock physically fused to the 8px bottom perimeter frame ($640 \times 480\text{px}$) emerging from the bottom bezel ($y = \text{height}$).
    - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
    - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
-5. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock.
-6. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$) with 8px perimeter frame.
-7. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$).
-8. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$).
+7. **Top-Docked Morphing Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)**: A continuous, top-docked physical glass notch ($680 \times 380\text{px}$) expanding smoothly downwards from the top notch bar on lock.
+8. **Top-Docked QuickShell Greeter (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)**: The system login screen executed by `greetd`, matching the Lock Screen's top-docked dynamic notch architecture ($680 \times 400\text{px}$) with 8px perimeter frame.
+9. **Gaming Settings Modal (`GamingSettingsModal.qml`)**: Centered floating glass modal ($640 \times 560\text{px}$).
+10. **Wallpaper Engine Manager Modal (`WallpaperManagerModal.qml`)**: Centered floating glass modal ($920 \times 640\text{px}$).
 
 ---
 
@@ -141,7 +147,7 @@ All components in the Bulldoze shell must consume tokens exclusively from `compo
 | `hoverFill` | `#1CFFFFFF` | ~11% alpha white (Hover interaction feedback) |
 | `activeFill` | `#33FFFFFF` | ~20% alpha white (Active toggle / selected pill) |
 | `separator` | `#1AFFFFFF` | ~10% alpha white (1px horizontal or vertical divider) |
-| `accent` | `#5294E2` | Accent blue for indicators, focus rings, and spinners |
+| `accent` | `#FFFFFF` | White highlight for indicators, focus rings, and spinners |
 
 ## 3.2 Typography & Contrast Tokens
 
@@ -221,16 +227,14 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 
 ## 4.1 Top Shell / Dynamic Central Glass Notch (`shell.qml`, `GlassPanel.qml`, `DefaultBarView.qml`)
 - **Bezel Docking**: Physically docked to the top monitor bezel ($y = 0$).
-- **Single-Row Streamlined Profile**:
-  - **Fixed 32px Height**: Replaces older 2-row designs with a streamlined, ultra-clean single row of 32px fixed height both at resting idle and on hover.
-  - **Collapsed State (Idle)**: Compact pill ($160\text{px} \times 32\text{px}$) displaying the central Clock and localized Date (`pt-BR`).
-  - **Expanded State (Hover)**: Expands horizontally to `contentExpandedWidth` (620px-680px) with `notchExpandDuration` (340ms) and `Easing.OutBack` when hovered.
-  - **Dynamic Content Calculation**: Dynamic bounds (`contentExpandedWidth = leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`) guarantee zero overlap between the clock, workspace pills, and status buttons.
+- **Streamlined Minimalist Profile**:
+  - **Fixed 32px Height**: Ultra-clean single row of 32px fixed height in resting idle state.
+  - **Collapsed State (Idle)**: Compact pill ($170\text{px} \times 32\text{px}$) displaying strictly the central Clock and localized Date (`pt-BR`).
+  - **Direct Morphing (Hover & Hotspot)**: Moving the cursor over the top notch hotspot (expanded to 920px width matching the launcher) directly triggers the Central Launcher (`LauncherBarView.qml`, 920x640px) with the **Home** tab open. No intermediate expanded bar state exists.
+  - **Exit Behavior**: Moving the mouse outside the Central Launcher collapses it back into the resting capsule (or via `SUPER + H`).
 - **Content Encapsulation**:
-  - **Left (revealed on expand)**: Empty placeholder item matching `rightGroup.implicitWidth`, preserving symmetrical weight so the central clock remains perfectly balanced.
   - **Center (always visible)**: Single-line Clock (Time 13px DemiBold + Date 11px Medium localized in `pt-BR`, format `"ddd, dd MMM"` via `Qt.locale("pt_BR")`).
-  - **Right (revealed on expand)**: Status group (`Status.qml`) with System Tray, Gaming Mode toggle (`""`), and Settings button (`""`).
-  - **Redundant Items Removed**: Arch logo, Workspaces, Wi-Fi, Bluetooth, Audio, and Notifications bell removed from the notch bar to preserve clean elegance and single-line ergonomics.
+  - **Redundant Items Consolidated**: Gaming mode toggles and power/profile controls are consolidated into the Central Launcher (Home & Gaming tabs), eliminating status buttons from the top bar for maximum visual clarity.
 
 ## 4.2 Bottom-Docked Minimalist Workspace Bar (`WorkspacePills.qml`, `shell.qml`)
 - **Direct Perimeter Fusion (`unifiedShape`)**:
@@ -250,14 +254,28 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 - **Inverted Hierarchy**: Search input bar at the bottom bezel (`ESC` badge, autofocus) and results list expanding upwards above it with compact typography (13px titles, 11px categories, 22x22 icons).
 - **Unified Glass Geometry**: Fused into `unifiedShape` with single-pass background blur (`frameBlurContainer`) and concave wings.
 
-## 4.3 Control Center / Unified Settings & Gaming (`SettingsBarView.qml`, `GamingBarView.qml`)
-- **Unified Settings View (`SettingsBarView.qml`, 920x640px)**:
-  - Accessible via Settings button (``) in notch or global shortcut `Ctrl + Super + C` (`SUPER + CONTROL + C`).
-  - **Sidebar Categories**: Wi-Fi, Bluetooth, Som (Sound), Wallpapers, Gaming.
+## 4.4 Central Launcher / System Hub (`LauncherBarView.qml`)
+- **Central Launcher View (`LauncherBarView.qml`, 920x640px)**:
+  - Accessible via hovering the top central notch hotspot (920px wide) or global shortcut `Super + H` (`SUPER + H`).
+  - **Top Centered Horizontal Category Rail**: Centered horizontal row of 6 category icons (Home, Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) independent of scroll, providing 100% full width to the content area below. Default landing category is **Home**.
+  - **Home Tab (`Início`)**:
+    - **Top Full-Width Welcome Card**:
+      - 180px height banner with rounded top corners matching the welcome card (`radius: theme.radiusItem`), masked with MultiEffect to contain blur cleanly.
+      - Reactive reload on wallpaper changes (`wpVersion` / `snapshotVersion`) pointing to `~/.cache/bulldoze/Wallpaper_greeter.png`.
+      - **Enquadramento / Crop Adjustment**: Top-left pen button (``) opens a popover with a vertical slider (0% to 100%, default 0% showing the top/beginning of the wallpaper), persisted in `~/.config/bulldoze/banner_crop.json`.
+      - Discrete top-right privacy eye toggle (`""` / `""`).
+      - 80x80px circular user avatar centered horizontally and overlapping the bottom border of the banner with 3px glass border.
+      - Single-line contextual greeting (with Unicode emojis: ☀️, 🌇, 🌙, 💤) addressing the user's `displayName`. When streamer privacy mode is enabled, `displayName` is smoothly blurred alongside `@hostName`.
+    - **Full-Width Stacked Sections (100% Width)**:
+      - **Data, Hora e Calendário**: High-contrast digital clock time (48px Bold), prominent day of the week badge, full Portuguese date, and a complete monthly calendar with pure white circular highlight for the current day.
+      - **Central de Jogos & Performance**: Single horizontal row spanning 100% width with 4 shortcut tiles for **GameMode** (``), **Bulldoptimizer** (``), **MangoHud** (``), and **Gamescope** (``), featuring tactile hover scaling and active indicator dots.
+    - **Fixed Bottom Power & System Info Bar**:
+      - Left: OS Name & Icon (`` Arch Linux), Linux Kernel version (``), and System uptime (``).
+      - Right: Action buttons for Bloquear (``), Encerrar Sessão (``), Reiniciar (``), e Desligar (``).
+      - Interactive confirmation modal overlay protecting against accidental session termination, reboots, or shutdowns.
   - **Sound Tab (`Som`)**: Full PipeWire audio manager with horizontal volume slider, real-time percentage, mute toggle, and interactive list of all audio sinks (Speakers, HDMI, Bluetooth headphones) with instant switching via `wpctl set-default <id>`.
   - **Wi-Fi & Bluetooth Tabs**: Complete network scanner, connection manager, and power controls.
-- **Gaming Hub View (`GamingBarView.qml`, compact 68px height)**:
-  - Dynamically centered with symmetric padding via `idealWidth`. Quick toggles for **GameMode**, **MangoHud**, and **Gamescope**, with gear button opening `GamingSettingsModal.qml`.
+  - **Gaming Tab (`Jogos`)**: Full gaming profile settings, Bulldoptimizer tweaks, and performance diagnostics.
 
 ## 4.4 Left-Docked Volume Bar (`AudioBarView.qml`, `shell.qml`)
 - **Fused Left Bezel Notch**: Physically extruded from the left 8px perimeter frame in `unifiedShape` ($48 \times 230\text{px}$) with organic concave arcs.
@@ -288,25 +306,42 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
   - Clear-all icon button (``) located at the bottom of the stack, visible strictly when expanded.
   - Clean card typography: app icon, app name with timestamp, bold summary, and body text.
 
-## 4.6 On-Screen Display / OSD (`Osd.qml`, `BottomGlassPanel.qml`)
+## 4.6 Top-Right Corner Border-Fused System Tray (`TrayBarView.qml`, `shell.qml`)
+- **Diagonal Corner Fusion (`unifiedShape`)**:
+  - Extruded directly into the top-right corner of the screen from the 8px perimeter frame, acting as an organic mirror to the bottom-right notification panel.
+  - Fixed 32px height, matching the central notch bar and workspace bar.
+  - Symmetrical concave curves flare into the top monitor bezel and right monitor bezel with a convex bottom-left corner and single continuous 1px glass border (`#24FFFFFF`).
+- **Responsive Width**:
+  - Dynamically calculated based on the count of active StatusNotifierItem (SNI) icons: $N \times 26\text{px} + (N-1) \times 6\text{px} + 16\text{px}$ insets (minimum 48px).
+- **Interactive Tiles**:
+  - Each item container is a $26 \times 26\text{px}$ tile (`radiusSmall`: 6px) with tactile hover feedback (`hoverFill`, `scale: 1.15`), $16 \times 16\text{px}$ icon, and click animations matching the notch control buttons.
+- **Mouse Interactions & SNI Context Menus**:
+  - Left click activates the application (`modelData.activate()`).
+  - Right click opens the DBus/SNI context menu (`QsMenuAnchor`) or secondary activate.
+  - While a context menu is open, the view remains pinned and open.
+- **Instant Hover Exit & Click-Through**:
+  - Disappears immediately upon mouse exit (unless a context menu is open).
+  - When no tray icons exist (`count === 0`), the hot zone and view are excluded from the Wayland `mask: Region`, leaving the desktop area completely click-through to underlying application windows.
+
+## 4.7 On-Screen Display / OSD (`Osd.qml`, `BottomGlassPanel.qml`)
 - **Type**: Bottom-docked glass notch (physically attached to bottom screen bezel $y = \text{screen.height}$).
 - **Layer Namespace**: `"bulldoze-osd"`.
 - **Dimensions**: $300 \times 74\text{ px}$, centered horizontally at the bottom of the screen (`margins.bottom: 0px`).
 - **Surface Geometry (`BottomGlassPanel.qml`)**: Smooth concave arcs flaring into the bottom screen bezel; convex rounded top corners. Exposed 1px glass border (`#24FFFFFF`) along left, top, and right edges.
 - **Motion**: Sticky vertical slide-up ($y: 28 \to 0$) + scale ($0.90 \to 1.0$) with `animDurationSticky` (320ms), `Easing.OutBack` (overshoot 1.15) on entry and `animDurationExit` (200ms) on dismiss.
 
-## 4.7 File Manager / Dolphin (`KDE / Qt Integration`)
+## 4.8 File Manager / Dolphin (`KDE / Qt Integration`)
 - **Physical Depth Stack**: Wallpaper → Hyprland native blur → 20%-25% translucent dark glass (`opacity: 0.78 override`) → 1px glass border (`rgba(ffffff24)`) → content.
 - **Color Scheme (`Bulldoze.colors` / `kdeglobals`)**: Pure neutral dark `#0E0E10` / `#121214` (strictly zero saturated blue/Nord `#0F1926` or opaque `#10141C`).
 
-## 4.8 Web Browser / Firefox (`userChrome.css Integration`)
+## 4.9 Web Browser / Firefox (`userChrome.css Integration`)
 - **Physical Depth Stack**: Wallpaper → Hyprland compositor blur → translucent dark glass (`--bulldoze-glass-fill`: `rgba(14, 16, 22, 0.40)`) → 1px glass border (`--bulldoze-glass-border`: `rgba(255, 255, 255, 0.14)`).
 
-## 4.9 User Identity & Avatar Strategy
+## 4.10 User Identity & Avatar Strategy
 - **Single Source of Truth**: Logged-in Mozilla / Firefox Sync account (`signedInUser.json`), synchronized to `~/.face` and AccountsService via `scripts/sync-profile.py`.
 - **Authoritative QML Masking Pattern**: Masked via `MultiEffect` with `radiusItem` (12px) and 1px `glassBorder`.
 
-## 4.10 Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)
+## 4.11 Lock Screen (`LockScreen.qml`, `GlassPanel.qml`)
 - **Type**: Wayland Session Lock (`WlSessionLock` & `WlSessionLockSurface`, `ext-session-lock-v1`).
 - **Surface Transparency & 100% Natural Wallpaper Fidelity**:
   - `WlSessionLockSurface.color` is strictly `"transparent"`.
@@ -326,7 +361,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 - **Scoped Frosted Glass Blur (`GlassPanel.qml`)**:
   - Blur is applied strictly behind the notch card geometry (`brightness: 0.0`, `contrast: 0.0`) preserving 100% luminosity of the underlying wallpaper without any synthetic darkening pass.
 
-## 4.11 QuickShell Greeter / Login Screen (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)
+## 4.12 QuickShell Greeter / Login Screen (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)
 - **Type**: Display Manager / Greeter Session for `greetd` (`WlrLayer.Overlay`, `WlrKeyboardFocus.Exclusive`, `quickshell -p /etc/greetd/bulldoze-greeter`).
 - **Layer Namespace**: `"bulldoze-greeter"`.
 - **Surface Transparency & 100% Natural Wallpaper Fidelity**:

@@ -25,10 +25,6 @@ Row {
     readonly property var prof: userProfile
     readonly property var game: gaming
 
-    // 1. System Tray
-    Tray {
-        anchors.verticalCenter: parent.verticalCenter
-    }
 
     // 2. Gaming Profile Button
     Rectangle {
