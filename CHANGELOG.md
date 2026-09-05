@@ -4,6 +4,162 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.5.0] - 2026-09
+
+### 🔤 Correção de Nitidez e Renderização Nativa de Fontes e Ícones
+- **Adoção Global de `NativeRendering` em Todo o Shell (`Text` e `TextInput`)**:
+  - Implementado `renderType: Text.NativeRendering` e `renderType: TextInput.NativeRendering` em 100% dos componentes de interface (343 elementos em 21 arquivos).
+  - Elimina aberração cromática, franjas coloridas (azul/laranja) e borrão visual em textos e ícones de fontes (Nerd Fonts / FontAwesome) renderizados sobre superfícies Wayland com transparência e vidro translúcido.
+  - Nitidez consistente em toda a experiência: relógio, Spotlight (`BottomLauncher.qml`), Notificações (`NotificationBarView.qml`), Launcher Central (`LauncherBarView.qml`), Central de Controle (`ControlCenter.qml`), LockScreen e Greeter.
+
+### 🚀 Redesign do Launcher Central e Expansão de Hotspot (`LauncherBarView.qml`, `shell.qml`)
+- **Ampliação do Hotspot de Acionamento Superior**:
+  - A área de gatilho do hover no topo da tela foi expandida para 920px de largura (idêntica à largura total do launcher), centralizada no topo e registrada na máscara de entrada do Wayland (`mask: Region`). O acionamento via mouse agora ocorre de forma imediata e ergonômica em toda a extensão do launcher.
+- **Transição de "Ajustes" para Launcher Central (`LauncherBarView.qml`)**:
+  - O arquivo foi renomeado de `SettingsBarView.qml` para `LauncherBarView.qml`.
+  - O termo "Ajustes do Sistema" e o botão de fechar ("X") foram completamente eliminados da view.
+  - O fechamento da view ocorre exclusivamente por hover-out ou pelo atalho global `SUPER + H`.
+- **Barra de Categorias Horizontal no Topo**:
+  - A antiga barra lateral vertical de 48px foi substituída por uma linha horizontal centralizada no topo, contendo as 6 categorias (Início, Wi-Fi, Bluetooth, Som, Wallpaper e Jogos) de forma fixa e independente da rolagem.
+  - Toda a área de conteúdo abaixo passa a usufruir de 100% da largura útil da janela.
+- **Banner de Boas-Vindas com 180px e Ajuste Fino de Corte**:
+  - Altura do banner aumentada de 136px para 180px.
+  - Cantos superiores arredondados com `theme.radiusItem` acompanhando organicamente o contorno do card de boas-vindas, mascarados via `MultiEffect` para prevenir qualquer vazamento visual do blur.
+  - Enquadramento inicial alterado para exibir o topo da imagem (0%).
+  - Novo botão de canetinha (`""`) no canto superior esquerdo do banner com popover e slider vertical para ajuste fino do enquadramento (0% a 100%), salvo automaticamente em `~/.config/bulldoze/banner_crop.json`.
+  - Recarregamento reativo instantâneo do banner (`Wallpaper_greeter.png`) sempre que o wallpaper do sistema for alterado.
+- **Blocos em 100% da Largura (Data/Hora e Central de Jogos)**:
+  - Substituída a antiga divisão 60%/40% por blocos empilhados ocupando 100% da largura.
+  - **Data, Hora e Calendário**: Relógio digital ampliado para 48px com badge destacando o dia da semana por extenso, data completa e calendário mensal em largura total.
+  - **Central de Jogos & Performance**: Atalhos para GameMode, Bulldoptimizer, MangoHud e Gamescope reorganizados em uma única linha horizontal com 4 botões proporcionais.
+- **Identificação do SO na Barra Inferior**:
+  - O nome do computador na parte inferior esquerda foi substituído por `" Arch Linux"`, mantendo o `@bulldoze` no card superior.
+
+### 📥 Nova Visualização da System Tray (Borda Superior Direita & Fusão Vetorial)
+- **Remoção da System Tray do Notch Central (`Status.qml`)**:
+  - A bandeja do sistema (`Tray`) foi completamente removida do notch superior, desacoplando os ícones de aplicativos em segundo plano da barra de status central.
+  - O grupo da direita do notch (`Status.qml`) mantém os botões de Modo Jogo (``), Configurações (``) e Avatar, preservando a simetria e o equilíbrio central do relógio.
+- **Novo Painel de System Tray Fundido à Borda Superior Direita (`shell.qml`, `TrayBarView.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na moldura perimetral superior direita da tela, espelhando a geometria do painel de notificações com curvas côncavas e convexas contínuas e borda sutil de 1px (`theme.glassBorderSubtle`).
+  - **Perfil e Geometria Harmoniosa**: Altura fixa de 32px (`theme.notchHeight`), alinhada visualmente com a altura do notch superior e da barra de workspaces.
+  - **Largura Responsiva**: Cálculo dinâmico baseado na contagem de ícones ativos da bandeja (`SystemTray.items`), com tiles individuais de 26x26px, espaçamento de 6px e insets do Design System.
+  - **Tiles Interativos & Feedback Táctil**: Cada ícone é encapsulado em um tile de 26x26px com cantos arredondados de 6px (`theme.radiusSmall`), feedback de hover (`theme.hoverFill`), micro-escala táctil e ícone centralizado de 16x16px idêntico aos botões do notch.
+  - **Gatilho de Hover na Borda (Hot Zone 48x48px)**: Passar o cursor sobre a zona sensível de 48x48px no canto superior direito revela a visualização da bandeja instantaneamente.
+  - **Fechamento Instantâneo**: Recolhimento imediato com animação fluida ao remover o mouse da área da view ou interagir com o workspace.
+  - **Suporte a Menus de Contexto SNI/DBus (`QsMenuAnchor`)**:
+    - Clique esquerdo ativa o aplicativo (`modelData.activate()`).
+    - Clique direito abre o menu de contexto nativo do aplicativo via `QsMenuAnchor` / SNI.
+    - O painel permanece aberto e fixado enquanto qualquer menu de contexto estiver em exibição.
+  - **Pegada Zero quando Vazia**: Quando não houver nenhum ícone ativo na bandeja (`trayItemCount === 0`), tanto o gatilho de hover quanto o container da view são completamente removidos da máscara do Wayland (`mask: Region`), permitindo cliques 100% transparentes sobre janelas subjacentes do workspace.
+
+### 🗂️ Reformulação da Visualização de Workspaces (Dock Inferior Minimalista & Fusão Vetorial)
+- **Remoção dos Workspaces do Notch Superior (`DefaultBarView.qml`)**:
+  - As pílulas de workspaces foram completamente removidas do notch superior.
+  - Foi mantido um espaçador simétrico à esquerda com largura equivalente ao grupo de status da direita, garantindo que o relógio permaneça rigorosamente travado no centro horizontal físico da tela.
+- **Nova Barra de Workspaces na Borda Inferior Central (`shell.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na base central da moldura perimetral com curvas côncavas e convexas fluidas com traço de 1px contínuo, integrando-se perfeitamente ao ecossistema de docks do Bulldoze.
+  - **Escalonamento Curvilíneo Contínuo (`dockCurveFactor`)**: Raios côncavos e convexos escalam proporcionalmente à altura de elevação da view, garantindo que a barra surja e recolha com tangência perfeita, sem "asas" ou arestas antecipadas.
+  - **Geometria Responsiva**: Altura fixa de 32px (mesma altura do notch) e largura adaptativa proporcional à quantidade de workspaces ativos (`workspaceCount`), com padding interno de 18px (`theme.contentInset`).
+  - **Gatilho por Comandos / Mudança de Workspace (2s)**: Toda alternância de workspace via atalhos globais (`SUPER + 1..9`, etc.) aciona a exibição do dock por 2 segundos com recolhimento automático suave.
+  - **Gatilho de Hover na Borda Inferior (Hot Zone)**: Zona de detecção de 240px de largura e 24px de altura na base da tela, devidamente mapeada na máscara de entrada Wayland (`mask: Region`). Ao aproximar o mouse, o dock abre instantaneamente, permanecendo aberto enquanto o mouse estiver sobre a área e fechando imediatamente ao sair.
+  - **Coexistência com Spotlight (`BottomLauncher.qml`)**:
+    - Acionar comandos de workspace com o Spotlight aberto fecha o Spotlight e exibe a barra de workspaces por 2 segundos.
+    - Acionar o Spotlight com a barra de workspaces aberta fecha a barra e abre o Spotlight imediatamente.
+    - Hover na base da tela com o Spotlight aberto não aciona a barra de workspaces.
+  - **Controle IPC**: Adicionados comandos `toggleWorkspaces` e `showWorkspaces` ao `IpcHandler`.
+- **Integração Diagonal no Canto da Moldura (`shell.qml`, `NotificationBarView.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: As notificações foram completamente removidas do Notch superior e integradas como uma extrusão orgânica ancorada diretamente no canto inferior direito da tela.
+  - **Transição Curva Diagonal Contínua**: A borda lateral direita transiciona suavemente em curva côncava para o topo da notificação, e o lado esquerdo desce em curva côncava para a borda inferior, preenchendo a quina sem frestas ou linhas indesejadas.
+  - **Exibição Popup OSD (2,5s)**: Ao receber um alerta, exibe apenas a notificação mais recente em card compacto com fechamento automático em 2,5 segundos.
+  - **Gatilho de Borda no Canto (Hot Zone)**: Passar o cursor sobre o canto inferior direito revela a notificação mais recente instantaneamente (ou *"Nenhuma notificação"* caso a fila esteja vazia). Ao sair da área, o painel fecha imediatamente.
+  - **Expansão com Dwell de 2 Segundos**: Manter o cursor sobre o painel por 2 segundos expande verticalmente a visualização para cima, exibindo a pilha de notificações.
+  - **Ordenação Bottom-to-Top & Scroll**: A notificação mais recente fica posicionada na base, com alertas anteriores empilhando-se para cima. Exibição de até 4 notificações simultâneas com rolagem via roda do mouse (*mouse wheel*) para notificações excedentes.
+  - **Ações Individuais e Limpeza Geral**: Botão de fechar individual (``) em cada card e botão de lixeira (``) na base do painel expandido para descarte de todas as notificações.
+
+### 🎯 Otimização do Notch Superior & Atalhos do Sistema
+- **Notch em Linha Única com Altura Fixa (`DefaultBarView.qml`, `shell.qml`)**:
+  - Reestruturação do layout da barra padrão do notch para uma única linha centralizada, com altura fixa de 32px tanto em repouso quanto em hover com o cursor.
+  - Eliminação da segunda linha de controles rápidos (`QuickControls.qml`) e de expansões desnecessárias de hover.
+- **Remoção do Botão do Arch no Notch (`DefaultBarView.qml`)**:
+  - Remoção do ícone/botão do Arch (`BulldozeLogo`) do notch superior, preservando a abertura do lançador exclusivamente via atalho global de teclado. O lado esquerdo agora abriga exclusivamente as pílulas dinâmicas de workspaces (`WorkspacePills`).
+- **Reposicionamento do Modo Jogo (`Status.qml`, `GamingBarView.qml`)**:
+  - Botão de Gaming Mode (``) integrado diretamente ao grupo da direita (`Status.qml`), posicionado harmonicamente entre a System Tray e as Configurações (``).
+  - Cálculo dinâmico de largura ideal (`idealWidth`) e centralização simétrica das pílulas no menu do Modo Jogo (`GamingBarView`), garantindo margens e paddings perfeitamente uniformes à esquerda e à direita.
+- **Simplificação e Remoção de Modais Redundantes**:
+  - Remoção dos botões e visualizações simplificadas de Wi-Fi e Bluetooth do Notch (`WifiBarView`, `BluetoothBarView`), concentrando todo o gerenciamento de rede nos Ajustes do Sistema.
+  - Remoção do botão de sino de notificações do notch, mantendo a visualização e daemons preservados no código para a próxima iteração.
+  - Limpeza dos comandos IPC correspondentes aos itens contidos nos Ajustes (`toggleWifi`, `toggleBluetooth`, `openWifiSettings`, etc.).
+- **Atualização de Atalhos do Hyprland (`~/.config/hypr/hyprland.lua`)**:
+  - Adicionado o atalho `Ctrl + Super + C` (`SUPER + CONTROL + C`) para abertura direta dos Ajustes do Sistema.
+  - Removido o atalho `SUPER + W` (antigo atalho do gerenciador de wallpapers).
+
+### 🔊 Reformulação da Interface de Áudio & Dispositivos
+- **Nova Barra Lateral de Volume Simplificada Fundida à Borda (`AudioBarView.qml`, `shell.qml`)**:
+  - **Fusão Vetorial Direta (`unifiedShape`)**: A barra de volume foi integrada diretamente à malha vetorial contínua da moldura perimetral esquerda de 8px, expandindo-se fluidamente para dentro da tela com curvas cúbicas suaves e borda de 1px sem costuras ou sobreposições flutuantes.
+  - **Controle Minimalista Vertical**:
+    - Topo: Ícone dinâmico de volume com alternância instantânea de mudo/desmudo ao clicar.
+    - Centro: Slider vertical fino com suporte completo a clique e arrasto para controle de volume.
+    - Base: Botão de engrenagem (``) para transição direta até a aba de Som nos Ajustes do Sistema.
+  - **Temporizador Inteligente & OSD**:
+    - Exibição automática por 2 segundos ao utilizar atalhos de volume do teclado (`raiseVolume`, `lowerVolume`, `toggleMute`).
+    - Pausa automática do temporizador de fechamento quando o cursor do mouse estiver sobre a barra.
+    - Ocultação automática em modo de tela cheia (`isFullscreenActive`) e quando a aba de Som dos Ajustes estiver ativa.
+    - Suporte a acionamento manual via IPC (`quickshell ipc call shell toggleAudio`).
+
+- **Interface Completa de Áudio nos Ajustes do Sistema (`SettingsBarView.qml`)**:
+  - **Nova Categoria "Som" na Barra Lateral de Configurações**:
+    - Slider horizontal de volume principal com porcentagem em tempo real e botão de mudo integrado.
+    - Listagem dinâmica e reativa de todas as saídas de áudio disponíveis (Alto-falantes, HDMI, Fones Bluetooth, DACs USB).
+    - Identificação visual de dispositivos através de ícones contextuais e badges de saída padrão.
+    - Alternância instantânea de saída de som via PipeWire (`wpctl set-default <id>`).
+    - Padronização visual em vidro translúcido monocromático (`theme.activeFill`, `theme.glassBorderStrong`), espelhando a identidade refinada da aba de Wi-Fi.
+
+- **Simplificação dos Controles Rápidos do Notch (`QuickControls.qml`, `DefaultBarView.qml`)**:
+  - Remoção do botão de áudio dos controles rápidos centrais do notch superior, mantendo o foco do notch em Wi-Fi, Bluetooth e Modo Jogo.
+
+- **Helper Assíncrono de Áudio (`scripts/bulldoze-audio.py`, `modules/Audio.qml`)**:
+  - Adicionado script utilitário para inspeção estruturada em JSON das saídas de som do PipeWire e troca de dispositivo padrão.
+
+### ⚡ Performance & Otimizações do Sistema
+- **Otimizações para GPU AMD Radeon no Bulldoptimizer (`modules/Gaming.qml`, `LauncherBarView.qml`, `GamingSettingsBarView.qml`, `scripts/bulldoze-game-run`)**:
+  - Transição de suporte de GPU da NVIDIA para a arquitetura AMD Radeon (foco na RX 9070 XT).
+  - **AMD DPM Performance (Max Clocks)**: Trava o clock da GPU Core e da VRAM em performance máxima (`power_dpm_force_performance_level = high`, `pp_power_profile_mode = 1` [3D_FULL_SCREEN]), prevenindo downclocking repentino e frametime spikes.
+  - **AMD RADV Anti-Lag & Shader Boost**: Injeção automática de variáveis de ambiente de alta performance no inicializador de jogos (`bulldoze-game-run`):
+    - `AMD_VULKAN_ICD="RADV"`: Força o driver Vulkan da Valve/Mesa com compilador ACO.
+    - `RADV_PERFTEST="aco,anti_lag"`: Ativa o compilador ACO e o AMD Anti-Lag para redução drástica de latência de entrada.
+    - `MESA_SHADER_CACHE_MAX_SIZE="50G"`: Cache de shaders ampliado para 50GB, eliminando micro-travadas por recompilação.
+    - `vk_xwayland_wait_ready=false`: Bypassa esperas artificiais de sincronização no XWayland.
+    - `MESA_VK_WSI_PRESENT_MODE="mailbox"`: Apresentação imediata de quadros sem tearing e com menor latência.
+    - `mesa_glthread=true`: Multi-threading assíncrono para jogos legados e títulos OpenGL.
+  - Aplicação e reversão automáticas ao alternar o Bulldoptimizer ou sair dos jogos.
+- **Auto-Pause do Wallpaper Exclusivo para Tela Cheia (`scripts/bulldoze-hypr-events.py`)**:
+  - Ajustada a regra de suspensão do motor do Wallpaper Engine para considerar apenas janelas em tela cheia (`has_fs`) em vez de qualquer janela aberta (`win_count > 0`).
+  - Permite que papéis de parede animados continuem em execução fluida durante o uso normal do desktop com janelas parciais/lado a lado, suspendendo e liberando 100% de VRAM e GPU apenas ao executar jogos em tela cheia.
+- **Captura Assíncrona e Instantânea de Wallpaper Snapshots (`scripts/bulldoze-wallpaper.py`, `shell.qml`)**:
+  - Pipeline otimizado em duas fases: geração instantânea via preview/textura do workshop (`snapshot`) e renderização em segundo plano da captura nativa 1440p limpa do engine (`snapshot-hires`).
+  - Atualização imediata do banner do Launcher e da tela de login (`Wallpaper_greeter.png`), com notificação reativa via IPC (`reloadWallpaperSnapshot`), extinguindo congelamentos de interface ao alternar papéis de parede.
+- **Isolamento de Áudio do Wallpaper Engine (`scripts/bulldoze-wallpaper.py`)**:
+  - Desacoplamento total do `linux-wallpaperengine` do subsistema PipeWire utilizando `SDL_AUDIODRIVER=dummy`, `ALSOFT_DRIVERS=dummy` e `--no-audio-processing`.
+  - **Correção de Deadlock com Bluetooth & YouTube**: Evita que o congelamento do wallpaper via `SIGSTOP` (recurso de economia de GPU com janelas abertas) trave o grafo de renegociação do PipeWire (`[negotiating]`) ao conectar fones/caixas Bluetooth (ex: JBL Go) ou alterar dispositivos de som, eliminando congelamentos de vídeos no YouTube e navegadores.
+- **Integração de Agendamento em Tempo Real (`ananicy-cpp` + `cachyos-ananicy-rules`)**:
+  - Priorização automática e contínua de processos com baixa latência para o compositor Hyprland, Quickshell e jogos.
+  - Rebaixamento automático de I/O e prioridade de CPU para processos em segundo plano (atualizadores, compiladores), eliminando micro-stutters.
+- **Desduplicação de Memória RAM com KSM (`cachyos-ksm-settings` / `ksmd`)**:
+  - Ativação do *Kernel Samepage Merging* (KSM) nativo via systemd, mesclando páginas idênticas de RAM entre processos de forma segura e sem consumo excessivo de CPU.
+- **Guia Completo de Otimizações de Sistema (`docs/system_optimizations.md`)**:
+  - Documentação detalhada sobre a arquitetura de agendamento de processos, KSM, comandos de instalação, ativação no systemd e monitoramento de economia de memória via `ksmstats`.
+
+### 📂 Centralização & Arquitetura
+- **Unificação de Scripts no Repositório (`scripts/`)**:
+  - Centralizados e versionados os scripts de inicialização de sessão e wallpaper: `start-session`, `capture-greeter-wallpaper` e `bulldoze-wallpaper-daemon`.
+  - Criados links simbólicos (*symlinks*) transparentes em `~/.config/bulldoze/scripts/` para total retrocompatibilidade com daemons e inicialização do Hyprland.
+- **Separação Clara de Runtime vs Código**:
+  - `~/.config/bulldoze/` mantido estritamente para dados de runtime e preferências mutáveis do usuário (`wallpaper.json`, `gaming.json`, `privacy.json`), desacoplando o código-fonte da configuração de estado.
+
+### 🐛 Correções & Polimento
+- **Suporte a Ícone do Bitwarden na System Tray (`components/Tray.qml`)**:
+  - Tratamento e mapeamento dedicado para renderização correta do ícone do Bitwarden quando ativo na bandeja do sistema.
+
 ## [3.1.0] - 2026-08
 
 ### ✨ Adicionado

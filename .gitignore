@@ -16,3 +16,5 @@ Wallpaper_greeter_raw.png
 *.swo
 *~
 .DS_Store
+
+docs/specs/*

@@ -1,0 +1,3 @@
+#!/bin/bash
+# Bulldoze Wallpaper Engine Daemon
+exec /usr/bin/python3 /home/paulo/.config/quickshell/bulldoze/scripts/bulldoze-wallpaper.py daemon

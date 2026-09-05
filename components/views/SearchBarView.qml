@@ -79,6 +79,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -96,6 +97,7 @@ Item {
 
             // Search Icon
             Text {
+                renderType: Text.NativeRendering
                 anchors.verticalCenter: parent.verticalCenter
                 text: ""
                 color: theme.textSubtle
@@ -104,6 +106,7 @@ Item {
 
             // Search Text Input
             TextInput {
+                renderType: TextInput.NativeRendering
                 id: searchInput
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 120
@@ -115,6 +118,7 @@ Item {
                 selectionColor: theme.hoverFill
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.verticalCenter: parent.verticalCenter
                     visible: !searchInput.text
                     text: "Pesquisar aplicativos..."
@@ -163,6 +167,7 @@ Item {
                 border.color: theme.glassBorderSubtle
 
                 Text {
+                    renderType: Text.NativeRendering
                     id: escText
                     anchors.centerIn: parent
                     text: "ESC"
@@ -225,6 +230,7 @@ Item {
                         height: 24
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.centerIn: parent
                             text: ""
                             color: theme.textStrong
@@ -255,6 +261,7 @@ Item {
                         spacing: 2
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: modelData.name
                             color: theme.textStrong
                             font.pixelSize: theme.fontSizeMd
@@ -262,6 +269,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             visible: modelData.genericName && modelData.genericName !== modelData.name
                             text: modelData.genericName || ""
                             color: theme.textMuted

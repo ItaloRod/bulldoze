@@ -55,6 +55,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -84,6 +85,7 @@ Item {
                 spacing: theme.spacingMd
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: ""
                     color: root.net.available ? theme.textStrong : theme.textMuted
                     font.pixelSize: theme.iconSizeXl
@@ -95,6 +97,7 @@ Item {
                     spacing: 1
 
                     Text {
+                        renderType: Text.NativeRendering
                         width: 160
                         text: root.net.available ? (root.net.ssid !== "" ? root.net.ssid : "Conectado") : (root.net.enabled ? "Desconectado" : "Wi-Fi Desativado")
                         color: root.net.available ? theme.textStrong : theme.textMedium
@@ -104,6 +107,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         width: 160
                         text: root.net.available ? "Rede sem fio ativa" : "Sem conexão"
                         color: theme.textMuted
@@ -144,6 +148,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: setMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -184,6 +189,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: (root.net && root.net.isScanning) ? theme.accent : (refMouse.containsMouse ? theme.textStrong : theme.textMedium)

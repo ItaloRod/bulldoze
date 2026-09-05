@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# =========================================================
+# Bulldoze 3.0 — Session Startup
+# =========================================================
+
+# 1. Captura o wallpaper limpo (sem hover) para Greeter/LockScreen e inicia o Wallpaper Engine
+/home/paulo/.config/bulldoze/scripts/capture-greeter-wallpaper &
+
+# 5. Interface e serviços
+export XDG_DATA_DIRS="${XDG_DATA_DIRS:-/usr/local/share:/usr/share}:/var/lib/flatpak/exports/share:$HOME/.local/share/flatpak/exports/share:$HOME/.local/share"
+quickshell -c bulldoze &
+hypridle &
+systemctl --user start hyprpolkitagent.service
+
+

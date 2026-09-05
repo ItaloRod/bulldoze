@@ -55,6 +55,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -84,6 +85,7 @@ Item {
                 spacing: theme.spacingMd
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: ""
                     color: root.bt.hasConnectedDevices ? theme.textStrong : (root.bt.enabled ? theme.textMedium : theme.textMuted)
                     font.pixelSize: theme.iconSizeXl
@@ -95,6 +97,7 @@ Item {
                     spacing: 1
 
                     Text {
+                        renderType: Text.NativeRendering
                         width: 160
                         text: !root.bt.enabled ? "Bluetooth Desligado" : (root.bt.hasConnectedDevices ? root.bt.connectedDevices[0] : "Sem Dispositivos")
                         color: root.bt.hasConnectedDevices ? theme.textStrong : (root.bt.enabled ? theme.textMedium : theme.textMuted)
@@ -104,6 +107,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         width: 160
                         text: root.bt.hasConnectedDevices ? (root.bt.connectedDevices.length > 1 ? "+" + (root.bt.connectedDevices.length - 1) + " outros conectados" : "Dispositivo conectado") : (root.bt.enabled ? "Pronto para parear" : "Desativado")
                         color: theme.textMuted
@@ -144,6 +148,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: pairMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -184,6 +189,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: mgrMouse.containsMouse ? theme.textStrong : theme.textMedium

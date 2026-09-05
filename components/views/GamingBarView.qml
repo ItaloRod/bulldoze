@@ -14,18 +14,16 @@ Item {
 
     readonly property var game: gaming
 
+    readonly property int idealWidth: Math.round(controlsRow.implicitWidth + ((theme.contentInset + theme.notchConcaveWidth) * 2))
+
     Item {
-        anchors {
-            left: parent.left
-            leftMargin: theme.contentInset + theme.notchConcaveWidth
-            right: parent.right
-            rightMargin: theme.contentInset + theme.notchConcaveWidth
-            verticalCenter: parent.verticalCenter
-        }
+        anchors.centerIn: parent
+        width: controlsRow.implicitWidth
         height: parent.height
 
         Row {
-            anchors.fill: parent
+            id: controlsRow
+            anchors.verticalCenter: parent.verticalCenter
             spacing: theme.spacingSm
 
             // 1. Back Button (Icon only)
@@ -51,6 +49,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -102,6 +101,7 @@ Item {
                     spacing: 6
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: ""
                         color: root.game.gamemodeEnabled ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.iconSizeSm
@@ -109,6 +109,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "GameMode"
                         color: root.game.gamemodeEnabled ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.fontSizeSubmenuBody
@@ -154,6 +155,7 @@ Item {
                     spacing: 6
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: ""
                         color: root.game.bulldoptimizerEnabled ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.iconSizeSm
@@ -161,6 +163,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "Bulldoptimizer"
                         color: root.game.bulldoptimizerEnabled ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.fontSizeSubmenuBody
@@ -206,6 +209,7 @@ Item {
                     spacing: 6
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: ""
                         color: root.game.mangohudEnabled ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.iconSizeSm
@@ -213,6 +217,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "MangoHud"
                         color: root.game.mangohudEnabled ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.fontSizeSubmenuBody
@@ -258,6 +263,7 @@ Item {
                     spacing: 6
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: ""
                         color: root.game.gamescopeEnabled ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.iconSizeSm
@@ -265,6 +271,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "Gamescope"
                         color: root.game.gamescopeEnabled ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
                         font.pixelSize: theme.fontSizeSubmenuBody

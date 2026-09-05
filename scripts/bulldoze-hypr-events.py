@@ -64,7 +64,7 @@ def main():
 
     last_paused = None
     if is_pause_on_window_enabled():
-        should_pause = (initial_wins > 0)
+        should_pause = initial_fs
         set_wallpaper_paused(should_pause)
         last_paused = should_pause
 
@@ -93,8 +93,8 @@ def main():
                         print(f"FULLSCREEN:{1 if has_fs else 0}", flush=True)
 
                     if is_pause_on_window_enabled():
-                        should_pause = (win_count > 0)
-                        if should_pause != last_paused or should_pause:
+                        should_pause = has_fs
+                        if should_pause != last_paused:
                             set_wallpaper_paused(should_pause)
                             last_paused = should_pause
                     else:

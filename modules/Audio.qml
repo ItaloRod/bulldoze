@@ -1,4 +1,6 @@
 import QtQuick
+import Quickshell
+import Quickshell.Io
 import Quickshell.Services.Pipewire
 
 QtObject {
@@ -15,6 +17,8 @@ QtObject {
     property PwObjectTracker tracker: PwObjectTracker {
         objects: root.sink ? [root.sink] : []
     }
+
+    property var availableSinks: []
 
     function toggleMute() {
         if (available)
@@ -33,6 +37,57 @@ QtObject {
     function stepVolume(delta) {
         if (available) {
             setVolume(sink.audio.volume + delta)
+        }
+    }
+
+    function setDefaultSink(id) {
+        if (!id) return
+        setSinkProc.command = [Quickshell.env("HOME") + "/.config/quickshell/bulldoze/scripts/bulldoze-audio.py", "set-sink", id.toString()]
+        setSinkProc.running = true
+    }
+
+    function refreshSinks() {
+        if (!sinksProc.running) {
+            sinksProc.buffer = ""
+            sinksProc.running = true
+        }
+    }
+
+    property var sinksTimer: Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        triggeredOnStart: true
+        onTriggered: root.refreshSinks()
+    }
+
+    property var sinksProc: Process {
+        id: sinksProc
+        command: [Quickshell.env("HOME") + "/.config/quickshell/bulldoze/scripts/bulldoze-audio.py", "sinks"]
+        property string buffer: ""
+
+        stdout: SplitParser {
+            onRead: data => {
+                sinksProc.buffer += data
+            }
+        }
+
+        onExited: (code, status) => {
+            if (code === 0) {
+                try {
+                    const parsed = JSON.parse(sinksProc.buffer.trim())
+                    root.availableSinks = parsed
+                } catch (e) {
+                }
+            }
+            sinksProc.buffer = ""
+        }
+    }
+
+    property var setSinkProc: Process {
+        id: setSinkProc
+        onExited: (code, status) => {
+            root.refreshSinks()
         }
     }
 }

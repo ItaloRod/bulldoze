@@ -130,6 +130,30 @@ if [[ "$USE_MANGOHUD" == "true" && ${#MANGOHUD_CONF_ITEMS[@]} -gt 0 ]]; then
     export MANGOHUD_CONFIG=$(IFS=","; echo "${MANGOHUD_CONF_ITEMS[*]}")
 fi
 
+# 4.1 Otimizações AMD Radeon (Mesa RADV & DPM) via Bulldoptimizer
+if [[ "$USE_BULLDOPTIMIZER" == "true" ]]; then
+    BO_RADV=$(jq -r '.bulldoptimizer_config.radv_optimizations // true' "$CONFIG_FILE" 2>/dev/null)
+    BO_AMD_DPM=$(jq -r '.bulldoptimizer_config.amd_dpm // true' "$CONFIG_FILE" 2>/dev/null)
+
+    if [[ "$BO_RADV" == "true" ]]; then
+        export AMD_VULKAN_ICD="RADV"
+        export RADV_PERFTEST="aco,anti_lag"
+        export MESA_SHADER_CACHE_MAX_SIZE="50G"
+        export vk_xwayland_wait_ready=false
+        export MESA_VK_WSI_PRESENT_MODE="mailbox"
+        export mesa_glthread=true
+    fi
+
+    if [[ "$BO_AMD_DPM" == "true" ]]; then
+        for card in /sys/class/drm/card*/device/power_dpm_force_performance_level; do
+            [[ -w "$card" ]] && echo "high" > "$card" 2>/dev/null
+        done
+        for prof in /sys/class/drm/card*/device/pp_power_profile_mode; do
+            [[ -w "$prof" ]] && echo "1" > "$prof" 2>/dev/null
+        done
+    fi
+fi
+
 # 5. Encadeia a ordem de execução
 CMD=()
 

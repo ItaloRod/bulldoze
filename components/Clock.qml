@@ -26,6 +26,7 @@ Row {
 
         font.pixelSize: theme.fontSizeMd
         font.weight: Font.Bold
+        renderType: Text.NativeRendering
     }
 
     Text {
@@ -39,6 +40,7 @@ Row {
 
         font.pixelSize: theme.fontSizeXs
         font.weight: Font.Medium
+        renderType: Text.NativeRendering
     }
 }
 

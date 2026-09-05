@@ -1,6 +1,6 @@
 # 🎮 Guia Completo: Gamescope & MangoHud no Bulldoze 3.0
 
-Este documento descreve detalhadamente cada opção do painel de **Jogos (Gaming Settings)** integrado à Central de Controle do Bulldoze, explicando seu funcionamento interno, impacto no desempenho e as recomendações de uso para o seu setup (**NVIDIA RTX 3060 + Ryzen 7 5700X + Monitor 2560x1440 @ 240Hz**).
+Este documento descreve detalhadamente cada opção do painel de **Jogos (Gaming Settings)** integrado à Central de Controle do Bulldoze, explicando seu funcionamento interno, impacto no desempenho e as recomendações de uso para o seu setup (**AMD Radeon RX 9070 XT + Ryzen 7 5700X + Monitor 2560x1440 @ 240Hz**).
 
 ---
 

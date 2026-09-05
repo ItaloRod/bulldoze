@@ -118,6 +118,7 @@ FocusScope {
                     spacing: theme.spacingSm
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: ""
                         color: theme.textMuted
@@ -125,6 +126,7 @@ FocusScope {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: search.text ? "Nenhum aplicativo encontrado" : "Digite para buscar aplicativos..."
                         color: theme.textMuted
@@ -164,6 +166,7 @@ FocusScope {
                         height: 22
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.centerIn: parent
                             text: ""
                             color: theme.textStrong
@@ -194,6 +197,7 @@ FocusScope {
                         spacing: 0
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: modelData.name
                             color: appList.currentIndex === index ? theme.textStrong : theme.textMedium
                             font.pixelSize: theme.fontSizeMd
@@ -201,6 +205,7 @@ FocusScope {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             visible: modelData.genericName && modelData.genericName !== modelData.name
                             text: modelData.genericName || ""
                             color: theme.textMuted
@@ -223,6 +228,7 @@ FocusScope {
                             border.color: theme.glassBorderSubtle
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: "↵"
                                 color: theme.textMedium
@@ -277,6 +283,7 @@ FocusScope {
 
             // Search Icon
             Text {
+                renderType: Text.NativeRendering
                 anchors.verticalCenter: parent.verticalCenter
                 text: ""
                 color: search.text ? theme.accent : theme.textSubtle
@@ -285,6 +292,7 @@ FocusScope {
 
             // Text Input
             TextInput {
+                renderType: TextInput.NativeRendering
                 id: search
                 anchors.verticalCenter: parent.verticalCenter
                 width: parent.width - 90
@@ -296,6 +304,7 @@ FocusScope {
                 selectionColor: theme.hoverFill
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.verticalCenter: parent.verticalCenter
                     visible: !search.text
                     text: "Pesquisar aplicativos..."
@@ -346,6 +355,7 @@ FocusScope {
                 border.color: theme.glassBorderSubtle
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: "ESC"
                     color: theme.textSubtle

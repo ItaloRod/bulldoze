@@ -736,6 +736,7 @@ WlSessionLock {
                         spacing: 2
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: Qt.formatDateTime(sysClock.date, "HH:mm")
                             color: theme.textStrong
@@ -744,6 +745,7 @@ WlSessionLock {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.horizontalCenter: parent.horizontalCenter
                             text: {
                                 const dateStr = sysClock.date.toLocaleDateString(Qt.locale("pt_BR"), "dddd, dd 'de' MMMM")
@@ -804,6 +806,7 @@ WlSessionLock {
                                 border.color: theme.glassBorderSubtle
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: userProfile.initial
                                     color: theme.textStrong
@@ -828,6 +831,7 @@ WlSessionLock {
                             spacing: 1
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: userProfile.displayName
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeSubmenuTitle
@@ -835,6 +839,7 @@ WlSessionLock {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: userProfile.hostName
                                 color: theme.textMuted
                                 font.pixelSize: theme.fontSizeSubmenuBody
@@ -869,6 +874,7 @@ WlSessionLock {
                                 anchors.verticalCenter: parent.verticalCenter
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     visible: !root.authenticating
@@ -877,6 +883,7 @@ WlSessionLock {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     visible: root.authenticating
@@ -894,6 +901,7 @@ WlSessionLock {
                             }
 
                             TextInput {
+                                renderType: TextInput.NativeRendering
                                 id: pwdInput
                                 anchors.verticalCenter: parent.verticalCenter
                                 width: parent.width - 20 - (revealBtn.visible ? 30 : 0) - 34 - (theme.spacingSm * 3)
@@ -920,6 +928,7 @@ WlSessionLock {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.fill: parent
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: root.authenticating ? "Autenticando..." : "Digite sua senha..."
@@ -940,6 +949,7 @@ WlSessionLock {
                                 visible: pwdInput.text.length > 0 && !root.authenticating
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: root.showPassword ? "" : ""
                                     color: revealMouse.containsMouse ? theme.textStrong : theme.textMuted
@@ -978,6 +988,7 @@ WlSessionLock {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     visible: !root.authenticating
@@ -986,6 +997,7 @@ WlSessionLock {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     visible: root.authenticating
@@ -1047,6 +1059,7 @@ WlSessionLock {
                             visible: root.authenticating || root.errorMessage.length > 0
 
                             Text {
+                                renderType: Text.NativeRendering
                                 visible: root.authenticating
                                 text: ""
                                 color: theme.accent
@@ -1063,6 +1076,7 @@ WlSessionLock {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 visible: !root.authenticating && root.errorMessage.length > 0
                                 text: ""
                                 color: "#FF6B6B"
@@ -1071,6 +1085,7 @@ WlSessionLock {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: root.authenticating ? "Autenticando..." : root.errorMessage
                                 color: root.errorMessage ? "#FF6B6B" : theme.textMedium
                                 font.pixelSize: theme.fontSizeSm
@@ -1106,6 +1121,7 @@ WlSessionLock {
                                 transformOrigin: Item.Center
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: pwrBtn.modelData.icon
                                     color: pwrBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1132,6 +1148,7 @@ WlSessionLock {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         id: tipText
                                         anchors.centerIn: parent
                                         text: pwrBtn.modelData.label

@@ -2,6 +2,7 @@ import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Io
+import Quickshell.Services.SystemTray
 import QtQuick
 import QtQuick.Shapes
 import "components"
@@ -11,8 +12,9 @@ import "modules"
 ShellRoot {
     id: shell
 
-    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "settings" | "power" | "profile" | "notifications"
-    property string activeSettingsTab: "wifi"
+    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "launcher" | "settings" | "power" | "profile" | "notifications"
+    property string activeLauncherTab: "home"
+    property alias activeSettingsTab: shell.activeLauncherTab
     property bool isFullscreenActive: false
     property bool isLauncherOpen: false
     property real notchActualWidth: 200
@@ -61,7 +63,7 @@ ShellRoot {
         property bool ready: false
 
         onNotificationReceived: notif => {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
+            if (ready && !shell.isLauncherOpen) {
                 shell.showNotificationOsd()
             }
         }
@@ -81,14 +83,14 @@ ShellRoot {
         property bool ready: false
 
         onVolumeChanged: {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
-                shell.showAudioOsd()
+            if (ready && !((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") && !shell.isLauncherOpen) {
+                shell.showAudioBar()
             }
         }
 
         onMutedChanged: {
-            if (ready && shell.activeMode === "none" && !launcher.open) {
-                shell.showAudioOsd()
+            if (ready && !((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") && !shell.isLauncherOpen) {
+                shell.showAudioBar()
             }
         }
 
@@ -102,76 +104,156 @@ ShellRoot {
         }
     }
 
-    property bool audioTriggeredByOsd: false
+    property bool isAudioBarOpen: false
 
-    property var audioOsdTimer: Timer {
-        id: audioOsdTimer
-        interval: 3000
+    property var audioBarTimer: Timer {
+        id: audioBarTimer
+        interval: 2000
         repeat: false
         onTriggered: {
-            if (shell.audioTriggeredByOsd && shell.activeMode === "audio") {
-                shell.activeMode = "none"
-                shell.audioTriggeredByOsd = false
+            shell.isAudioBarOpen = false
+        }
+    }
+
+    property bool wsReady: false
+    property var currentFocusedWorkspace: Hyprland.focusedWorkspace
+    onCurrentFocusedWorkspaceChanged: {
+        if (shell.wsReady) {
+            if (shell.isLauncherOpen) {
+                shell.isLauncherOpen = false
+            }
+            shell.showWorkspaceBar(2000)
+        }
+    }
+
+    property var wsReadyTimer: Timer {
+        id: wsReadyTimer
+        interval: 1000
+        running: true
+        onTriggered: shell.wsReady = true
+    }
+
+    property bool isWorkspaceOpen: false
+
+    property var workspaceBarTimer: Timer {
+        id: workspaceBarTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            shell.isWorkspaceOpen = false
+        }
+    }
+
+    property bool isNotifOpen: false
+    property bool isNotifExpanded: false
+
+    property var notifDismissTimer: Timer {
+        id: notifDismissTimer
+        interval: 2500
+        repeat: false
+        onTriggered: {
+            shell.closeNotification()
+        }
+    }
+
+    property var notifExpandTimer: Timer {
+        id: notifExpandTimer
+        interval: 2000
+        repeat: false
+        onTriggered: {
+            if (shell.isNotifOpen && globalNotifications.count > 1) {
+                shell.isNotifExpanded = true
             }
         }
     }
 
-    property var notificationTimer: Timer {
-        id: notificationTimer
-        interval: 5000
-        repeat: false
-        onTriggered: {
-            if (shell.activeMode === "notifications") {
-                shell.activeMode = "none"
-            }
-        }
+    function showAudioBar() {
+        if (shell.isFullscreenActive) return
+        if ((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") return
+        shell.isAudioBarOpen = true
+        audioBarTimer.restart()
     }
 
-    function resetNotificationTimer() {
-        if (shell.activeMode === "notifications") {
-            notificationTimer.restart()
+    function toggleAudioBar() {
+        if (shell.isAudioBarOpen) {
+            shell.isAudioBarOpen = false
+            audioBarTimer.stop()
+        } else {
+            shell.isAudioBarOpen = true
+            audioBarTimer.restart()
         }
-    }
-
-    function showAudioOsd() {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        notificationTimer.stop()
-        if (shell.activeMode !== "audio") {
-            shell.activeMode = "audio"
-        }
-        shell.audioTriggeredByOsd = true
-        audioOsdTimer.restart()
     }
 
     function showNotificationOsd() {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        audioOsdTimer.stop()
-        shell.audioTriggeredByOsd = false
-        if (shell.activeMode !== "notifications") {
-            shell.activeMode = "notifications"
+        if (shell.isFullscreenActive) return
+        shell.isNotifExpanded = false
+        shell.isNotifOpen = true
+        notifDismissTimer.restart()
+    }
+
+    function showNotificationCorner() {
+        if (shell.isFullscreenActive) return
+        notifDismissTimer.stop()
+        shell.isNotifExpanded = false
+        shell.isNotifOpen = true
+    }
+
+    function closeNotification() {
+        notifDismissTimer.stop()
+        notifExpandTimer.stop()
+        shell.isNotifOpen = false
+        shell.isNotifExpanded = false
+    }
+
+    function showWorkspaceBar(timeout) {
+        if (shell.isFullscreenActive) return
+        if (shell.isLauncherOpen) return
+        shell.isWorkspaceOpen = true
+        if (timeout > 0) {
+            workspaceBarTimer.interval = timeout
+            workspaceBarTimer.restart()
+        } else {
+            workspaceBarTimer.stop()
         }
-        notificationTimer.restart()
+    }
+
+    function closeWorkspaceBar() {
+        workspaceBarTimer.stop()
+        shell.isWorkspaceOpen = false
+    }
+
+    property bool isTrayOpen: false
+    property bool isTrayMenuOpen: false
+    readonly property int trayItemCount: (SystemTray.items && SystemTray.items.values) ? SystemTray.items.values.length : 0
+
+    function showTrayBar() {
+        if (shell.isFullscreenActive) return
+        if (shell.trayItemCount === 0) return
+        shell.isTrayOpen = true
+    }
+
+    function closeTrayBar() {
+        if (shell.isTrayMenuOpen) return
+        shell.isTrayOpen = false
     }
 
     function toggleMode(mode) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        audioOsdTimer.stop()
-        notificationTimer.stop()
-        shell.audioTriggeredByOsd = false
         if (activeMode === mode) {
             activeMode = "none"
         } else {
             activeMode = mode
-            if (mode === "notifications") {
-                notificationTimer.restart()
-            }
         }
     }
 
-    function closeActiveMode() {
-        audioOsdTimer.stop()
-        notificationTimer.stop()
-        shell.audioTriggeredByOsd = false
+    property bool preventAutoOpenSettings: false
+
+    function closeActiveMode(manual) {
+        if (manual && (shell.activeMode === "launcher" || shell.activeMode === "settings")) {
+            shell.preventAutoOpenSettings = true
+        } else {
+            shell.preventAutoOpenSettings = false
+        }
         activeMode = "none"
     }
 
@@ -179,6 +261,7 @@ ShellRoot {
         if (shell.isLauncherOpen) {
             shell.isLauncherOpen = false
         } else {
+            shell.closeWorkspaceBar()
             shell.closeActiveMode()
             shell.isLauncherOpen = true
         }
@@ -188,10 +271,29 @@ ShellRoot {
         shell.toggleMode("gaming-settings")
     }
 
-    function openSettingsTab(tab) {
+    function openLauncherTab(tab) {
         if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        shell.activeSettingsTab = tab || "wifi"
-        shell.activeMode = "settings"
+        shell.isAudioBarOpen = false
+        shell.audioBarTimer.stop()
+        shell.preventAutoOpenSettings = false
+        shell.activeLauncherTab = tab || "home"
+        shell.activeMode = "launcher"
+    }
+
+    function openSettingsTab(tab) {
+        shell.openLauncherTab(tab)
+    }
+
+    function toggleLauncherBar() {
+        if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
+            shell.closeActiveMode(true)
+        } else {
+            shell.openLauncherTab("home")
+        }
+    }
+
+    function toggleSettings() {
+        shell.toggleLauncherBar()
     }
 
     function toggleWallpaperModal() {
@@ -199,6 +301,7 @@ ShellRoot {
     }
 
     function activateWorkspace(id) {
+        if (shell.isLauncherOpen) shell.isLauncherOpen = false
         for (const workspace of Hyprland.workspaces.values) {
             if (workspace.id === id) {
                 workspace.activate()
@@ -216,29 +319,28 @@ ShellRoot {
         target: "shell"
         function toggleLauncher() { shell.toggleLauncher() }
         function toggleSearch() { shell.toggleLauncher() }
-        function toggleWifi() { shell.toggleMode("wifi") }
-        function toggleBluetooth() { shell.toggleMode("bluetooth") }
-        function toggleAudio() { shell.toggleMode("audio") }
-        function toggleGaming() { shell.toggleMode("gaming") }
+        function toggleWorkspaces() { if (shell.isWorkspaceOpen) shell.closeWorkspaceBar(); else shell.showWorkspaceBar(2000) }
+        function showWorkspaces() { shell.showWorkspaceBar(2000) }
+        function toggleAudio() { shell.toggleAudioBar() }
+        function toggleGaming() { shell.openLauncherTab("gaming") }
         function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
-        function toggleSettings() { shell.toggleMode("settings") }
-        function openSettings(tab: string) { shell.openSettingsTab(tab) }
-        function openWifiSettings() { shell.openSettingsTab("wifi") }
-        function openBluetoothSettings() { shell.openSettingsTab("bluetooth") }
-        function openWallpaperSettings() { shell.openSettingsTab("wallpaper") }
-        function openGamingSettings() { shell.openSettingsTab("gaming") }
-        function toggleWallpaperManager() { shell.toggleMode("settings") }
+        function toggleSettings() { shell.toggleLauncherBar() }
+        function toggleLauncherBar() { shell.toggleLauncherBar() }
+        function openSettings(tab: string) { shell.openLauncherTab(tab) }
+        function openLauncher(tab: string) { shell.openLauncherTab(tab) }
         function toggleWallpaper() { shell.toggleMode("wallpaper") }
         function toggleWallpaperModal() { shell.toggleWallpaperModal() }
-        function toggleProfile() { shell.toggleMode("power") }
-        function togglePowerMenu() { shell.toggleMode("power") }
-        function toggleNotifications() { shell.toggleMode("notifications") }
-        function toggleControlCenter() { shell.toggleMode("gaming") }
-        function closeActiveMode() { shell.closeActiveMode(); shell.isLauncherOpen = false }
+        function toggleProfile() { shell.openLauncherTab("home") }
+        function togglePowerMenu() { shell.openLauncherTab("home") }
+        function toggleNotifications() { if (shell.isNotifOpen) shell.closeNotification(); else shell.showNotificationCorner() }
+        function expandNotifications() { shell.isNotifOpen = true; shell.isNotifExpanded = true }
+        function toggleControlCenter() { shell.openLauncherTab("home") }
+        function closeActiveMode() { shell.closeActiveMode(true); shell.isLauncherOpen = false }
         function lockScreen() { shell.lockScreen() }
-        function raiseVolume() { globalAudio.stepVolume(0.05) }
-        function lowerVolume() { globalAudio.stepVolume(-0.05) }
-        function toggleMute() { globalAudio.toggleMute() }
+        function raiseVolume() { globalAudio.stepVolume(0.05); shell.showAudioBar() }
+        function lowerVolume() { globalAudio.stepVolume(-0.05); shell.showAudioBar() }
+        function toggleMute() { globalAudio.toggleMute(); shell.showAudioBar() }
+        function reloadWallpaperSnapshot() { globalWallpaper.snapshotVersion++ }
     }
 
     // Static Desktop Wallpaper for GameMode (Zero-GPU Mode)
@@ -303,9 +405,9 @@ ShellRoot {
 
                 WlrLayershell.namespace: "bulldoze-bar"
                 WlrLayershell.layer: shell.isLauncherOpen ? WlrLayer.Overlay : WlrLayer.Top
-                WlrLayershell.keyboardFocus: (shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "settings") ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+                WlrLayershell.keyboardFocus: (shell.isLauncherOpen || shell.activeMode === "wallpaper") ? WlrKeyboardFocus.Exclusive : ((shell.activeMode === "launcher" || shell.activeMode === "settings") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
                 exclusiveZone: 0
-                focusable: shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "settings"
+                focusable: shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "launcher" || shell.activeMode === "settings"
                 visible: (!shell.isFullscreenActive || shell.activeMode !== "none" || shell.isLauncherOpen) && mainContainer.opacity > 0.001
                 color: "transparent"
 
@@ -318,6 +420,32 @@ ShellRoot {
 
                 mask: Region {
                     item: shell.isLauncherOpen ? fullscreenOverlay : notchContainer
+
+                    Region {
+                        item: (shell.activeMode === "none" && !shell.isLauncherOpen && typeof notchTopTrigger !== "undefined") ? notchTopTrigger : null
+                    }
+
+                    Region {
+                        item: (shell.isAudioBarOpen || root.animAudioWidth > 0) ? leftAudioBarContainer : null
+                    }
+
+                    Region {
+                        item: (shell.isNotifOpen || root.animNotifHeight > 0) ? (typeof bottomNotifContainer !== "undefined" ? bottomNotifContainer : null) : (typeof notifCornerTrigger !== "undefined" ? notifCornerTrigger : null)
+                    }
+
+                    Region {
+                        item: (shell.trayItemCount > 0)
+                            ? ((shell.isTrayOpen || root.animTrayHeight > 0)
+                                ? (typeof topTrayContainer !== "undefined" ? topTrayContainer : null)
+                                : (typeof trayCornerTrigger !== "undefined" ? trayCornerTrigger : null))
+                            : null
+                    }
+
+                    Region {
+                        item: (shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0)
+                            ? (typeof bottomLauncherContainer !== "undefined" ? bottomLauncherContainer : null)
+                            : (typeof workspaceBottomTrigger !== "undefined" ? workspaceBottomTrigger : null)
+                    }
                 }
 
                 HyprlandFocusGrab {
@@ -341,31 +469,20 @@ ShellRoot {
                 readonly property real bottomRadius: theme.notchBottomRadius
                 readonly property real topRadius: 18
 
-                property bool isHovered: barHover.hovered
-                property bool isExpanded: isHovered || shell.activeMode !== "none"
-                property int expandedWidth: (defaultBarView && defaultBarView.contentExpandedWidth > 0) ? defaultBarView.contentExpandedWidth : 620
+                property bool isHovered: (typeof notchHover !== "undefined" && typeof topHoverHandler !== "undefined") ? (notchHover.hovered || topHoverHandler.hovered) : false
                 property int collapsedWidth: (defaultBarView && defaultBarView.contentCollapsedWidth > 0) ? defaultBarView.contentCollapsedWidth : 170
 
                 property int targetWidth: {
-                    if (shell.activeMode === "wifi") return 460
-                    if (shell.activeMode === "bluetooth") return 470
-                    if (shell.activeMode === "audio") return 380
-                    if (shell.activeMode === "gaming") return 620
-                    if (shell.activeMode === "gaming-settings") return 720
+                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") return 920
                     if (shell.activeMode === "wallpaper") return 920
-                    if (shell.activeMode === "settings") return 920
-                    if (shell.activeMode === "notifications") return 520
-                    if (shell.activeMode === "power" || shell.activeMode === "profile") return 520
-                    return root.isExpanded ? expandedWidth : collapsedWidth
+                    if (shell.activeMode === "gaming-settings") return 720
+                    return collapsedWidth
                 }
 
                 property int targetHeight: {
+                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") return 640
                     if (shell.activeMode === "wallpaper") return 620
-                    if (shell.activeMode === "settings") return 640
                     if (shell.activeMode === "gaming-settings") return 580
-                    if (shell.activeMode === "notifications") return theme.notchNotificationHeight
-                    if (shell.activeMode !== "none") return theme.notchExpandedHeight
-                    if (root.isHovered) return theme.notchHoverHeight
                     return theme.notchHeight
                 }
 
@@ -374,16 +491,16 @@ ShellRoot {
 
                 Behavior on animNotchWidth {
                     NumberAnimation {
-                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : (root.isExpanded ? theme.notchExpandDuration : theme.notchCollapseDuration)
-                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : (root.isExpanded ? Easing.OutBack : Easing.InOutCubic)
+                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : theme.notchCollapseDuration
+                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : Easing.InOutCubic
                         easing.overshoot: theme.stickyOvershoot
                     }
                 }
 
                 Behavior on animNotchHeight {
                     NumberAnimation {
-                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : (root.isExpanded ? theme.notchExpandDuration : theme.notchCollapseDuration)
-                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : (root.isExpanded ? Easing.OutBack : Easing.InOutCubic)
+                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : theme.notchCollapseDuration
+                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : Easing.InOutCubic
                         easing.overshoot: theme.stickyOvershoot
                     }
                 }
@@ -391,30 +508,143 @@ ShellRoot {
                 readonly property real notchLeft: Math.round((root.width - animNotchWidth) / 2)
                 readonly property real notchRight: notchLeft + animNotchWidth
 
-                // Bottom Morphing Launcher Properties
-                property int launcherTargetHeight: shell.isLauncherOpen ? 480 : 0
-                property int launcherTargetWidth: shell.isLauncherOpen ? 640 : 0
+                // Bottom Morphing Dock (Launcher & Workspace View)
+                readonly property int workspaceCount: {
+                    let count = 0
+                    for (const ws of Hyprland.workspaces.values) {
+                        if (ws && ws.id > 0) count++
+                    }
+                    return Math.max(1, count)
+                }
+                readonly property int workspacePillsWidth: 22 + (12 * (workspaceCount - 1))
+                property int workspaceTargetWidth: Math.max(80, workspacePillsWidth + (theme.contentInset * 2) + (root.concaveWidth * 2))
+                property int launcherTargetHeight: shell.isLauncherOpen ? 480 : (shell.isWorkspaceOpen ? 32 : 0)
+                property int launcherTargetWidth: shell.isLauncherOpen ? 640 : root.workspaceTargetWidth
                 property real animLauncherHeight: launcherTargetHeight
                 property real animLauncherWidth: launcherTargetWidth
 
+                readonly property real dockCurveFactor: Math.min(1.0, Math.max(0.0, animLauncherHeight / (concaveHeight + topRadius)))
+                readonly property real dockConcaveHeight: concaveHeight * dockCurveFactor
+                readonly property real dockConcaveWidth: concaveWidth * dockCurveFactor
+                readonly property real dockTopRadius: topRadius * dockCurveFactor
+
                 Behavior on animLauncherHeight {
                     NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : theme.animDurationExit
-                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.InQuad
+                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
+                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
                         easing.overshoot: 1.15
                     }
                 }
 
                 Behavior on animLauncherWidth {
                     NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : theme.animDurationExit
-                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.InQuad
+                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
+                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
                     }
                 }
 
                 readonly property real launcherLeft: Math.round((root.width - animLauncherWidth) / 2)
                 readonly property real launcherRight: launcherLeft + animLauncherWidth
                 readonly property real launcherTop: root.height - root.borderThickness - animLauncherHeight
+
+                // Left Audio Bar Morphing Properties
+                property int audioTargetWidth: shell.isAudioBarOpen ? 48 : 0
+                property int audioTargetHeight: shell.isAudioBarOpen ? 230 : 0
+                property real animAudioWidth: audioTargetWidth
+                property real animAudioHeight: audioTargetHeight
+
+                Behavior on animAudioWidth {
+                    NumberAnimation {
+                        duration: shell.isAudioBarOpen ? theme.animDurationSlow : theme.animDurationExit
+                        easing.type: shell.isAudioBarOpen ? Easing.OutBack : Easing.InQuad
+                        easing.overshoot: 1.15
+                    }
+                }
+
+                Behavior on animAudioHeight {
+                    NumberAnimation {
+                        duration: shell.isAudioBarOpen ? theme.animDurationSlow : theme.animDurationExit
+                        easing.type: shell.isAudioBarOpen ? Easing.OutBack : Easing.InQuad
+                    }
+                }
+
+                readonly property real audioTop: Math.round((root.height - animAudioHeight) / 2)
+                readonly property real audioBottom: audioTop + animAudioHeight
+                readonly property real audioRight: root.borderThickness + animAudioWidth
+
+                // Notification Panel geometry (bottom-right corner)
+                readonly property int notifWidth: 380
+                readonly property int notifCollapsedHeight: 64
+                readonly property int notifEmptyHeight: 56
+                property int notifExpandedHeight: {
+                    if (globalNotifications.count === 0) return notifEmptyHeight
+                    let visibleCount = Math.min(globalNotifications.count, 4)
+                    return (visibleCount * 58) + 38
+                }
+
+                property real targetNotifHeight: {
+                    if (!shell.isNotifOpen) return 0
+                    if (shell.isNotifExpanded) return notifExpandedHeight
+                    if (globalNotifications.count === 0) return notifEmptyHeight
+                    return notifCollapsedHeight
+                }
+
+                property real targetNotifWidth: {
+                    if (!shell.isNotifOpen && animNotifHeight === 0) return 0
+                    return notifWidth
+                }
+
+                property real animNotifWidth: targetNotifWidth
+                property real animNotifHeight: targetNotifHeight
+
+                Behavior on animNotifWidth {
+                    NumberAnimation {
+                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                Behavior on animNotifHeight {
+                    NumberAnimation {
+                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                property real notifRight: root.width - root.borderThickness
+                property real notifLeft: notifRight - animNotifWidth
+                property real notifTop: root.height - root.borderThickness - animNotifHeight
+
+                // System Tray Panel geometry (top-right corner)
+                readonly property int trayHeight: theme.notchHeight
+                property int trayTargetWidth: (topTrayView && topTrayView.idealWidth > 0) ? topTrayView.idealWidth : 48
+                property real targetTrayWidth: (shell.isTrayOpen && shell.trayItemCount > 0) ? trayTargetWidth : 0
+                property real targetTrayHeight: (shell.isTrayOpen && shell.trayItemCount > 0) ? trayHeight : 0
+
+                property real animTrayWidth: targetTrayWidth
+                property real animTrayHeight: targetTrayHeight
+
+                Behavior on animTrayWidth {
+                    NumberAnimation {
+                        duration: shell.isTrayOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isTrayOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                Behavior on animTrayHeight {
+                    NumberAnimation {
+                        duration: shell.isTrayOpen ? theme.animDurationFast : theme.animDurationExit
+                        easing.type: shell.isTrayOpen ? Easing.OutBack : Easing.InCubic
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                property real trayRight: root.width - root.borderThickness
+                property real trayLeft: trayRight - animTrayWidth
+                property real trayBottom: root.borderThickness + animTrayHeight
 
                 onAnimNotchWidthChanged: {
                     shell.notchActualWidth = animNotchWidth
@@ -522,35 +752,179 @@ ShellRoot {
                                 control2Y: root.borderThickness
                             }
 
-                            // Top horizontal border towards top-right
+                            // Top horizontal border towards top-right tray
                             PathLine {
-                                x: root.width - root.borderThickness - root.innerRadius
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius)
                                 y: root.borderThickness
                             }
 
-                            // Top-right inner rounded corner
+                            // Top-right concave transition flaring down into tray left edge
                             PathCubic {
-                                x: root.width - root.borderThickness
-                                y: root.borderThickness + root.innerRadius
-                                control1X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                x: root.animTrayHeight > 0
+                                   ? root.trayLeft
+                                   : (root.width - root.borderThickness)
+                                y: root.animTrayHeight > 0
+                                   ? (root.borderThickness + root.concaveHeight)
+                                   : (root.borderThickness + root.innerRadius)
+                                control1X: root.animTrayHeight > 0
+                                           ? (root.trayLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
                                 control1Y: root.borderThickness
-                                control2X: root.width - root.borderThickness
-                                control2Y: root.borderThickness + (root.innerRadius * 0.5)
+                                control2X: root.animTrayHeight > 0
+                                           ? root.trayLeft
+                                           : (root.width - root.borderThickness)
+                                control2Y: root.animTrayHeight > 0
+                                           ? (root.borderThickness + (root.concaveHeight * 0.5))
+                                           : (root.borderThickness + (root.innerRadius * 0.5))
                             }
 
-                            // Right vertical inner border
+                            // Left vertical edge of tray panel
+                            PathLine {
+                                x: root.animTrayHeight > 0
+                                   ? root.trayLeft
+                                   : (root.width - root.borderThickness)
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom - root.bottomRadius)
+                                   : (root.borderThickness + root.innerRadius)
+                            }
+
+                            // Bottom-left convex rounded corner of tray panel
+                            PathCubic {
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft + root.bottomRadius)
+                                   : (root.width - root.borderThickness)
+                                y: root.animTrayHeight > 0
+                                   ? root.trayBottom
+                                   : (root.borderThickness + root.innerRadius)
+                                control1X: root.animTrayHeight > 0
+                                           ? root.trayLeft
+                                           : (root.width - root.borderThickness)
+                                control1Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom - (root.bottomRadius * 0.5))
+                                           : (root.borderThickness + root.innerRadius)
+                                control2X: root.animTrayHeight > 0
+                                           ? (root.trayLeft + (root.bottomRadius * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control2Y: root.animTrayHeight > 0
+                                           ? root.trayBottom
+                                           : (root.borderThickness + root.innerRadius)
+                            }
+
+                            // Bottom horizontal edge of tray panel
+                            PathLine {
+                                x: root.animTrayHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight)
+                                   : (root.width - root.borderThickness)
+                                y: root.animTrayHeight > 0
+                                   ? root.trayBottom
+                                   : (root.borderThickness + root.innerRadius)
+                            }
+
+                            // Concave transition flaring down into right bezel
+                            PathCubic {
+                                x: root.width - root.borderThickness
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom + root.concaveWidth)
+                                   : (root.borderThickness + root.innerRadius)
+                                control1X: root.animTrayHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control1Y: root.animTrayHeight > 0
+                                           ? root.trayBottom
+                                           : (root.borderThickness + root.innerRadius)
+                                control2X: root.width - root.borderThickness
+                                control2Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom + (root.concaveWidth * 0.5))
+                                           : (root.borderThickness + root.innerRadius)
+                            }
+
+                            // Right vertical inner border down towards notification panel
                             PathLine {
                                 x: root.width - root.borderThickness
-                                y: root.height - root.borderThickness - root.innerRadius
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop - root.concaveWidth)
+                                   : (root.height - root.borderThickness - root.innerRadius)
                             }
 
-                            // Bottom-right inner rounded corner
+                            // Concave flare flaring left from right border into notification top ceiling
                             PathCubic {
-                                x: root.width - root.borderThickness - root.innerRadius
-                                y: root.height - root.borderThickness
+                                x: root.animNotifHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight)
+                                   : (root.width - root.borderThickness)
+                                y: root.animNotifHeight > 0
+                                   ? root.notifTop
+                                   : (root.height - root.borderThickness - root.innerRadius)
                                 control1X: root.width - root.borderThickness
-                                control1Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                                control2X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop - (root.concaveWidth * 0.5))
+                                           : (root.height - root.borderThickness - root.innerRadius)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control2Y: root.animNotifHeight > 0
+                                           ? root.notifTop
+                                           : (root.height - root.borderThickness - root.innerRadius)
+                            }
+
+                            // Top horizontal ceiling of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + root.topRadius)
+                                   : (root.width - root.borderThickness)
+                                y: root.animNotifHeight > 0
+                                   ? root.notifTop
+                                   : (root.height - root.borderThickness - root.innerRadius)
+                            }
+
+                            // Top-left convex corner (or screen's inner corner when closed)
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? root.notifLeft
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + root.topRadius)
+                                   : (root.height - root.borderThickness)
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + (root.topRadius * 0.5))
+                                           : (root.width - root.borderThickness)
+                                control1Y: root.animNotifHeight > 0
+                                           ? root.notifTop
+                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
+                                control2X: root.animNotifHeight > 0
+                                           ? root.notifLeft
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + (root.topRadius * 0.5))
+                                           : (root.height - root.borderThickness)
+                            }
+
+                            // Left vertical edge of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? root.notifLeft
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.animNotifHeight > 0
+                                   ? (root.height - root.borderThickness - root.concaveHeight)
+                                   : (root.height - root.borderThickness)
+                            }
+
+                            // Bottom-left concave transition flaring into bottom bezel
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius)
+                                y: root.height - root.borderThickness
+                                control1X: root.animNotifHeight > 0
+                                           ? root.notifLeft
+                                           : (root.width - root.borderThickness - root.innerRadius)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.height - root.borderThickness)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - root.innerRadius)
                                 control2Y: root.height - root.borderThickness
                             }
 
@@ -560,61 +934,61 @@ ShellRoot {
                                 y: root.height - root.borderThickness
                             }
 
-                            // Bottom-right concave transition flaring into bottom launcher
+                            // Bottom-right concave transition flaring into bottom dock
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherRight - (root.concaveWidth * 0.5)
+                                x: root.launcherRight - root.dockConcaveWidth
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
+                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
                                 control1Y: root.height - root.borderThickness
-                                control2X: root.launcherRight - root.concaveWidth
-                                control2Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherRight - root.dockConcaveWidth
+                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
                             }
 
-                            // Right vertical edge of bottom launcher
+                            // Right vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherRight - root.concaveWidth
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth
+                                y: root.launcherTop + root.dockTopRadius
                             }
 
                             // Top-right convex corner
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
                                 y: root.launcherTop
-                                control1X: root.launcherRight - root.concaveWidth
-                                control1Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherRight - root.concaveWidth - (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control1X: root.launcherRight - root.dockConcaveWidth
+                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
+                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
                                 control2Y: root.launcherTop
                             }
 
-                            // Top horizontal ceiling of bottom launcher
+                            // Top horizontal ceiling of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
                                 y: root.launcherTop
                             }
 
                             // Top-left convex corner
                             PathCubic {
-                                x: root.launcherLeft + root.concaveWidth
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherLeft + root.concaveWidth + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth
+                                y: root.launcherTop + root.dockTopRadius
+                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
                                 control1Y: root.launcherTop
-                                control2X: root.launcherLeft + root.concaveWidth
-                                control2Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherLeft + root.dockConcaveWidth
+                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
                             }
 
-                            // Left vertical edge of bottom launcher
+                            // Left vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
                             }
 
                             // Bottom-left concave transition flaring into bottom bezel
                             PathCubic {
                                 x: root.launcherLeft
                                 y: root.height - root.borderThickness
-                                control1X: root.launcherLeft + root.concaveWidth
-                                control1Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherLeft + (root.concaveWidth * 0.5)
+                                control1X: root.launcherLeft + root.dockConcaveWidth
+                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
+                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
                                 control2Y: root.height - root.borderThickness
                             }
 
@@ -634,7 +1008,69 @@ ShellRoot {
                                 control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
                             }
 
-                            // Left vertical inner border
+                            // Line from bottom-left corner up to audioBottom
+                            PathLine {
+                                x: root.borderThickness
+                                y: root.audioBottom
+                            }
+
+                            // Bottom concave transition flaring into left audio panel
+                            PathCubic {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.borderThickness
+                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Bottom-right convex corner
+                            PathLine {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+                            PathCubic {
+                                x: root.audioRight
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Right vertical edge of left audio panel
+                            PathLine {
+                                x: root.audioRight
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top-right convex corner
+                            PathCubic {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top horizontal ceiling of left audio panel
+                            PathLine {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top concave transition flaring into left screen bezel
+                            PathCubic {
+                                x: root.borderThickness
+                                y: root.audioTop
+                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness
+                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Left vertical inner border continuing to top-left corner
                             PathLine {
                                 x: root.borderThickness
                                 y: root.borderThickness + root.innerRadius
@@ -725,35 +1161,179 @@ ShellRoot {
                                 control2Y: root.borderThickness + 0.5
                             }
 
-                            // Top-right inner horizontal line
+                            // Top-right inner horizontal line towards tray
                             PathLine {
-                                x: root.width - root.borderThickness - root.innerRadius
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius)
                                 y: root.borderThickness + 0.5
                             }
 
-                            // Top-right inner rounded corner
+                            // Top-right concave transition flaring down into tray left edge
                             PathCubic {
-                                x: root.width - root.borderThickness - 0.5
-                                y: root.borderThickness + root.innerRadius + 0.5
-                                control1X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft + 0.5)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animTrayHeight > 0
+                                   ? (root.borderThickness + root.concaveHeight + 0.5)
+                                   : (root.borderThickness + root.innerRadius + 0.5)
+                                control1X: root.animTrayHeight > 0
+                                           ? (root.trayLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
                                 control1Y: root.borderThickness + 0.5
-                                control2X: root.width - root.borderThickness - 0.5
-                                control2Y: root.borderThickness + (root.innerRadius * 0.5)
+                                control2X: root.animTrayHeight > 0
+                                           ? (root.trayLeft + 0.5)
+                                           : (root.width - root.borderThickness - 0.5)
+                                control2Y: root.animTrayHeight > 0
+                                           ? (root.borderThickness + (root.concaveHeight * 0.5) + 0.5)
+                                           : (root.borderThickness + (root.innerRadius * 0.5) + 0.5)
                             }
 
-                            // Right inner vertical edge
+                            // Left vertical edge of tray panel
+                            PathLine {
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft + 0.5)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom - root.bottomRadius)
+                                   : (root.borderThickness + root.innerRadius + 0.5)
+                            }
+
+                            // Bottom-left convex rounded corner of tray panel
+                            PathCubic {
+                                x: root.animTrayHeight > 0
+                                   ? (root.trayLeft + root.bottomRadius)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom + 0.5)
+                                   : (root.borderThickness + root.innerRadius + 0.5)
+                                control1X: root.animTrayHeight > 0
+                                           ? (root.trayLeft + 0.5)
+                                           : (root.width - root.borderThickness - 0.5)
+                                control1Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom - (root.bottomRadius * 0.5) + 0.5)
+                                           : (root.borderThickness + root.innerRadius + 0.5)
+                                control2X: root.animTrayHeight > 0
+                                           ? (root.trayLeft + (root.bottomRadius * 0.5))
+                                           : (root.width - root.borderThickness - 0.5)
+                                control2Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom + 0.5)
+                                           : (root.borderThickness + root.innerRadius + 0.5)
+                            }
+
+                            // Bottom horizontal edge of tray panel
+                            PathLine {
+                                x: root.animTrayHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight - 0.5)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom + 0.5)
+                                   : (root.borderThickness + root.innerRadius + 0.5)
+                            }
+
+                            // Concave transition flaring down into right bezel
+                            PathCubic {
+                                x: root.width - root.borderThickness - 0.5
+                                y: root.animTrayHeight > 0
+                                   ? (root.trayBottom + root.concaveWidth)
+                                   : (root.borderThickness + root.innerRadius + 0.5)
+                                control1X: root.animTrayHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5) - 0.5)
+                                           : (root.width - root.borderThickness - 0.5)
+                                control1Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom + 0.5)
+                                           : (root.borderThickness + root.innerRadius + 0.5)
+                                control2X: root.width - root.borderThickness - 0.5
+                                control2Y: root.animTrayHeight > 0
+                                           ? (root.trayBottom + (root.concaveWidth * 0.5))
+                                           : (root.borderThickness + root.innerRadius + 0.5)
+                            }
+
+                            // Right vertical inner border down towards notification panel
                             PathLine {
                                 x: root.width - root.borderThickness - 0.5
-                                y: root.height - root.borderThickness - root.innerRadius - 0.5
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop - root.concaveWidth)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
                             }
 
-                            // Bottom-right inner rounded corner
+                            // Concave flare flaring left from right border into notification top ceiling
                             PathCubic {
-                                x: root.width - root.borderThickness - root.innerRadius - 0.5
-                                y: root.height - root.borderThickness - 0.5
+                                x: root.animNotifHeight > 0
+                                   ? (root.width - root.borderThickness - root.concaveHeight - 0.5)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + 0.5)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
                                 control1X: root.width - root.borderThickness - 0.5
-                                control1Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                                control2X: root.width - root.borderThickness - (root.innerRadius * 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop - (root.concaveWidth * 0.5))
+                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5) - 0.5)
+                                           : (root.width - root.borderThickness - 0.5)
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + 0.5)
+                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                            }
+
+                            // Top horizontal ceiling of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + root.topRadius)
+                                   : (root.width - root.borderThickness - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + 0.5)
+                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
+                            }
+
+                            // Top-left convex corner (or screen's inner corner when closed)
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + 0.5)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.notifTop + root.topRadius)
+                                   : (root.height - root.borderThickness - 0.5)
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + (root.topRadius * 0.5))
+                                           : (root.width - root.borderThickness - 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + 0.5)
+                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + 0.5)
+                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
+                                control2Y: root.animNotifHeight > 0
+                                           ? (root.notifTop + (root.topRadius * 0.5))
+                                           : (root.height - root.borderThickness - 0.5)
+                            }
+
+                            // Left vertical edge of notification panel
+                            PathLine {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft + 0.5)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.animNotifHeight > 0
+                                   ? (root.height - root.borderThickness - root.concaveHeight)
+                                   : (root.height - root.borderThickness - 0.5)
+                            }
+
+                            // Bottom-left concave transition flaring into bottom bezel
+                            PathCubic {
+                                x: root.animNotifHeight > 0
+                                   ? (root.notifLeft - root.concaveWidth)
+                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                y: root.height - root.borderThickness - 0.5
+                                control1X: root.animNotifHeight > 0
+                                           ? (root.notifLeft + 0.5)
+                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
+                                control1Y: root.animNotifHeight > 0
+                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
+                                           : (root.height - root.borderThickness - 0.5)
+                                control2X: root.animNotifHeight > 0
+                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
+                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
                                 control2Y: root.height - root.borderThickness - 0.5
                             }
 
@@ -763,61 +1343,61 @@ ShellRoot {
                                 y: root.height - root.borderThickness - 0.5
                             }
 
-                            // Bottom-right concave transition flaring into bottom launcher
+                            // Bottom-right concave transition flaring into bottom dock
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - 0.5
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherRight - (root.concaveWidth * 0.5)
+                                x: root.launcherRight - root.dockConcaveWidth - 0.5
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
+                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
                                 control1Y: root.height - root.borderThickness - 0.5
-                                control2X: root.launcherRight - root.concaveWidth - 0.5
-                                control2Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherRight - root.dockConcaveWidth - 0.5
+                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
                             }
 
-                            // Right vertical edge of bottom launcher
+                            // Right vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherRight - root.concaveWidth - 0.5
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - 0.5
+                                y: root.launcherTop + root.dockTopRadius
                             }
 
                             // Top-right convex corner
                             PathCubic {
-                                x: root.launcherRight - root.concaveWidth - (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
                                 y: root.launcherTop + 0.5
-                                control1X: root.launcherRight - root.concaveWidth - 0.5
-                                control1Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherRight - root.concaveWidth - (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control1X: root.launcherRight - root.dockConcaveWidth - 0.5
+                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
+                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
                                 control2Y: root.launcherTop + 0.5
                             }
 
-                            // Top horizontal ceiling of bottom launcher
+                            // Top horizontal ceiling of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
                                 y: root.launcherTop + 0.5
                             }
 
                             // Top-left convex corner
                             PathCubic {
-                                x: root.launcherLeft + root.concaveWidth + 0.5
-                                y: root.launcherTop + (root.topRadius * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control1X: root.launcherLeft + root.concaveWidth + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                y: root.launcherTop + root.dockTopRadius
+                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
                                 control1Y: root.launcherTop + 0.5
-                                control2X: root.launcherLeft + root.concaveWidth + 0.5
-                                control2Y: root.launcherTop + (root.topRadius * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
+                                control2X: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
                             }
 
-                            // Left vertical edge of bottom launcher
+                            // Left vertical edge of bottom dock
                             PathLine {
-                                x: root.launcherLeft + root.concaveWidth + 0.5
-                                y: root.height - root.borderThickness - (root.concaveHeight * (root.animLauncherHeight > 0 ? 1 : 0))
+                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                y: root.height - root.borderThickness - root.dockConcaveHeight
                             }
 
                             // Bottom-left concave transition flaring into bottom bezel
                             PathCubic {
                                 x: root.launcherLeft
                                 y: root.height - root.borderThickness - 0.5
-                                control1X: root.launcherLeft + root.concaveWidth + 0.5
-                                control1Y: root.height - root.borderThickness - (root.concaveHeight * 0.5 * (root.animLauncherHeight > 0 ? 1 : 0))
-                                control2X: root.launcherLeft + (root.concaveWidth * 0.5)
+                                control1X: root.launcherLeft + root.dockConcaveWidth + 0.5
+                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
+                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
                                 control2Y: root.height - root.borderThickness - 0.5
                             }
 
@@ -837,7 +1417,71 @@ ShellRoot {
                                 control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
                             }
 
-                            // Left inner vertical edge
+                            // Line from bottom-left corner up to audioBottom
+                            PathLine {
+                                x: root.borderThickness + 0.5
+                                y: root.audioBottom
+                            }
+
+                            // Bottom concave transition
+                            PathCubic {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.borderThickness + 0.5
+                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Bottom horizontal line towards audioRight
+                            PathLine {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
+                            }
+
+                            // Bottom-right convex corner
+                            PathCubic {
+                                x: root.audioRight + 0.5
+                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
+                                control2X: root.audioRight + 0.5
+                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Right vertical edge of left audio panel
+                            PathLine {
+                                x: root.audioRight + 0.5
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Top-right convex corner
+                            PathCubic {
+                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control1X: root.audioRight + 0.5
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                            }
+
+                            // Top horizontal ceiling of left audio panel
+                            PathLine {
+                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                            }
+
+                            // Top concave transition
+                            PathCubic {
+                                x: root.borderThickness + 0.5
+                                y: root.audioTop
+                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
+                                control2X: root.borderThickness + 0.5
+                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
+                            }
+
+                            // Left vertical inner border
                             PathLine {
                                 x: root.borderThickness + 0.5
                                 y: root.borderThickness + root.innerRadius + 0.5
@@ -861,6 +1505,29 @@ ShellRoot {
                         }
                     }
 
+                    // Interactive Top Hover Trigger (Hotspot ampliado para a largura do launcher: 920px quando colapsado)
+                    Item {
+                        id: notchTopTrigger
+                        x: Math.round((root.width - 920) / 2)
+                        y: 0
+                        width: 920
+                        height: theme.notchHeight + 8
+                        visible: shell.activeMode === "none" && !shell.isLauncherOpen
+
+                        HoverHandler {
+                            id: topHoverHandler
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    if (!shell.preventAutoOpenSettings && shell.activeMode === "none" && !shell.isLauncherOpen) {
+                                        shell.openLauncherTab("home")
+                                    }
+                                } else {
+                                    shell.preventAutoOpenSettings = false
+                                }
+                            }
+                        }
+                    }
+
                     // Interactive Notch Container
                     Item {
                         id: notchContainer
@@ -870,7 +1537,29 @@ ShellRoot {
                         height: root.animNotchHeight
 
                         HoverHandler {
-                            id: barHover
+                            id: notchHover
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    launcherExitTimer.stop()
+                                } else {
+                                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
+                                        launcherExitTimer.restart()
+                                    }
+                                }
+                            }
+                        }
+
+                        Timer {
+                            id: launcherExitTimer
+                            interval: 280
+                            repeat: false
+                            onTriggered: {
+                                if (!notchHover.hovered && !topHoverHandler.hovered) {
+                                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
+                                        shell.closeActiveMode(false)
+                                    }
+                                }
+                            }
                         }
 
                         Item {
@@ -878,115 +1567,22 @@ ShellRoot {
                             anchors.fill: parent
                             clip: true
 
-                            // View 0: Default Bar View (Workspaces, Clock, Status)
+                            // View 0: Default Bar View (Clock & Date)
                             DefaultBarView {
                                 id: defaultBarView
                                 anchors.fill: parent
                                 clip: true
-                                isExpanded: root.isExpanded && shell.activeMode === "none"
                                 visible: opacity > 0.001
                                 opacity: shell.activeMode === "none" ? 1.0 : 0.0
 
-                                network: globalNetwork
-                                bluetooth: globalBluetooth
-                                audio: globalAudio
                                 gaming: globalGaming
                                 notifications: globalNotifications
                                 userProfile: globalUserProfile
 
                                 activateLauncher: () => shell.toggleLauncher()
                                 activateWorkspace: workspaceId => shell.activateWorkspace(workspaceId)
-                                toggleWifi: () => shell.toggleMode("wifi")
-                                toggleBluetooth: () => shell.toggleMode("bluetooth")
-                                toggleAudio: () => shell.toggleMode("audio")
-                                toggleGaming: () => shell.toggleMode("gaming")
                                 toggleNotifications: () => shell.toggleMode("notifications")
-                                toggleSettings: () => shell.toggleMode("settings")
-                                toggleProfile: () => shell.toggleMode("power")
-                                togglePowerMenu: () => shell.toggleMode("power")
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 1: Wi-Fi View
-                            WifiBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "wifi" ? 1.0 : 0.0
-                                network: globalNetwork
-                                openSettings: () => shell.openSettingsTab("wifi")
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 2: Bluetooth View
-                            BluetoothBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "bluetooth" ? 1.0 : 0.0
-                                bluetooth: globalBluetooth
-                                openSettings: () => shell.openSettingsTab("bluetooth")
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 3: Audio View
-                            AudioBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "audio" ? 1.0 : 0.0
-                                audio: globalAudio
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 4: Gaming Profile View
-                            GamingBarView {
-                                id: gamingView
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "gaming" ? 1.0 : 0.0
-                                gaming: globalGaming
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 5: Unified Profile & Power Menu View
-                            PowerBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: (shell.activeMode === "power" || shell.activeMode === "profile") ? 1.0 : 0.0
-                                userProfile: globalUserProfile
-                                lockScreen: () => shell.lockScreen()
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 6: Notifications View
-                            NotificationBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "notifications" ? 1.0 : 0.0
-                                notifications: globalNotifications
-                                goBack: () => shell.closeActiveMode()
-                                resetTimer: () => shell.resetNotificationTimer()
+                                toggleSettings: () => shell.toggleLauncherBar()
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
@@ -1012,25 +1608,28 @@ ShellRoot {
                                 visible: opacity > 0.001
                                 opacity: shell.activeMode === "gaming-settings" ? 1.0 : 0.0
                                 gaming: globalGaming
-                                goBack: () => shell.toggleMode("gaming")
+                                goBack: () => shell.closeActiveMode()
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
                                 }
                             }
 
-                            // View 9: Unified Settings View (WiFi + Bluetooth + Wallpapers + Gaming)
-                            SettingsBarView {
-                                id: settingsView
+                            // View 9: Central Launcher View (WiFi + Bluetooth + Som + Wallpapers + Gaming)
+                            LauncherBarView {
+                                id: launcherBarView
                                 anchors.fill: parent
                                 visible: opacity > 0.001
-                                opacity: shell.activeMode === "settings" ? 1.0 : 0.0
-                                activeCategory: shell.activeSettingsTab
+                                opacity: (shell.activeMode === "launcher" || shell.activeMode === "settings") ? 1.0 : 0.0
+                                activeCategory: shell.activeLauncherTab
                                 network: globalNetwork
                                 bluetooth: globalBluetooth
+                                audio: globalAudio
                                 gaming: globalGaming
                                 wallpaperEngine: globalWallpaper
-                                goBack: () => shell.closeActiveMode()
+                                userProfile: globalUserProfile
+                                lockScreen: () => shell.lockScreen()
+                                goBack: () => shell.closeActiveMode(true)
 
                                 Behavior on opacity {
                                     NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
@@ -1048,7 +1647,7 @@ ShellRoot {
                         onClicked: shell.isLauncherOpen = false
                     }
 
-                    // Interactive Bottom Launcher Container
+                    // Interactive Bottom Launcher / Workspace Container
                     Item {
                         id: bottomLauncherContainer
                         x: root.launcherLeft
@@ -1056,14 +1655,227 @@ ShellRoot {
                         width: root.animLauncherWidth
                         height: root.animLauncherHeight + root.borderThickness
                         clip: true
-                        visible: shell.isLauncherOpen || root.animLauncherHeight > 0
+                        visible: shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0
                         focus: shell.isLauncherOpen
                         z: 100
 
                         BottomLauncher {
                             anchors.fill: parent
+                            visible: shell.isLauncherOpen
                             open: shell.isLauncherOpen
                             closeLauncher: () => shell.isLauncherOpen = false
+                        }
+
+                        // Minimalist Bottom Workspace View
+                        Item {
+                            id: bottomWorkspaceView
+                            anchors {
+                                top: parent.top
+                                left: parent.left
+                                right: parent.right
+                                bottom: parent.bottom
+                                bottomMargin: root.borderThickness
+                            }
+                            visible: !shell.isLauncherOpen && (shell.isWorkspaceOpen || root.animLauncherHeight > 0)
+                            opacity: (!shell.isLauncherOpen && shell.isWorkspaceOpen) ? 1.0 : 0.0
+
+                            Behavior on opacity {
+                                NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                            }
+
+                            HoverHandler {
+                                id: bottomWorkspaceHover
+                                onHoveredChanged: {
+                                    if (hovered) {
+                                        shell.workspaceBarTimer.stop()
+                                    } else {
+                                        if (shell.isWorkspaceOpen) {
+                                            shell.closeWorkspaceBar()
+                                        }
+                                    }
+                                }
+                            }
+
+                            WorkspacePills {
+                                id: bottomWorkspacePills
+                                anchors.centerIn: parent
+                                activateWorkspace: workspaceId => {
+                                    shell.activateWorkspace(workspaceId)
+                                    if (!bottomWorkspaceHover.hovered) {
+                                        shell.closeWorkspaceBar()
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Bottom Center Workspace Trigger Hot Zone (Screen Bezel)
+                    Item {
+                        id: workspaceBottomTrigger
+                        x: Math.round((root.width - Math.max(240, root.workspaceTargetWidth)) / 2)
+                        y: root.height - root.borderThickness - 16
+                        width: Math.max(240, root.workspaceTargetWidth)
+                        height: root.borderThickness + 16
+                        visible: !shell.isWorkspaceOpen && !shell.isLauncherOpen
+
+                        HoverHandler {
+                            onHoveredChanged: {
+                                if (hovered && !shell.isLauncherOpen) {
+                                    shell.showWorkspaceBar(0)
+                                }
+                            }
+                        }
+                    }
+
+                    // Interactive Left Audio Bar Container (integrated with left border)
+                    Item {
+                        id: leftAudioBarContainer
+                        x: 0
+                        y: root.audioTop
+                        width: root.animAudioWidth + root.borderThickness
+                        height: root.animAudioHeight
+                        clip: true
+                        visible: shell.isAudioBarOpen || root.animAudioWidth > 0
+
+                        HoverHandler {
+                            id: sideBarHover
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.audioBarTimer.stop()
+                                } else {
+                                    if (shell.isAudioBarOpen) {
+                                        shell.audioBarTimer.restart()
+                                    }
+                                }
+                            }
+                        }
+
+                        AudioBarView {
+                            anchors {
+                                left: parent.left
+                                leftMargin: root.borderThickness
+                                top: parent.top
+                                bottom: parent.bottom
+                            }
+                            width: 48
+                            audio: globalAudio
+                            openSettings: () => {
+                                shell.isAudioBarOpen = false
+                                shell.audioBarTimer.stop()
+                                shell.openSettingsTab("sound")
+                            }
+                        }
+                    }
+
+                    // Interactive Bottom-Right Notification Container
+                    Item {
+                        id: bottomNotifContainer
+                        x: root.notifLeft
+                        y: root.notifTop
+                        width: root.animNotifWidth + root.borderThickness
+                        height: root.animNotifHeight + root.borderThickness
+                        clip: true
+                        visible: shell.isNotifOpen || root.animNotifHeight > 0
+
+                        HoverHandler {
+                            id: bottomNotifHover
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.notifDismissTimer.stop()
+                                    if (globalNotifications.count > 1) {
+                                        shell.notifExpandTimer.restart()
+                                    }
+                                } else {
+                                    shell.closeNotification()
+                                }
+                            }
+                        }
+
+                        NotificationBarView {
+                            anchors {
+                                fill: parent
+                                topMargin: 6
+                                bottomMargin: root.borderThickness + 4
+                                leftMargin: 12
+                                rightMargin: root.borderThickness + 6
+                            }
+                            notifications: globalNotifications
+                            isExpanded: shell.isNotifExpanded
+                            dismissAll: () => globalNotifications.dismissAll()
+                            dismissOne: notif => globalNotifications.dismiss(notif)
+                        }
+                    }
+
+                    // Bottom-Right Corner Trigger Hot Zone
+                    Item {
+                        id: notifCornerTrigger
+                        x: root.width - root.borderThickness - 48
+                        y: root.height - root.borderThickness - 48
+                        width: root.borderThickness + 48
+                        height: root.borderThickness + 48
+                        visible: !shell.isNotifOpen
+
+                        HoverHandler {
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    shell.showNotificationCorner()
+                                }
+                            }
+                        }
+                    }
+
+                    // Interactive Top-Right System Tray Container
+                    Item {
+                        id: topTrayContainer
+                        x: root.trayLeft
+                        y: 0
+                        width: root.animTrayWidth + root.borderThickness
+                        height: root.animTrayHeight + root.borderThickness
+                        clip: true
+                        visible: (shell.isTrayOpen || root.animTrayHeight > 0) && shell.trayItemCount > 0
+
+                        HoverHandler {
+                            id: topTrayHover
+                            onHoveredChanged: {
+                                if (!hovered && !shell.isTrayMenuOpen) {
+                                    shell.closeTrayBar()
+                                }
+                            }
+                        }
+
+                        TrayBarView {
+                            id: topTrayView
+                            anchors {
+                                fill: parent
+                                topMargin: root.borderThickness
+                                bottomMargin: 0
+                                leftMargin: 0
+                                rightMargin: root.borderThickness
+                            }
+                            onIsAnyMenuOpenChanged: {
+                                shell.isTrayMenuOpen = isAnyMenuOpen
+                                if (!isAnyMenuOpen && !topTrayHover.hovered) {
+                                    shell.closeTrayBar()
+                                }
+                            }
+                        }
+                    }
+
+                    // Top-Right Corner Trigger Hot Zone (Screen Bezel)
+                    Item {
+                        id: trayCornerTrigger
+                        x: root.width - root.borderThickness - 48
+                        y: 0
+                        width: root.borderThickness + 48
+                        height: root.borderThickness + 48
+                        visible: !shell.isTrayOpen && shell.trayItemCount > 0 && !shell.isLauncherOpen
+
+                        HoverHandler {
+                            onHoveredChanged: {
+                                if (hovered && !shell.isLauncherOpen && shell.trayItemCount > 0) {
+                                    shell.showTrayBar()
+                                }
+                            }
                         }
                     }
                 }
@@ -1079,4 +1891,5 @@ ShellRoot {
         notifications: globalNotifications
     }
 }
+
 

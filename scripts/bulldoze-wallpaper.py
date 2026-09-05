@@ -8,6 +8,8 @@ full interactive mouse, scaling, and shader customization.
 
 import os
 import sys
+import time
+import shutil
 import json
 import glob
 import struct
@@ -20,6 +22,7 @@ OWUI_DIR = os.path.expanduser("~/.local/share/owui/wpe")
 OWUI_SETTINGS = os.path.expanduser("~/.config/owui/settings.ndl")
 CONFIG_FILE = os.path.expanduser("~/.config/bulldoze/wallpaper.json")
 CACHE_DIR = os.path.expanduser("~/.cache/bulldoze/wallpapers")
+STEAM_THUMB_DIR = os.path.expanduser("~/.local/share/Steam/steamapps/common/wallpaper_engine/ui/thumbnails")
 
 SPONSOR_KEYWORDS = [
     'sponsor', 'tip', 'qrcode', 'pay', 'author', 'donate',
@@ -165,6 +168,11 @@ def scan_wallpapers():
             if owui_tex:
                 preview_path = owui_tex[0]
 
+        if not os.path.exists(preview_path):
+            steam_thumb = os.path.join(STEAM_THUMB_DIR, f"ws_{entry}_thumb.jpg")
+            if os.path.exists(steam_thumb):
+                preview_path = steam_thumb
+
         final_preview = get_cached_preview(entry, preview_path)
 
         # Parse objects and sponsor layers from scene.pkg
@@ -297,7 +305,17 @@ def apply_wallpaper(wp_id=None, overrides=None):
 
     stop_running_wallpaper()
 
-    cmd = [
+    user_cache = os.path.expanduser("~/.cache/bulldoze")
+    os.makedirs(user_cache, exist_ok=True)
+    temp_snap = os.path.join(user_cache, "Wallpaper_greeter_raw.png")
+    user_out = os.path.join(user_cache, "Wallpaper_greeter.png")
+    if os.path.exists(temp_snap):
+        try:
+            os.remove(temp_snap)
+        except Exception:
+            pass
+
+    base_cmd = [
         "linux-wallpaperengine",
         "--assets-dir", ASSETS_DIR,
         "--screen-root", screen,
@@ -305,38 +323,121 @@ def apply_wallpaper(wp_id=None, overrides=None):
         "--scaling", scaling,
         "--clamp", clamp,
         "--fps", str(fps),
-        "--silent"
+        "--silent",
+        "--no-audio-processing"
     ]
-
-    if not mouse:
-        cmd.append("--disable-mouse")
 
     # Set individual properties
     for p_key, p_val in custom_props.items():
         if isinstance(p_val, bool):
-            cmd.extend(["--set-property", f"{p_key}={1 if p_val else 0}"])
+            base_cmd.extend(["--set-property", f"{p_key}={1 if p_val else 0}"])
         elif isinstance(p_val, (int, float)):
-            cmd.extend(["--set-property", f"{p_key}={p_val}"])
+            base_cmd.extend(["--set-property", f"{p_key}={p_val}"])
         else:
-            cmd.extend(["--set-property", f"{p_key}={p_val}"])
+            base_cmd.extend(["--set-property", f"{p_key}={p_val}"])
 
     # Skip objects and effects
     for obj_id in sorted(skip_objects):
-        cmd.extend(["--render-debug", f"skip-object={obj_id}"])
+        base_cmd.extend(["--render-debug", f"skip-object={obj_id}"])
     for eff_id in sorted(skip_effects):
-        cmd.extend(["--render-debug", f"skip-effect={eff_id}"])
+        base_cmd.extend(["--render-debug", f"skip-effect={eff_id}"])
 
     save_config(cfg)
 
-    # Launch daemon in background detached
-    subprocess.Popen(
-        cmd,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True
-    )
+    wp_env = os.environ.copy()
+    wp_env["SDL_AUDIODRIVER"] = "dummy"
+    wp_env["ALSOFT_DRIVERS"] = "dummy"
 
-    # If pause_on_window is active and current workspace has windows, pause shortly after initial render
+    captured = False
+    if mouse:
+        # Step 1: Capture 100% clean snapshot with mouse & hover strictly disabled
+        snap_cmd = list(base_cmd) + [
+            "--disable-mouse",
+            "--screenshot", temp_snap,
+            "--screenshot-delay", "2"
+        ]
+        snap_proc = subprocess.Popen(
+            snap_cmd,
+            env=wp_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+
+        start_t = time.time()
+        while time.time() - start_t < 2.5:
+            if os.path.exists(temp_snap) and os.path.getsize(temp_snap) > 1000:
+                captured = True
+                break
+            time.sleep(0.04)
+
+        # Step 2: Seamlessly switch to interactive daemon (mouse enabled)
+        daemon_cmd = list(base_cmd)
+        subprocess.Popen(
+            daemon_cmd,
+            env=wp_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        time.sleep(0.15)
+        try:
+            snap_proc.terminate()
+            snap_proc.wait(timeout=0.5)
+        except Exception:
+            try:
+                snap_proc.kill()
+            except Exception:
+                pass
+    else:
+        # Mouse is globally disabled, single clean daemon
+        daemon_cmd = list(base_cmd) + [
+            "--disable-mouse",
+            "--screenshot", temp_snap,
+            "--screenshot-delay", "2"
+        ]
+        subprocess.Popen(
+            daemon_cmd,
+            env=wp_env,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            start_new_session=True
+        )
+        start_t = time.time()
+        while time.time() - start_t < 2.5:
+            if os.path.exists(temp_snap) and os.path.getsize(temp_snap) > 1000:
+                captured = True
+                break
+            time.sleep(0.04)
+
+    if captured:
+        try:
+            os.replace(temp_snap, user_out)
+            dst = "/var/lib/greetd/Wallpaper_greeter.png"
+            try:
+                if os.path.exists(dst) and os.access(dst, os.W_OK):
+                    shutil.copy2(user_out, dst)
+                elif os.access("/var/lib/greetd", os.W_OK):
+                    shutil.copy2(user_out, dst)
+            except Exception:
+                pass
+
+            try:
+                subprocess.run(
+                    ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=2
+                )
+            except Exception:
+                pass
+        except Exception as e:
+            sys.stderr.write(f"Snapshot copy error: {e}\n")
+    else:
+        # Fallback only if native screenshot timed out or failed
+        generate_clean_snapshot(active_id)
+
+    # If pause_on_window is active and current workspace has fullscreen window, pause shortly after initial render
     if pause_on_window:
         def _delayed_pause():
             import time, signal
@@ -345,7 +446,7 @@ def apply_wallpaper(wp_id=None, overrides=None):
                 res = subprocess.run(["hyprctl", "activeworkspace", "-j"], capture_output=True, text=True, timeout=1)
                 if res.returncode == 0:
                     data = json.loads(res.stdout)
-                    if int(data.get("windows", 0)) > 0:
+                    if bool(data.get("hasfullscreen", False)):
                         out = subprocess.check_output(["pidof", "linux-wallpaperengine"], text=True)
                         for p in out.strip().split():
                             try:
@@ -360,15 +461,7 @@ def apply_wallpaper(wp_id=None, overrides=None):
         t.start()
         t.join(timeout=0.4)
 
-    # Automatically generate clean snapshot for LockScreen & Greeter in background
-    subprocess.Popen(
-        [sys.executable, os.path.abspath(__file__), "snapshot-silent", active_id],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        start_new_session=True
-    )
-
-    return {"status": "ok", "active_id": active_id, "cmd": cmd}
+    return {"status": "ok", "active_id": active_id, "cmd": daemon_cmd}
 
 def generate_clean_snapshot(wp_id=None):
     """Captures clean frame with native engine screenshot and updates Lockscreen/Greeter blur"""
@@ -381,11 +474,80 @@ def generate_clean_snapshot(wp_id=None):
         cfg["active_id"] = str(wp_id)
     
     active_id = str(cfg.get("active_id", "3522563935"))
+
+    # Try native engine screenshot first
+    res = capture_engine_hires_snapshot(active_id)
+    if res.get("status") == "ok":
+        return res
+
+    # Fallback to static preview images only if engine screenshot failed
+    folder = os.path.join(WORKSHOP_DIR, active_id)
+    user_cache = os.path.expanduser("~/.cache/bulldoze")
+    os.makedirs(user_cache, exist_ok=True)
+    temp_snap = os.path.join(user_cache, "Wallpaper_greeter_temp.png")
+    user_out = os.path.join(user_cache, "Wallpaper_greeter.png")
+
+    preview = ""
+    for cand in ["preview.jpg", "preview.jpeg", "preview.png", "preview.webp"]:
+        p = os.path.join(folder, cand)
+        if os.path.exists(p):
+            preview = p
+            break
+
+    if not preview:
+        owui_tex = glob.glob(os.path.join(OWUI_DIR, active_id, "textures", "*.*"))
+        if owui_tex:
+            preview = owui_tex[0]
+
+    if not preview:
+        steam_thumb = os.path.join(STEAM_THUMB_DIR, f"ws_{active_id}_thumb.jpg")
+        if os.path.exists(steam_thumb):
+            preview = steam_thumb
+
+    if preview and os.path.exists(preview):
+        try:
+            with Image.open(preview) as im:
+                im.convert("RGB").save(temp_snap, "PNG")
+            os.replace(temp_snap, user_out)
+
+            dst = "/var/lib/greetd/Wallpaper_greeter.png"
+            try:
+                if os.path.exists(dst) and os.access(dst, os.W_OK):
+                    shutil.copy2(user_out, dst)
+                elif os.access("/var/lib/greetd", os.W_OK):
+                    shutil.copy2(user_out, dst)
+            except Exception:
+                pass
+
+            try:
+                subprocess.run(
+                    ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    timeout=2
+                )
+            except Exception:
+                pass
+            return {"status": "ok", "file": user_out}
+        except Exception as e:
+            sys.stderr.write(f"Snapshot processing error: {e}\n")
+
+    if os.path.exists(user_out):
+        return {"status": "ok", "file": user_out}
+    return {"status": "error"}
+
+def capture_engine_hires_snapshot(wp_id=None):
+    """Captures native 2560x1440 clean screenshot from linux-wallpaperengine"""
+    import time
+    import shutil
+
+    cfg = get_current_config()
+    active_id = str(wp_id) if wp_id else str(cfg.get("active_id", "3522563935"))
     screen = cfg.get("screen") or detect_primary_monitor()
     scaling = cfg.get("scaling", "fill")
     clamp = cfg.get("clamp", "border")
     hide_sponsor = cfg.get("hide_sponsor", True)
-    
+
     wp_settings = cfg.get("per_wallpaper_settings", {}).get(active_id, {})
     custom_props = dict(wp_settings.get("properties", {}))
     skip_objects = set(wp_settings.get("skip_objects", []))
@@ -399,7 +561,7 @@ def generate_clean_snapshot(wp_id=None):
 
     user_cache = os.path.expanduser("~/.cache/bulldoze")
     os.makedirs(user_cache, exist_ok=True)
-    temp_snap = os.path.join(user_cache, "Wallpaper_greeter_raw.png")
+    temp_snap = os.path.join(user_cache, f"Wallpaper_hires_{active_id}.png")
     user_out = os.path.join(user_cache, "Wallpaper_greeter.png")
 
     if os.path.exists(temp_snap):
@@ -408,7 +570,6 @@ def generate_clean_snapshot(wp_id=None):
         except Exception:
             pass
 
-    # Launch in clean snapshot mode: no mouse, no sound, native engine screenshot
     cmd = [
         "linux-wallpaperengine",
         "--assets-dir", ASSETS_DIR,
@@ -419,8 +580,9 @@ def generate_clean_snapshot(wp_id=None):
         "--fps", "60",
         "--disable-mouse",
         "--silent",
+        "--no-audio-processing",
         "--screenshot", temp_snap,
-        "--screenshot-delay", "25"
+        "--screenshot-delay", "3"
     ]
     for p_key, p_val in custom_props.items():
         if isinstance(p_val, bool):
@@ -429,64 +591,57 @@ def generate_clean_snapshot(wp_id=None):
             cmd.extend(["--set-property", f"{p_key}={p_val}"])
         else:
             cmd.extend(["--set-property", f"{p_key}={p_val}"])
-            
+
     for obj_id in sorted(skip_objects):
         cmd.extend(["--render-debug", f"skip-object={obj_id}"])
     for eff_id in sorted(skip_effects):
         cmd.extend(["--render-debug", f"skip-effect={eff_id}"])
 
-    proc = subprocess.Popen(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    
-    # Wait for engine screenshot to be created
-    start_time = time.time()
-    generated = False
-    while time.time() - start_time < 4.0:
-        if os.path.exists(temp_snap) and os.path.getsize(temp_snap) > 1000:
-            generated = True
-            break
-        time.sleep(0.05)
+    wp_env = os.environ.copy()
+    wp_env["SDL_AUDIODRIVER"] = "dummy"
+    wp_env["ALSOFT_DRIVERS"] = "dummy"
 
     try:
-        proc.terminate()
-        proc.wait(timeout=1.0)
-    except Exception:
-        try:
-            proc.kill()
-        except Exception:
-            pass
-
-    # Fallback to workshop preview if engine screenshot failed
-    if not generated:
-        preview = ""
-        for cand in ["preview.jpg", "preview.jpeg", "preview.png", "preview.webp"]:
-            p = os.path.join(folder, cand)
-            if os.path.exists(p):
-                preview = p
+        proc = subprocess.Popen(cmd, env=wp_env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        start_time = time.time()
+        generated = False
+        while time.time() - start_time < 3.5:
+            if os.path.exists(temp_snap) and os.path.getsize(temp_snap) > 1000:
+                generated = True
                 break
-        if preview:
-            try:
-                with Image.open(preview) as im:
-                    im.convert("RGB").save(temp_snap, "PNG")
-                    generated = True
-            except Exception:
-                pass
+            time.sleep(0.05)
 
-    if generated and os.path.exists(temp_snap):
+        proc.terminate()
         try:
-            shutil.copy2(temp_snap, user_out)
+            proc.wait(timeout=0.5)
+        except Exception:
+            proc.kill()
 
-            # Update /var/lib/greetd if writable
-            dst = "/var/lib/greetd/Wallpaper_greeter.png"
-            try:
-                if os.path.exists(dst) and os.access(dst, os.W_OK):
-                    shutil.copy2(user_out, dst)
-                elif os.access("/var/lib/greetd", os.W_OK):
-                    shutil.copy2(user_out, dst)
-            except Exception:
-                pass
-            return {"status": "ok", "file": user_out}
-        except Exception as e:
-            sys.stderr.write(f"Snapshot processing error: {e}\n")
+        if generated and os.path.exists(temp_snap):
+            current_cfg = get_current_config()
+            if str(current_cfg.get("active_id")) == active_id:
+                os.replace(temp_snap, user_out)
+                dst = "/var/lib/greetd/Wallpaper_greeter.png"
+                try:
+                    if os.path.exists(dst) and os.access(dst, os.W_OK):
+                        shutil.copy2(user_out, dst)
+                    elif os.access("/var/lib/greetd", os.W_OK):
+                        shutil.copy2(user_out, dst)
+                except Exception:
+                    pass
+
+                try:
+                    subprocess.run(
+                        ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
+                        stdout=subprocess.DEVNULL,
+                        stderr=subprocess.DEVNULL,
+                        timeout=2
+                    )
+                except Exception:
+                    pass
+                return {"status": "ok", "file": user_out}
+    except Exception as e:
+        sys.stderr.write(f"High-res snapshot error: {e}\n")
     return {"status": "error"}
 
 def capture_clean_snapshot(wp_id=None):
@@ -531,6 +686,11 @@ def main():
     elif action == "snapshot-silent":
         wp_id = sys.argv[2] if len(sys.argv) > 2 else None
         res = generate_clean_snapshot(wp_id)
+        print(json.dumps(res, ensure_ascii=False))
+
+    elif action == "snapshot-hires":
+        wp_id = sys.argv[2] if len(sys.argv) > 2 else None
+        res = capture_engine_hires_snapshot(wp_id)
         print(json.dumps(res, ensure_ascii=False))
 
     elif action == "daemon":

@@ -138,6 +138,7 @@ PanelWindow {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         text: modelData.icon
                         color: theme.textStrong
@@ -189,6 +190,7 @@ PanelWindow {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             id: tipText
                             anchors.centerIn: parent
                             text: modelData.label

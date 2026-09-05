@@ -20,7 +20,13 @@ Row {
             IconImage {
                 anchors.fill: parent
                 source: {
-                    if (!modelData.icon) return ""
+                    const idStr = (modelData.id || "").toLowerCase();
+                    const titleStr = (modelData.title || "").toLowerCase();
+                    const tooltipStr = (modelData.tooltip || "").toLowerCase();
+                    if (idStr.includes("bitwarden") || titleStr.includes("bitwarden") || tooltipStr.includes("bitwarden")) {
+                        return "file:///home/paulo/.config/bulldoze/icons/bitwarden.svg";
+                    }
+                    if (!modelData.icon) return "";
                     if (modelData.icon.startsWith("/") || modelData.icon.startsWith("file://") || modelData.icon.startsWith("image://")) {
                         return modelData.icon.startsWith("/") ? ("file://" + modelData.icon) : modelData.icon
                     }

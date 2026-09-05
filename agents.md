@@ -21,7 +21,7 @@
 - `hoverFill`: `#1CFFFFFF` (realce suave de hover).
 - `activeFill`: `#33FFFFFF` (realce de toggle ativo).
 - `separator`: `#1AFFFFFF` (linha divisória de 1px).
-- `accent`: `#5294E2` (azul de destaque para indicadores, foco e spinners de carregamento).
+- `accent`: `#FFFFFF` (branco de destaque para indicadores, foco e spinners de carregamento).
 - `textStrong`: `#F2FFFFFF` (títulos, hora, ícones principais).
 - `textMedium`: `#DFFFFFFF` (corpo, nomes de app, workspaces ativos).
 - `textMuted`: `#BFFFFFFF` (data, descrições secundárias, subtítulos).
@@ -53,43 +53,41 @@
 
 ## 3. Arquitetura de Componentes & Dynamic Top Morphing Notch
 
-### 3.1 Central Glass Notch Metamórfico (`shell.qml`, `GlassPanel.qml`, `components/views/`)
+### 3.1 Central Glass Notch (`shell.qml`, `GlassPanel.qml`, `components/views/`)
 - **Acoplamento**: Fisicamente dockado no topo da tela ($y = 0$).
+- **Layout em Linha Única com Altura Fixa (32px)**:
+  - Mantém perfil contínuo e ultralimpo de 32px de altura tanto em repouso quanto em hover.
+  - Eliminação de expansões verticais excessivas e da antiga linha secundária de controles rápidos.
 - **Cálculo Dinâmico de Espaçamento e Largura**:
-  - A largura expandida e recolhida é computada dinamicamente com base no conteúdo real (`leftContentWidth + clockContentWidth + rightContentWidth + dynamic gaps`), eliminando 100% de sobreposições entre a hora e os botões de status / Wi-Fi.
-  - A altura se adapta suavemente entre `notchHeight: 36px` (idle), `notchHoverHeight: 42px` (hover com itens) e `notchExpandedHeight: 48px` (submodos ativos).
-- **Máquina de Estados & Regra de Não-Sobreposição**:
-  - `activeMode`: `"none"` | `"wifi"` | `"bluetooth"` | `"audio"` | `"gaming"` | `"profile"` | `"power"` | `"notifications"`.
-  - Apenas um modo pode modificar a barra por vez. Alternar para um novo modo fecha suavemente o anterior e redimensiona a barra para a geometria alvo com `Easing.OutBack` calibrado para 240Hz.
-  - Tecla `Escape` ou botão `[  Voltar ]` retorna à barra padrão, além de timers de inatividade configurados para modos temporários.
-- **Modos e Sub-views**:
-  - **Modo Padrão (`DefaultBarView.qml`)**:
-    - Recolhido (Idle): Pílula compacta ($160\text{px} \times 36\text{px}$) com Relógio central e Data em `pt-BR`.
-    - Expandido (Hover): $680\text{px} \times 42\text{px}$ (ou proporcional). Revela Logo (`""`, abre o Launcher central), Workspaces dinâmicos com pills, Relógio centralizado dinamicamente no vão livre e botões segmentados em linha única (Wi-Fi, Bluetooth, Áudio, Perfil de Jogos, Notificações, Tray, Mini Avatar do Usuário).
-  - **Modo Wi-Fi (`WifiBarView.qml`)**:
-    - Geometria: $460 \times 48\text{px}$. Botão voltar + Ícone e status de rede (SSID) + Configurações + Atualizar + Switch Ligar/Desligar.
-  - **Modo Bluetooth (`BluetoothBarView.qml`)**:
-    - Geometria: $470 \times 48\text{px}$. Botão voltar + Ícone e status (dispositivo conectado) + Parear + Gerenciador + Switch Ligar/Desligar.
-  - **Modo Áudio Unificado (`AudioBarView.qml`)**:
-    - Geometria: $380 \times 48\text{px}$. Botão voltar + separador + alternar mudo/som por ícone + slider contínuo de volume + indicador percentual.
-    - **Feedback Unificado do Sistema (OSD Integrado na Barra)**: Ao pressionar teclas de volume no teclado ou girar knobs de áudio, a barra superior ativa suavemente o modo de áudio no topo da tela e recolhe automaticamente após 2 segundos de inatividade, eliminando a necessidade de qualquer popup redundante na base da tela.
-  - **Modo Perfil de Jogos (`GamingBarView.qml`)**:
-    - Geometria: $480 \times 48\text{px}$. Botão voltar + 3 Quick Toggles (**GameMode**, **MangoHud**, **Gamescope**) + botão de engrenagem (`""`) que abre o modal flutuante centralizado `GamingSettingsModal.qml`.
-  - **Modo Notificações Integrado (`NotificationBarView.qml`)**:
-    - Geometria: $520 \times 82\text{px}$ (`notchNotificationHeight: 82`).
-    - **Estrutura de Pilha (FILO - First In, Last Out)**: Mantém buffer de até 7 mensagens, exibindo sempre a mais recente no topo com badge de contagem `(N)`.
-    - **Timer de Inatividade (5s)**: A barra recolhe automaticamente após 5 segundos de inatividade, reiniciando o timer dinamicamente ao passar o mouse ou descartar uma notificação.
-    - **Ação do Botão ``**: Descarta e faz o pop da notificação atual, revelando instantaneamente a anterior da pilha até esvaziar.
-  - **Modo Perfil & Menu de Energia Unificado (`PowerBarView.qml`)**:
-    - Geometria: $490 \times 48\text{px}$. Botão voltar + separador + Avatar circular ($26\text{px}$) + Nome de exibição & Hostname com Privacy Blur + Botão Modo Privacidade (Olhinho `""`/`""`) + separador + 4 ações de energia horizontais (Bloquear, Deslogar, Reiniciar, Desligar).
+  - A largura expandida e recolhida é computada dinamicamente com base no conteúdo real (`contentExpandedWidth: 620px-680px`), mantendo o relógio perfeitamente equilibrado no centro.
+- **Encapsulamento do Notch**:
+  - **Esquerda (revelada no hover)**: Espaçador simétrico equivalente à largura do grupo de status da direita, mantendo o relógio rigorosamente equilibrado no centro.
+  - **Centro (sempre visível)**: Relógio em linha única (Hora 13px DemiBold + Data 11px Medium em `pt-BR`).
+  - **Direita (`Status.qml`)**: System Tray + Botão Modo Jogo (`""`) + Botão de Configurações (`""`).
+  - **Modos Ativos Integrados**:
+    - **Modo Jogo (`GamingBarView.qml`)**: Altura compacta (68px) com centralização simétrica e largura ideal calculada dinamicamente (`idealWidth`), contendo toggles para **GameMode**, **MangoHud**, e **Gamescope**, além de acesso aos ajustes avançados.
+    - **Modo Perfil & Menu de Energia (`PowerBarView.qml`)**: Avatar circular ($26\text{px}$), nome de usuário com Privacy Blur e 4 ações de energia (Bloquear, Deslogar, Reiniciar, Desligar).
+    - **Launcher Central do Sistema (`LauncherBarView.qml`, 920x640px)**: Central de controle e lançador unificado acionado via hover no topo (hotspot de 920px) ou `SUPER + H`. Possui barra horizontal de categorias no topo, banner responsivo de 180px com ajuste fino de corte/enquadramento, blocos empilhados de Data/Hora (relógio 48px e calendário) e Central de Jogos em 100% da largura, além de abas para Wi-Fi, Bluetooth, Som, Wallpapers e Jogos.
 
-### 3.2 Application Launcher (`Launcher.qml`)
-- **Modal Centralizado Flutuante**: Janela centralizada ($580 \times 480\text{ px}$) inspirada em lançadores como Walker/Spotlight, com `radiusModal` (22px), `glassFillDark` + `glassBorder`.
-- **Interação**: Campo de busca com ícone `""`, navegação por setas (Up/Down) e Enter, atalho Escape e foco automático.
-- **Lista**: Itens com ícones (`IconImage`), título do aplicativo, subtítulo e animação suave de hover (`hoverFill`).
-- **Namespace Wayland**: `"bulldoze-launcher"`.
+### 3.2 Barra Minimalista de Workspaces na Borda Inferior (`WorkspacePills.qml`, `shell.qml`)
+- **Fusão Vetorial Direta (`unifiedShape`)**: Extrusão orgânica na base da moldura perimetral, compartilhando o sistema de morphing do dock inferior.
+- **Escalonamento Curvilíneo Contínuo (`dockCurveFactor`)**: Os côncavos e cantos convexos escalam dinamicamente e proporcionalmente à altura de elevação da barra, garantindo transições perfeitamente contínuas e sem "asas" prematuras.
+- **Geometria & Ergonomia**: Altura fixa de 32px (mesma altura do notch) e largura adaptativa ao número de workspaces ativos (`workspaceCount`), com padding interno simétrico de 18px.
+- **Gatilhos & Comportamentos**:
+  - **Comandos de Workspace**: Toda troca de workspace ativa a exibição temporária da barra por 2 segundos.
+  - **Hover na Borda Inferior**: Zona de toque de 240x24px na base da tela (registrada em `mask: Region`) aciona a barra imediatamente. Permanece visível enquanto o cursor estiver dentro; fecha imediatamente ao sair.
+  - **Coexistência com Spotlight**: Ao abrir o Spotlight (`SUPER + D`), a barra de workspaces fecha imediatamente. Ao trocar de workspace com o Spotlight aberto, o Spotlight fecha e a barra é exibida por 2 segundos.
 
-### 3.3 Modal Flutuante de Configurações de Jogos (`GamingSettingsModal.qml`)
+### 3.3 Lançador de Aplicativos Inferior (`BottomLauncher.qml`, `shell.qml`)
+- **Dock de Pesquisa Invertido**: Fisicamente fundido à borda inferior de 8px em `unifiedShape` ($640 \times 480\text{px}$).
+- **Hierarquia Invertida**: Barra de busca com autofoco na base e lista de aplicativos expandindo-se para cima com navegação por teclado e visual translúcido.
+
+### 3.3 Barra Lateral de Volume (`AudioBarView.qml`, `shell.qml`)
+- **Extrusão na Borda Esquerda**: Integrada diretamente à moldura perimetral esquerda de 8px em `unifiedShape` ($48 \times 230\text{px}$) com asas côncavas suaves.
+- **Controles Verticais**: Ícone de som com alternância rápida de mudo, slider vertical fino e botão de engrenagem para navegação direta até a aba de Som dos Ajustes.
+- **OSD Inteligente (2s)**: Surge automaticamente ao pressionar atalhos de volume do teclado e recolhe em 2 segundos (pausando o timer se o mouse estiver sobreposto).
+
+### 3.4 Modal Flutuante de Configurações de Jogos (`GamingSettingsModal.qml`)
 - **Modal Centralizado Flutuante**: Janela centralizada ampla ($640 \times 560\text{ px}$) com rolagem suave (`Flickable`), cantos arredondados de $22\text{px}$ (`radiusModal`) e acabamento em vidro translúcido escuro.
 - **Aba Gamescope (Completa)**:
   - **Visual & HDR**: HDR Nativo (`--hdr-enabled`), Mapeamento Inverso SDR $\to$ HDR (`--hdr-itm-enabled`), Seletor de Nits SDR (200, 300, 400, 600, 1000 nits).
@@ -101,7 +99,7 @@
   - **CPU & Sistema**: Carga e Temperatura da CPU (°C), Memória RAM do Sistema, Consumo em Watts e Frequência dos núcleos (MHz).
   - **Layout & Posição**: Topo-Esquerda, Topo-Direita, Base-Esquerda, Base-Direita, Modo Linha Compacta (`hud_compact`).
 
-### 3.4 Gerenciador de Wallpapers & Wallpaper Engine (`WallpaperManagerModal.qml`, `modules/WallpaperEngine.qml`)
+### 3.5 Gerenciador de Wallpapers & Wallpaper Engine (`WallpaperManagerModal.qml`, `modules/WallpaperEngine.qml`)
 - **Modal Centralizado Flutuante**: Janela ampla ($920 \times 640\text{px}$) acionada globalmente pelo atalho **`ALT + W`** (`hyprland.lua`), construída em vidro translúcido escuro (`glassFillDark`), borda de 1px (`glassBorder`) e `radiusModal` (22px).
 - **Galeria Visual Integrada da Steam**:
   - Escaneia a pasta do Workshop da Steam (`~/.local/share/Steam/steamapps/workshop/content/431960/`) e faz cache automático de previews em `~/.cache/bulldoze/wallpapers/`.
@@ -112,24 +110,32 @@
   - **Remoção Automática de Patrocinadores/Doações**: Varredura profunda do `scene.pkg` para identificar objetos de QR code/doações (`sponsor_tip_x`, `微信赞助码`, `objeto 33`, etc.) e descarte direto na GPU via `--render-debug skip-object=<id>`.
   - **Propriedades Dinâmicas de Cena**: Mapeia automaticamente variáveis de shaders (`透视开关` / Raio-X, `透视大小` / Raio do Mouse, cores, switches e sliders).
   - **Desempenho**: Seletores de taxa de quadros (60, 120, 240 FPS), toggle de interatividade de mouse/parallax e pausa automática em janelas visíveis (áudio estritamente silenciado via `--silent`).
-- **Backend & Sincronização**:
-  - Script backend Python em `scripts/bulldoze-wallpaper.py` e daemon de sessão.
-  - Sincronização automática para `~/.cache/bulldoze/Wallpaper_greeter.png` e `/var/lib/greetd/Wallpaper_greeter.png`, mantendo a imagem nítida sem artefatos de prints ou menus sobrepostos.
-- **Namespace Wayland**: `"bulldoze-wallpaper-manager"`.
+- **Isolamento de Áudio PipeWire**: Execução de papéis de parede com driver dummy no SDL/OpenAL para evitar deadlocks na renegociação de Bluetooth/YouTube ao pausar em segundo plano.
 
-### 3.5 Central de Notificações (`NotificationCenter.qml`, `modules/Notifications.qml`, `NotificationBarView.qml`)
-- Módulo singleton no `shell.qml` que gerencia a pilha (FILO) de notificações ativas (capacidade máxima de 7 mensagens).
-- Suporte a OSD automático pelo Top Notch via `NotificationBarView.qml` ($520 \times 82\text{px}$) com timer de 5 segundos de inatividade e reset inteligente no hover/pop.
-- Descarte individual através do botão `` que remove a notificação do topo da pilha e revela a mensagem anterior instantaneamente.
-- Ícone do aplicativo emissor (`IconImage` dinâmico com fallback elegante `""` quando ausente/inválido), nome do app, título e corpo resumido.
-- Namespace Wayland: `"bulldoze-notifications"`.
+### 3.6 Central de Notificações no Canto Inferior Direito (`NotificationBarView.qml`, `shell.qml`, `modules/Notifications.qml`)
+- **Fusão Diagonal no Canto da Moldura (`unifiedShape`)**:
+  - Extrusão orgânica ancorada diretamente no canto inferior direito da tela, integrada à malha vetorial contínua de 8px.
+  - A borda lateral direita transiciona suavemente em curva côncava para o topo do painel, e a base esquerda transiciona em curva côncava para a borda inferior, sem nenhum vão ou linha de corte.
+- **Popup OSD (2,5s)**:
+  - Ao chegar uma nova notificação, exibe apenas o card mais recente por 2,5 segundos com auto-hide.
+- **Gatilho de Canto (Hot Zone)**:
+  - Passar o cursor na quina inferior direita revela a notificação mais recente instantaneamente (ou estado vazio *"Nenhuma notificação"*).
+  - Fechamento imediato ao retirar o mouse.
+- **Expansão em Pilha com Dwell de 2s**:
+  - Manter o mouse sobre o painel por 2 segundos expande a visualização para cima em até 4 notificações ($380 \times 96\text{px}$ a $380 \times 270\text{px}$).
+- **Ordenação Bottom-to-Top & Rolagem**:
+  - A notificação mais recente fica sempre na base física do painel, com as mais antigas empilhando-se para cima.
+  - Rolagem nativa por roda do mouse (*mouse wheel*) quando houver mais de 4 notificações.
+- **Ações & Limpeza**:
+  - Botão individual "x" (``) para fechar cada alerta.
+  - Botão de lixeira (``) na base para apagar todas as notificações de uma vez (visível estritamente quando expandido).
 
-### 3.6 On-Screen Display (`Osd.qml`, `BottomGlassPanel.qml`)
+### 3.7 On-Screen Display (`Osd.qml`, `BottomGlassPanel.qml`)
 - **Acoplamento Inferior**: Cápsula/Notch inferior ($300 \times 74\text{ px}$) dockado fisicamente na borda inferior da tela ($y = \text{screen.height}$, `margins.bottom: 0px`) utilizando `BottomGlassPanel.qml`.
 - **Geometria**: Arcos côncavos na base flaring no bezel inferior e cantos convexos arredondados no topo, com borda sutil de 1px nos limites livres.
 - **Animação**: Entrada elástica vertical ($y: 28 \to 0$, escala $0.90 \to 1.0$) com `animDurationSticky` (320ms), `Easing.OutBack` (overshoot 1.15) e saída suave via `animDurationExit` (200ms) `Easing.InCubic`.
 
-### 3.7 Tela de Bloqueio (`LockScreen.qml`, `GlassPanel.qml`)
+### 3.8 Tela de Bloqueio (`LockScreen.qml`, `GlassPanel.qml`)
 - **Fidelidade Total do Wallpaper (Zero Véu)**:
   - `WlSessionLockSurface.color` é estritamente `"transparent"`.
   - **Zero Véu ou Overlay Escurecedor**: Remoção total de qualquer camada de escurecimento sobre a imagem (`#30000000` ou similar). O wallpaper exibe 100% de saturação, nitidez e brilho naturais do desktop logado.
@@ -147,7 +153,7 @@
 - **Blur Puro de Componente (`GlassPanel.qml`)**:
   - Desfoque fosco restrito à geometria do card com `brightness: 0.0` e `contrast: 0.0`, preservando a luminosidade do wallpaper subjacente sem rebaixamento sintético de brilho.
 
-### 3.8 QuickShell Greeter / Login Manager (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)
+### 3.9 QuickShell Greeter / Login Manager (`greeter.qml`, `Greeter.qml`, `GlassPanel.qml`)
 - **Fidelidade Total do Wallpaper (Zero Véu)**:
   - `PanelWindow.color` é estritamente `"transparent"`.
   - Sem sobreposições de véu (`#30000000`), exibindo o wallpaper nativo de `/var/lib/greetd/Wallpaper_greeter.png`.
