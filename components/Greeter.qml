@@ -786,6 +786,7 @@ Item {
                     spacing: 2
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: Qt.formatDateTime(sysClock.date, "HH:mm")
                         color: theme.textStrong
@@ -794,6 +795,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.horizontalCenter: parent.horizontalCenter
                         text: {
                             const dateStr = sysClock.date.toLocaleDateString(Qt.locale("pt_BR"), "dddd, dd 'de' MMMM")
@@ -864,6 +866,7 @@ Item {
                                 border.color: theme.glassBorderSubtle
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: (currentUser.displayName || currentUser.username || "U").charAt(0).toUpperCase()
                                     color: theme.textStrong
@@ -888,6 +891,7 @@ Item {
                             spacing: 1
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: currentUser.displayName || currentUser.username
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeSubmenuTitle
@@ -895,6 +899,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: currentUser.hostName || "bulldoze"
                                 color: theme.textMuted
                                 font.pixelSize: theme.fontSizeSubmenuBody
@@ -926,6 +931,7 @@ Item {
                             spacing: 6
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: currentSession.icon || ""
                                 color: theme.textStrong
                                 font.pixelSize: theme.iconSizeSm
@@ -933,6 +939,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: currentSession.name
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeXs
@@ -941,6 +948,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: root.sessionDropdownOpen ? "▴" : "▾"
                                 color: theme.textMuted
                                 font.pixelSize: 10
@@ -1017,6 +1025,7 @@ Item {
                                             spacing: theme.spacingSm
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: sessItem.modelData.icon || ""
                                                 color: theme.textStrong
                                                 font.pixelSize: theme.iconSizeSm
@@ -1024,6 +1033,7 @@ Item {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: sessItem.modelData.name
                                                 color: theme.textStrong
                                                 font.pixelSize: theme.fontSizeSm
@@ -1077,6 +1087,7 @@ Item {
                             anchors.verticalCenter: parent.verticalCenter
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: ""
                                 visible: !root.authenticating
@@ -1085,6 +1096,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: ""
                                 visible: root.authenticating
@@ -1102,6 +1114,7 @@ Item {
                         }
 
                         TextInput {
+                            renderType: TextInput.NativeRendering
                             id: pwdInput
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width - 20 - (revealBtn.visible ? 30 : 0) - 34 - (theme.spacingSm * 3)
@@ -1118,6 +1131,7 @@ Item {
                             Component.onCompleted: forceActiveFocus()
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.fill: parent
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: root.authenticating ? "Iniciando sessão..." : "Digite sua senha..."
@@ -1138,6 +1152,7 @@ Item {
                             visible: pwdInput.text.length > 0 && !root.authenticating
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: root.showPassword ? "" : ""
                                 color: revealMouse.containsMouse ? theme.textStrong : theme.textMuted
@@ -1176,6 +1191,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: ""
                                 visible: !root.authenticating
@@ -1184,6 +1200,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: ""
                                 visible: root.authenticating
@@ -1245,6 +1262,7 @@ Item {
                         visible: root.authenticating || root.errorMessage.length > 0
 
                         Text {
+                            renderType: Text.NativeRendering
                             visible: root.authenticating
                             text: ""
                             color: theme.accent
@@ -1261,6 +1279,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             visible: !root.authenticating && root.errorMessage.length > 0
                             text: ""
                             color: "#FF6B6B"
@@ -1269,6 +1288,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: root.authenticating ? "Iniciando sessão..." : root.errorMessage
                             color: root.errorMessage ? "#FF6B6B" : theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -1304,6 +1324,7 @@ Item {
                             transformOrigin: Item.Center
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: pwrBtn.modelData.icon
                                 color: pwrBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1330,6 +1351,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     id: tipText
                                     anchors.centerIn: parent
                                     text: pwrBtn.modelData.label

@@ -6,6 +6,12 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.0] - 2026-09
 
+### 🔤 Correção de Nitidez e Renderização Nativa de Fontes e Ícones
+- **Adoção Global de `NativeRendering` em Todo o Shell (`Text` e `TextInput`)**:
+  - Implementado `renderType: Text.NativeRendering` e `renderType: TextInput.NativeRendering` em 100% dos componentes de interface (343 elementos em 21 arquivos).
+  - Elimina aberração cromática, franjas coloridas (azul/laranja) e borrão visual em textos e ícones de fontes (Nerd Fonts / FontAwesome) renderizados sobre superfícies Wayland com transparência e vidro translúcido.
+  - Nitidez consistente em toda a experiência: relógio, Spotlight (`BottomLauncher.qml`), Notificações (`NotificationBarView.qml`), Launcher Central (`LauncherBarView.qml`), Central de Controle (`ControlCenter.qml`), LockScreen e Greeter.
+
 ### 🚀 Redesign do Launcher Central e Expansão de Hotspot (`LauncherBarView.qml`, `shell.qml`)
 - **Ampliação do Hotspot de Acionamento Superior**:
   - A área de gatilho do hover no topo da tela foi expandida para 920px de largura (idêntica à largura total do launcher), centralizada no topo e registrada na máscara de entrada do Wayland (`mask: Region`). O acionamento via mouse agora ocorre de forma imediata e ergonômica em toda a extensão do launcher.

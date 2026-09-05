@@ -147,6 +147,7 @@ Item {
         Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
 
         Text {
+            renderType: Text.NativeRendering
             id: pillText
             anchors.centerIn: parent
             text: pill.label
@@ -191,6 +192,7 @@ Item {
             height: contentCol.implicitHeight
 
             Text {
+                renderType: Text.NativeRendering
                 id: rowIcon
                 visible: toggleRow.iconGlyph !== ""
                 text: toggleRow.iconGlyph
@@ -211,6 +213,7 @@ Item {
                 spacing: 1
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     text: toggleRow.title
                     color: theme.textStrong
@@ -220,6 +223,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     visible: toggleRow.subtitle !== ""
                     text: toggleRow.subtitle
@@ -274,6 +278,7 @@ Item {
         height: 22
 
         Text {
+            renderType: Text.NativeRendering
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: parent.title
@@ -315,6 +320,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "home" ? theme.textStrong : (catHomeMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -346,6 +352,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "wifi" ? theme.textStrong : (catWifiMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -377,6 +384,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "bluetooth" ? theme.textStrong : (catBtMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -408,6 +416,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "sound" ? theme.textStrong : (catSoundMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -439,6 +448,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "wallpaper" ? theme.textStrong : (catWpMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -470,6 +480,7 @@ Item {
                     text: ""
                     color: root.activeCategory === "gaming" ? theme.textStrong : (catGamingMouse.containsMouse ? theme.textStrong : theme.textMuted)
                     font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
                 }
 
                 MouseArea {
@@ -633,6 +644,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.centerIn: parent
                             text: ""
                             color: root.isCropAdjustOpen ? theme.textStrong : (hcMouse.containsMouse ? theme.textStrong : theme.textMuted)
@@ -671,6 +683,7 @@ Item {
                             spacing: 6
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: "Enquadramento"
                                 color: theme.textStrong
@@ -731,6 +744,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.horizontalCenter: parent.horizontalCenter
                                 text: Math.round(root.bannerCropOffset * 100) + "%"
                                 color: theme.textMuted
@@ -748,6 +762,7 @@ Item {
                                 border.color: theme.glassBorderSubtle
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: "Início (0%)"
                                     color: theme.textStrong
@@ -797,6 +812,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.centerIn: parent
                             text: (root.prof && root.prof.privacyMode) ? "" : ""
                             color: (root.prof && root.prof.privacyMode) ? theme.textStrong : (hpMouse.containsMouse ? theme.textStrong : theme.textMuted)
@@ -969,6 +985,7 @@ Item {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.centerIn: parent
                                                 visible: !bigAvatarImg.visible
                                                 text: (root.prof && root.prof.initial) ? root.prof.initial : "U"
@@ -993,6 +1010,7 @@ Item {
                                             spacing: 6
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: homeTabContent.greetingPrefix
                                                 color: theme.textStrong
                                                 font.pixelSize: 22
@@ -1014,6 +1032,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     id: nameText
                                                     anchors.centerIn: parent
                                                     text: (root.prof && root.prof.displayName) ? root.prof.displayName : "Usuário"
@@ -1024,6 +1043,7 @@ Item {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: homeTabContent.greetingSuffix
                                                 color: theme.textStrong
                                                 font.pixelSize: 22
@@ -1052,6 +1072,7 @@ Item {
                                                 spacing: 4
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: ""
                                                     color: theme.textMuted
                                                     font.pixelSize: 11
@@ -1059,6 +1080,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: "@" + (root.prof ? root.prof.hostName : "bulldoze")
                                                     color: theme.textMuted
                                                     font.pixelSize: theme.fontSizeSm
@@ -1101,6 +1123,7 @@ Item {
 
                                         // Big Clock (Aumentado para 48px)
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: Qt.formatTime(homeTabContent.currentTime, "hh:mm")
                                             color: theme.textStrong
                                             font.pixelSize: 48
@@ -1134,6 +1157,7 @@ Item {
                                                     anchors.verticalCenter: parent.verticalCenter
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         id: dayBadgeText
                                                         anchors.centerIn: parent
                                                         text: {
@@ -1148,6 +1172,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     anchors.verticalCenter: parent.verticalCenter
                                                     text: {
                                                         const d = homeTabContent.currentTime
@@ -1160,6 +1185,7 @@ Item {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: "Dia " + homeTabContent.currentTime.getDate() + " do mês • " + (root.prof ? root.prof.loginUser : "usuario") + "@archlinux"
                                                 color: theme.textMuted
                                                 font.pixelSize: theme.fontSizeXs
@@ -1181,6 +1207,7 @@ Item {
 
                                         // Título do Mês
                                         Text {
+                                            renderType: Text.NativeRendering
                                             anchors.horizontalCenter: parent.horizontalCenter
                                             text: {
                                                 const m = homeTabContent.currentTime.toLocaleDateString(Qt.locale("pt_BR"), "MMMM yyyy")
@@ -1200,6 +1227,7 @@ Item {
                                                     width: parent.width / 7
                                                     height: 18
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: modelData
                                                         color: theme.textSubtle
@@ -1240,6 +1268,7 @@ Item {
                                                         color: modelData.isToday ? theme.textStrong : "transparent"
 
                                                         Text {
+                                                            renderType: Text.NativeRendering
                                                             anchors.centerIn: parent
                                                             text: modelData.day
                                                             color: modelData.isToday
@@ -1283,6 +1312,7 @@ Item {
                                         spacing: theme.spacingSm
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: ""
                                             color: theme.textMuted
                                             font.pixelSize: theme.fontSizeXs
@@ -1290,6 +1320,7 @@ Item {
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "Central de Jogos & Performance"
                                             color: theme.textSubtle
                                             font.pixelSize: 11
@@ -1327,6 +1358,7 @@ Item {
                                                 spacing: 8
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: ""
                                                     color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.iconSizeSm
@@ -1334,6 +1366,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: "GameMode"
                                                     color: (root.game && root.game.gamemodeEnabled) ? theme.textStrong : (gmMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.fontSizeSm
@@ -1385,6 +1418,7 @@ Item {
                                                 spacing: 8
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: ""
                                                     color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.iconSizeSm
@@ -1392,6 +1426,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: "Bulldoptimizer"
                                                     color: (root.game && root.game.bulldoptimizerEnabled) ? theme.textStrong : (boMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.fontSizeSm
@@ -1443,6 +1478,7 @@ Item {
                                                 spacing: 8
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: ""
                                                     color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.iconSizeSm
@@ -1450,6 +1486,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: "MangoHud"
                                                     color: (root.game && root.game.mangohudEnabled) ? theme.textStrong : (mhMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.fontSizeSm
@@ -1501,6 +1538,7 @@ Item {
                                                 spacing: 8
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: ""
                                                     color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.iconSizeSm
@@ -1508,6 +1546,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: "Gamescope"
                                                     color: (root.game && root.game.gamescopeEnabled) ? theme.textStrong : (gsMouse.containsMouse ? theme.textStrong : theme.textMedium)
                                                     font.pixelSize: theme.fontSizeSm
@@ -1579,6 +1618,7 @@ Item {
                                 spacing: 5
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: theme.textStrong
                                     font.pixelSize: theme.fontSizeSm
@@ -1586,6 +1626,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "Arch Linux"
                                     color: theme.textStrong
                                     font.pixelSize: theme.fontSizeXs
@@ -1608,6 +1649,7 @@ Item {
                                 visible: homeTabContent.kernelStr !== ""
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
@@ -1615,6 +1657,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "Kernel " + homeTabContent.kernelStr
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
@@ -1636,6 +1679,7 @@ Item {
                                 spacing: 4
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
@@ -1643,6 +1687,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "Atividade: " + homeTabContent.uptimeStr
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
@@ -1675,6 +1720,7 @@ Item {
                                 Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     color: lockBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1708,6 +1754,7 @@ Item {
                                 Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     color: logoutBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1743,6 +1790,7 @@ Item {
                                 Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     color: rebootBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1778,6 +1826,7 @@ Item {
                                 Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     color: poweroffBtnMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1829,12 +1878,14 @@ Item {
                                 Row {
                                     spacing: theme.spacingSm
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: ""
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeXl
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: homeTabContent.confirmTitle
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeLg
@@ -1844,6 +1895,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     width: parent.width
                                     text: homeTabContent.confirmDesc
                                     color: theme.textMedium
@@ -1867,6 +1919,7 @@ Item {
                                         border.color: theme.glassBorderSubtle
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             anchors.centerIn: parent
                                             text: "Cancelar"
                                             color: theme.textMedium
@@ -1893,6 +1946,7 @@ Item {
                                         border.color: theme.glassBorderStrong
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             anchors.centerIn: parent
                                             text: "Confirmar"
                                             color: theme.textStrong
@@ -1946,6 +2000,7 @@ Item {
                                 spacing: theme.spacingMd
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: root.net && root.net.enabled ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.iconSizeLg
@@ -1958,6 +2013,7 @@ Item {
                                     spacing: 1
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: root.net && root.net.enabled ? "Wi-Fi Habilitado" : "Wi-Fi Desativado"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -1965,6 +2021,7 @@ Item {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: root.net && root.net.available ? (root.net.ssid ? ("Conectado em " + root.net.ssid + (root.net.currentIp ? " (" + root.net.currentIp + ")" : "")) : "Procurando redes...") : "Sem conexão ativa"
                                         color: theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -1989,6 +2046,7 @@ Item {
                                     visible: Boolean(root.net && root.net.enabled)
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.centerIn: parent
                                         text: ""
                                         color: root.net && root.net.isScanning ? theme.accent : theme.textMedium
@@ -2091,6 +2149,7 @@ Item {
                                                     spacing: theme.spacingSm
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         text: ""
                                                         color: modelData.inUse ? theme.textStrong : theme.textMedium
@@ -2105,6 +2164,7 @@ Item {
                                                         Row {
                                                             spacing: 6
                                                             Text {
+                                                                renderType: Text.NativeRendering
                                                                 text: modelData.ssid
                                                                 color: theme.textStrong
                                                                 font.pixelSize: theme.fontSizeSm
@@ -2112,6 +2172,7 @@ Item {
                                                                 elide: Text.ElideRight
                                                             }
                                                             Text {
+                                                                renderType: Text.NativeRendering
                                                                 visible: modelData.security && !modelData.security.includes("open")
                                                                 text: ""
                                                                 color: theme.textSubtle
@@ -2121,6 +2182,7 @@ Item {
                                                         }
 
                                                         Text {
+                                                            renderType: Text.NativeRendering
                                                             text: modelData.inUse ? "Conectado • Sinal: " + modelData.signal + "%" : "Sinal: " + modelData.signal + "% • " + (modelData.security || "Aberta")
                                                             color: theme.textMuted
                                                             font.pixelSize: theme.fontSizeXs
@@ -2139,6 +2201,7 @@ Item {
                                                     border.color: theme.glassBorderStrong
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: modelData.inUse ? "Desconectar" : "Conectar"
                                                         color: theme.textStrong
@@ -2190,6 +2253,7 @@ Item {
                                                         spacing: 6
 
                                                         TextInput {
+                                                            renderType: TextInput.NativeRendering
                                                             id: pwdInput
                                                             anchors.verticalCenter: parent.verticalCenter
                                                             width: parent.width - 28
@@ -2199,6 +2263,7 @@ Item {
                                                             clip: true
 
                                                             Text {
+                                                                renderType: Text.NativeRendering
                                                                 anchors.fill: parent
                                                                 text: "Senha da rede..."
                                                                 color: theme.textSubtle
@@ -2214,6 +2279,7 @@ Item {
                                                         }
 
                                                         Text {
+                                                            renderType: Text.NativeRendering
                                                             anchors.verticalCenter: parent.verticalCenter
                                                             text: root.showPasswordText ? "" : ""
                                                             color: theme.textMuted
@@ -2236,6 +2302,7 @@ Item {
                                                     border.color: theme.glassBorderStrong
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: "OK"
                                                         color: theme.textStrong
@@ -2264,6 +2331,7 @@ Item {
                                                     border.color: theme.glassBorderSubtle
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: "Cancelar"
                                                         color: theme.textMuted
@@ -2320,6 +2388,7 @@ Item {
                                 spacing: theme.spacingMd
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: root.bt && root.bt.enabled ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.iconSizeLg
@@ -2332,6 +2401,7 @@ Item {
                                     spacing: 1
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: root.bt && root.bt.enabled ? "Bluetooth Habilitado" : "Bluetooth Desativado"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -2339,6 +2409,7 @@ Item {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: root.bt && root.bt.hasConnectedDevices ? (root.bt.connectedDevices.join(", ")) : (root.bt && root.bt.enabled ? "Pronto para parear novos dispositivos" : "Adaptador desligado")
                                         color: theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -2363,6 +2434,7 @@ Item {
                                     visible: Boolean(root.bt && root.bt.enabled)
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.centerIn: parent
                                         text: ""
                                         color: root.bt && root.bt.isScanning ? theme.accent : theme.textMedium
@@ -2460,6 +2532,7 @@ Item {
                                                 spacing: theme.spacingSm
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     anchors.verticalCenter: parent.verticalCenter
                                                     text: modelData.icon || ""
                                                     color: modelData.connected ? theme.textStrong : theme.textMedium
@@ -2472,6 +2545,7 @@ Item {
                                                     spacing: 1
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         text: modelData.name || modelData.mac
                                                         color: theme.textStrong
                                                         font.pixelSize: theme.fontSizeSm
@@ -2480,6 +2554,7 @@ Item {
                                                     }
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         text: modelData.connected ? "Conectado" : "Desconectado"
                                                         color: modelData.connected ? theme.textStrong : theme.textMuted
                                                         font.pixelSize: theme.fontSizeXs
@@ -2501,6 +2576,7 @@ Item {
                                                     border.color: theme.glassBorderStrong
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: modelData.connected ? "Desconectar" : "Conectar"
                                                         color: theme.textStrong
@@ -2529,6 +2605,7 @@ Item {
                                                     border.color: rmBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.centerIn: parent
                                                         text: ""
                                                         color: rmBtnMouse.containsMouse ? theme.textStrong : theme.textSubtle
@@ -2556,6 +2633,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     visible: !root.bt || root.bt.pairedDevices.length === 0
                                     text: "Nenhum dispositivo Bluetooth pareado."
                                     color: theme.textMuted
@@ -2591,6 +2669,7 @@ Item {
                                                 spacing: theme.spacingSm
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     anchors.verticalCenter: parent.verticalCenter
                                                     text: modelData.icon || ""
                                                     color: theme.textMedium
@@ -2603,6 +2682,7 @@ Item {
                                                     spacing: 1
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         text: modelData.name || modelData.mac
                                                         color: theme.textStrong
                                                         font.pixelSize: theme.fontSizeSm
@@ -2611,6 +2691,7 @@ Item {
                                                     }
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         text: modelData.mac
                                                         color: theme.textMuted
                                                         font.pixelSize: theme.fontSizeXs
@@ -2629,6 +2710,7 @@ Item {
                                                 border.color: theme.glassBorderStrong
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     anchors.centerIn: parent
                                                     text: "Parear"
                                                     color: theme.textStrong
@@ -2656,6 +2738,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     visible: Boolean(root.bt && root.bt.isScanning && root.bt.discoveredDevices.length === 0)
                                     text: "Escaneando dispositivos próximos..."
                                     color: theme.textMuted
@@ -2706,6 +2789,7 @@ Item {
                                     Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack } }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.centerIn: parent
                                         text: root.aud ? root.aud.icon : ""
                                         color: root.aud && root.aud.muted ? theme.indicatorInactive : theme.textStrong
@@ -2722,6 +2806,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: "Volume de Saída"
                                     color: theme.textStrong
@@ -2735,6 +2820,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: 50
                                     horizontalAlignment: Text.AlignRight
@@ -2851,6 +2937,7 @@ Item {
                                             spacing: theme.spacingMd
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: modelData.icon || ""
                                                 color: modelData.isDefault ? theme.textStrong : theme.textMedium
@@ -2863,6 +2950,7 @@ Item {
                                                 spacing: 2
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     width: parent.width
                                                     text: modelData.name
                                                     color: theme.textStrong
@@ -2872,6 +2960,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: modelData.isDefault ? "Saída de áudio padrão ativa" : "Disponível para reprodução"
                                                     color: theme.textMuted
                                                     font.pixelSize: theme.fontSizeXs
@@ -2894,6 +2983,7 @@ Item {
                                                 spacing: 4
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     visible: modelData.isDefault
                                                     text: ""
                                                     color: theme.textStrong
@@ -2902,6 +2992,7 @@ Item {
                                                 }
 
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     text: modelData.isDefault ? "Padrão" : "Selecionar"
                                                     color: theme.textStrong
                                                     font.pixelSize: theme.fontSizeXs
@@ -2955,6 +3046,7 @@ Item {
                                 spacing: theme.spacingSm
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.verticalCenter: parent.verticalCenter
                                     text: ""
                                     color: theme.textSubtle
@@ -2962,6 +3054,7 @@ Item {
                                 }
 
                                 TextInput {
+                                    renderType: TextInput.NativeRendering
                                     id: wpSearchField
                                     anchors.verticalCenter: parent.verticalCenter
                                     width: parent.width - 30
@@ -2970,6 +3063,7 @@ Item {
                                     clip: true
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.fill: parent
                                         text: "Pesquisar wallpaper..."
                                         color: theme.textSubtle
@@ -3049,6 +3143,7 @@ Item {
                                                 color: theme.glassFillDark
                                                 visible: !thumbImg.visible
                                                 Text {
+                                                    renderType: Text.NativeRendering
                                                     anchors.centerIn: parent
                                                     text: ""
                                                     color: theme.textSubtle
@@ -3083,13 +3178,14 @@ Item {
                                                 Row {
                                                     anchors.centerIn: parent
                                                     spacing: 2
-                                                    Text { text: ""; color: theme.textStrong; font.pixelSize: 8 }
-                                                    Text { text: "ATIVO"; color: theme.textStrong; font.pixelSize: 8; font.weight: Font.Bold }
+                                                    Text { renderType: Text.NativeRendering; text: ""; color: theme.textStrong; font.pixelSize: 8 }
+                                                    Text { renderType: Text.NativeRendering; text: "ATIVO"; color: theme.textStrong; font.pixelSize: 8; font.weight: Font.Bold }
                                                 }
                                             }
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             width: parent.width
                                             text: itemData.title || itemData.id
                                             color: isSelected ? theme.textStrong : theme.textMedium
@@ -3168,6 +3264,7 @@ Item {
                                     spacing: 2
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         width: parent.width
                                         text: (root.wp && root.wp.selectedWallpaper) ? root.wp.selectedWallpaper.title : "Nenhum selecionado"
                                         color: theme.textStrong
@@ -3177,6 +3274,7 @@ Item {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         width: parent.width
                                         text: (root.wp && root.wp.selectedWallpaper) ? ("ID: " + root.wp.selectedWallpaper.id) : ""
                                         color: theme.textMuted
@@ -3304,6 +3402,7 @@ Item {
                                                             width: parent.width
                                                             height: 18
                                                             Text {
+                                                                renderType: Text.NativeRendering
                                                                 anchors.left: parent.left
                                                                 anchors.verticalCenter: parent.verticalCenter
                                                                 text: propData.text || propData.key
@@ -3312,6 +3411,7 @@ Item {
                                                                 font.weight: Font.Medium
                                                             }
                                                             Text {
+                                                                renderType: Text.NativeRendering
                                                                 anchors.right: parent.right
                                                                 anchors.verticalCenter: parent.verticalCenter
                                                                 text: Number(sliderMouse.currentVal).toFixed(2)
@@ -3435,12 +3535,14 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: ""
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Aplicar Wallpaper Agora"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -3621,6 +3723,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Brilho SDR no HDR:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm
@@ -3690,6 +3793,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Taxa de Atualização:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm
@@ -3715,6 +3819,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Resolução Nativa:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm
@@ -3772,6 +3877,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Nitidez FSR:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm
@@ -3818,6 +3924,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Render Interno:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm
@@ -3851,6 +3958,7 @@ Item {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Limite de FPS:"
                                         color: theme.textMedium
                                         font.pixelSize: theme.fontSizeSm

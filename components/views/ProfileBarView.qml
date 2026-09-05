@@ -48,6 +48,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: backMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -69,6 +70,7 @@ Item {
                 spacing: theme.spacingSm
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: ""
                     color: theme.textStrong
                     font.pixelSize: theme.fontSizeMd
@@ -76,6 +78,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: "Perfil do Usuário"
                     color: theme.textStrong
                     font.pixelSize: theme.fontSizeMd
@@ -154,6 +157,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         visible: !avatarImg.visible
                         text: root.prof.initial
@@ -194,6 +198,7 @@ Item {
                         }
 
                         Text {
+                            renderType: Text.NativeRendering
                             width: parent.width
                             text: root.prof.displayName
                             color: theme.textStrong
@@ -208,6 +213,7 @@ Item {
                             opacity: 1.0 - (root.prof.privacyBlur * 0.7)
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: ""
                                 color: theme.textMuted
                                 font.pixelSize: theme.fontSizeXs
@@ -215,6 +221,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: root.prof.hostName
                                 color: theme.textMuted
                                 font.pixelSize: theme.fontSizeXs
@@ -274,6 +281,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         text: root.prof.privacyMode ? "" : ""
                         color: root.prof.privacyMode ? theme.textStrong : theme.textMuted

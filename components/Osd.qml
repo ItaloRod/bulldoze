@@ -96,6 +96,7 @@ PanelWindow {
                 spacing: theme.spacingSm
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: root.message
                     color: theme.textStrong
                     font.pixelSize: theme.fontSizeSm

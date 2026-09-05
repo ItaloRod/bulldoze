@@ -1,6 +1,7 @@
 import QtQuick
 
 Text {
+    renderType: Text.NativeRendering
     id: root
 
     property var activateLauncher

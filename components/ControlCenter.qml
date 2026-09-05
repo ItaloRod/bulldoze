@@ -121,6 +121,7 @@ PanelWindow {
             height: contentCol.implicitHeight
 
             Text {
+                renderType: Text.NativeRendering
                 id: rowIcon
                 visible: toggleRow.iconGlyph !== ""
                 text: toggleRow.iconGlyph
@@ -141,6 +142,7 @@ PanelWindow {
                 spacing: 1
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     text: toggleRow.title
                     color: theme.textStrong
@@ -150,6 +152,7 @@ PanelWindow {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     visible: toggleRow.subtitle !== ""
                     text: toggleRow.subtitle
@@ -202,6 +205,7 @@ PanelWindow {
         }
 
         Text {
+            renderType: Text.NativeRendering
             anchors.centerIn: parent
             text: pillBtn.label
             color: pillBtn.active ? theme.textStrong : theme.textMedium
@@ -376,6 +380,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 visible: !avatarImg.visible
                                 text: userProfile.initial
@@ -418,6 +423,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     width: parent.width
                                     text: userProfile.displayName
                                     color: theme.textStrong
@@ -432,6 +438,7 @@ PanelWindow {
                                     opacity: 1.0 - (userProfile.privacyBlur * 0.7)
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: ""
                                         color: theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -439,6 +446,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: userProfile.hostName
                                         color: theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -494,6 +502,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: userProfile.privacyMode ? "" : ""
                                 color: userProfile.privacyMode ? theme.textStrong : theme.textMuted
@@ -531,6 +540,7 @@ PanelWindow {
                         spacing: theme.spacingMd
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: ""
                             color: network.available ? theme.textStrong : theme.textMuted
                             font.pixelSize: theme.fontSizeLg
@@ -542,6 +552,7 @@ PanelWindow {
                             spacing: 2
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: "Wi-Fi"
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeMd
@@ -549,6 +560,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: network.available ? (network.ssid !== "" ? "Conectado a: " + network.ssid : "Conectado") : "Desconectado"
                                 color: network.available ? theme.textMedium : theme.textMuted
                                 font.pixelSize: theme.fontSizeXs
@@ -625,6 +637,7 @@ PanelWindow {
                                 spacing: theme.spacingMd
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: bluetooth.enabled ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.fontSizeLg
@@ -636,6 +649,7 @@ PanelWindow {
                                     spacing: 2
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Bluetooth"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
@@ -643,6 +657,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: !bluetooth.enabled ? "Desligado" : (bluetooth.hasConnectedDevices ? bluetooth.connectedDevices.join(", ") : "Nenhum dispositivo")
                                         color: bluetooth.hasConnectedDevices ? theme.textMedium : theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -704,12 +719,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: ""
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: modelData
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -718,6 +735,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors {
                                         right: parent.right
                                         rightMargin: theme.spacingSm
@@ -747,12 +765,14 @@ PanelWindow {
                                 spacing: theme.spacingSm
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: theme.textStrong
                                     font.pixelSize: theme.fontSizeSm
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "Parear novo dispositivo"
                                     color: theme.textMedium
                                     font.pixelSize: theme.fontSizeSm
@@ -801,6 +821,7 @@ PanelWindow {
                                 spacing: theme.spacingMd
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: audio.icon
                                     color: audio.muted ? theme.textMuted : theme.textStrong
                                     font.pixelSize: theme.fontSizeLg
@@ -812,6 +833,7 @@ PanelWindow {
                                     spacing: 2
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Áudio"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
@@ -819,6 +841,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: audio.label
                                         color: theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -839,6 +862,7 @@ PanelWindow {
                                 border.color: theme.glassBorderSubtle
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: audio.muted ? "Mutado" : "Silenciar"
                                     color: audio.muted ? theme.textStrong : theme.textMedium
@@ -861,6 +885,7 @@ PanelWindow {
                             spacing: theme.spacingSm
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: ""
                                 color: theme.textMuted
@@ -932,6 +957,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.verticalCenter: parent.verticalCenter
                                 text: ""
                                 color: theme.textStrong
@@ -973,6 +999,7 @@ PanelWindow {
                                 spacing: theme.spacingMd
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: ""
                                     color: gaming.anyActive ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.fontSizeLg
@@ -984,6 +1011,7 @@ PanelWindow {
                                     spacing: 2
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Perfil de Jogos"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
@@ -991,6 +1019,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: gaming.anyActive ? "Otimizações gráficas ativas para jogos" : "Ferramentas e wrappers desativados"
                                         color: gaming.anyActive ? theme.textMedium : theme.textMuted
                                         font.pixelSize: theme.fontSizeXs
@@ -1017,6 +1046,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     anchors.centerIn: parent
                                     text: ""
                                     color: gearMouse.containsMouse ? theme.textStrong : theme.textMedium
@@ -1061,6 +1091,7 @@ PanelWindow {
                                         spacing: 7
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: ""
                                             color: gaming.gamemodeEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1068,6 +1099,7 @@ PanelWindow {
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "GameMode"
                                             color: gaming.gamemodeEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1077,6 +1109,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: gaming.gamemodeEnabled ? "Ativo" : "Desligado"
                                         color: gaming.gamemodeEnabled ? theme.textStrong : theme.textSubtle
@@ -1115,6 +1148,7 @@ PanelWindow {
                                         spacing: 7
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: ""
                                             color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1122,6 +1156,7 @@ PanelWindow {
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "Bulldoptimizer"
                                             color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1131,6 +1166,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: gaming.bulldoptimizerEnabled ? "Otimizado" : "Desligado"
                                         color: gaming.bulldoptimizerEnabled ? theme.textStrong : theme.textSubtle
@@ -1169,6 +1205,7 @@ PanelWindow {
                                         spacing: 7
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "󰓅"
                                             color: gaming.mangohudEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1176,6 +1213,7 @@ PanelWindow {
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "MangoHud"
                                             color: gaming.mangohudEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1185,6 +1223,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: gaming.mangohudEnabled ? (gaming.mhVram ? "Overlay + VRAM" : "Overlay") : "Desligado"
                                         color: gaming.mangohudEnabled ? theme.textStrong : theme.textSubtle
@@ -1223,6 +1262,7 @@ PanelWindow {
                                         spacing: 7
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "󰹑"
                                             color: gaming.gamescopeEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1230,6 +1270,7 @@ PanelWindow {
                                         }
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "Gamescope"
                                             color: gaming.gamescopeEnabled ? theme.textStrong : theme.textMedium
                                             font.pixelSize: theme.fontSizeSm
@@ -1239,6 +1280,7 @@ PanelWindow {
                                     }
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         anchors.horizontalCenter: parent.horizontalCenter
                                         text: gaming.gamescopeEnabled ? (gaming.gsHdr ? "HDR " + gaming.gsRefreshRate + "Hz" : gaming.gsRefreshRate + "Hz") : "Desligado"
                                         color: gaming.gamescopeEnabled ? theme.textStrong : theme.textSubtle
@@ -1319,6 +1361,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.centerIn: parent
                                 text: ""
                                 color: theme.textStrong
@@ -1339,6 +1382,7 @@ PanelWindow {
                             spacing: 1
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: "Ajustes de Jogos"
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeLg
@@ -1346,6 +1390,7 @@ PanelWindow {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: "Gamescope HDR & Métricas MangoHud"
                                 color: theme.textMuted
                                 font.pixelSize: theme.fontSizeXs
@@ -1368,12 +1413,14 @@ PanelWindow {
                             spacing: 4
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: ""
                                 color: theme.textSubtle
                                 font.pixelSize: theme.fontSizeXs
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: "Salvo"
                                 color: theme.textSubtle
                                 font.pixelSize: theme.fontSizeXs
@@ -1414,6 +1461,7 @@ PanelWindow {
                                 spacing: 6
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "󰹑"
                                     color: root.activeGamingTab === "gamescope" ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.fontSizeSm
@@ -1421,6 +1469,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "Gamescope"
                                     color: root.activeGamingTab === "gamescope" ? theme.textStrong : theme.textMedium
                                     font.pixelSize: theme.fontSizeSm
@@ -1456,6 +1505,7 @@ PanelWindow {
                                 spacing: 6
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "󰓅"
                                     color: root.activeGamingTab === "mangohud" ? theme.textStrong : theme.textMuted
                                     font.pixelSize: theme.fontSizeSm
@@ -1463,6 +1513,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     text: "MangoHud"
                                     color: root.activeGamingTab === "mangohud" ? theme.textStrong : theme.textMedium
                                     font.pixelSize: theme.fontSizeSm
@@ -1554,12 +1605,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰑋"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Resolução de Renderização (Entrada)"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -1599,6 +1652,7 @@ PanelWindow {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     width: parent.width
                                     text: (gaming.gsRenderWidth > 0 && gaming.gsRenderHeight > 0)
                                         ? ("Renderizando internamente em " + gaming.gsRenderWidth + "x" + gaming.gsRenderHeight + " ➔ Upscaling para " + gaming.gsWidth + "x" + gaming.gsHeight)
@@ -1634,12 +1688,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰍹"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Resolução de Saída (Tela)"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -1704,12 +1760,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰹑"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Upscaling & Filtros de Escala"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -1746,6 +1804,7 @@ PanelWindow {
                                         spacing: theme.spacingSm
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             text: "Algoritmo de Escala"
                                             color: theme.textMedium
                                             font.pixelSize: theme.fontSizeXs
@@ -1794,6 +1853,7 @@ PanelWindow {
                                             height: 16
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.left: parent.left
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: "Nitidez do Filtro"
@@ -1803,6 +1863,7 @@ PanelWindow {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: "Nível " + gaming.gsFsrSharpness
@@ -1900,12 +1961,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰓅"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Taxa de Atualização"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -2068,6 +2131,7 @@ PanelWindow {
                                             height: 16
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.left: parent.left
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: "Luminância de Conteúdo SDR"
@@ -2077,6 +2141,7 @@ PanelWindow {
                                             }
 
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 anchors.right: parent.right
                                                 anchors.verticalCenter: parent.verticalCenter
                                                 text: gaming.gsHdrSdrNits + " nits"
@@ -2232,12 +2297,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰘚"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Consumo de Memória"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -2294,12 +2361,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰢮"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Placa de Vídeo (GPU)"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -2374,12 +2443,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "󰍛"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Processador (CPU)"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm
@@ -2497,12 +2568,14 @@ PanelWindow {
                                     spacing: theme.spacingSm
 
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: ""
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeMd
                                         anchors.verticalCenter: parent.verticalCenter
                                     }
                                     Text {
+                                        renderType: Text.NativeRendering
                                         text: "Posição do Overlay na Tela"
                                         color: theme.textStrong
                                         font.pixelSize: theme.fontSizeSm

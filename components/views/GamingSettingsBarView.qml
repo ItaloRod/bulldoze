@@ -49,6 +49,7 @@ Item {
             height: contentCol.implicitHeight
 
             Text {
+                renderType: Text.NativeRendering
                 id: rowIcon
                 visible: toggleRow.iconGlyph !== ""
                 text: toggleRow.iconGlyph
@@ -69,6 +70,7 @@ Item {
                 spacing: 1
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     text: toggleRow.title
                     color: theme.textStrong
@@ -78,6 +80,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     visible: toggleRow.subtitle !== ""
                     text: toggleRow.subtitle
@@ -143,6 +146,7 @@ Item {
         }
 
         Text {
+            renderType: Text.NativeRendering
             id: pillText
             anchors.centerIn: parent
             text: pill.label
@@ -166,6 +170,7 @@ Item {
         height: 22
 
         Text {
+            renderType: Text.NativeRendering
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: parent.title
@@ -207,6 +212,7 @@ Item {
                     Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic } }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         text: ""
                         color: theme.textStrong
@@ -227,6 +233,7 @@ Item {
                     spacing: 1
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "Configurações de Jogos"
                         color: theme.textStrong
                         font.pixelSize: theme.fontSizeLg
@@ -234,6 +241,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         text: "Bulldoptimizer, Gamescope HDR & MangoHud"
                         color: theme.textMuted
                         font.pixelSize: theme.fontSizeXs
@@ -401,6 +409,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Brilho SDR no HDR:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -471,6 +480,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Taxa de Atualização:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -497,6 +507,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Resolução Nativa:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -555,6 +566,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Nitidez FSR:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -602,6 +614,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Render Interno:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm
@@ -636,6 +649,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             text: "Limite de FPS:"
                             color: theme.textMedium
                             font.pixelSize: theme.fontSizeSm

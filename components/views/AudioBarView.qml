@@ -44,6 +44,7 @@ Item {
             }
 
             Text {
+                renderType: Text.NativeRendering
                 anchors.centerIn: parent
                 text: root.aud ? root.aud.icon : ""
                 color: root.aud && root.aud.muted ? theme.indicatorInactive : (muteMouse.containsMouse ? theme.textStrong : theme.textMedium)
@@ -148,6 +149,7 @@ Item {
             }
 
             Text {
+                renderType: Text.NativeRendering
                 anchors.centerIn: parent
                 text: ""
                 color: gearMouse.containsMouse ? theme.textStrong : theme.textMedium

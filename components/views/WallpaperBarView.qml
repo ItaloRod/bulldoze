@@ -46,6 +46,7 @@ Item {
         }
 
         Text {
+            renderType: Text.NativeRendering
             anchors.centerIn: parent
             text: pill.label
             color: pill.active ? theme.textStrong : theme.textMedium
@@ -91,6 +92,7 @@ Item {
             height: contentCol.implicitHeight
 
             Text {
+                renderType: Text.NativeRendering
                 id: rowIcon
                 visible: toggleRow.iconGlyph !== ""
                 text: toggleRow.iconGlyph
@@ -111,6 +113,7 @@ Item {
                 spacing: 1
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     text: toggleRow.title
                     color: theme.textStrong
@@ -120,6 +123,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     width: parent.width
                     visible: toggleRow.subtitle !== ""
                     text: toggleRow.subtitle
@@ -174,6 +178,7 @@ Item {
         height: 20
 
         Text {
+            renderType: Text.NativeRendering
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             text: parent.title
@@ -204,12 +209,14 @@ Item {
                 Row {
                     spacing: theme.spacingSm
                     Text {
+                        renderType: Text.NativeRendering
                         text: ""
                         color: theme.textStrong
                         font.pixelSize: theme.fontSizeTitle
                         anchors.verticalCenter: parent.verticalCenter
                     }
                     Text {
+                        renderType: Text.NativeRendering
                         text: "Gerenciador de Wallpapers"
                         color: theme.textStrong
                         font.pixelSize: theme.fontSizeTitle
@@ -219,6 +226,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: "Wallpaper Engine Workshop • Shaders e Interatividade de Mouse"
                     color: theme.textMuted
                     font.pixelSize: theme.fontSizeXs
@@ -236,6 +244,7 @@ Item {
                 border.color: closeBtnMouse.containsMouse ? theme.glassBorderStrong : "transparent"
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: theme.textMuted
@@ -289,6 +298,7 @@ Item {
                         spacing: theme.spacingSm
 
                         Text {
+                            renderType: Text.NativeRendering
                             anchors.verticalCenter: parent.verticalCenter
                             text: ""
                             color: theme.textSubtle
@@ -296,6 +306,7 @@ Item {
                         }
 
                         TextInput {
+                            renderType: TextInput.NativeRendering
                             id: searchField
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width - 30
@@ -304,6 +315,7 @@ Item {
                             clip: true
 
                             Text {
+                                renderType: Text.NativeRendering
                                 anchors.fill: parent
                                 text: "Pesquisar por nome ou tag..."
                                 color: theme.textSubtle
@@ -388,6 +400,7 @@ Item {
                                         color: theme.glassFillDark
                                         visible: !thumbImg.visible
                                         Text {
+                                            renderType: Text.NativeRendering
                                             anchors.centerIn: parent
                                             text: ""
                                             color: theme.textSubtle
@@ -424,11 +437,13 @@ Item {
                                             anchors.centerIn: parent
                                             spacing: 3
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: ""
                                                 color: theme.textStrong
                                                 font.pixelSize: 9
                                             }
                                             Text {
+                                                renderType: Text.NativeRendering
                                                 text: "ATIVO"
                                                 color: theme.textStrong
                                                 font.pixelSize: 9
@@ -448,6 +463,7 @@ Item {
                                         color: theme.glassFillDark
 
                                         Text {
+                                            renderType: Text.NativeRendering
                                             anchors.centerIn: parent
                                             text: itemData.type === "video" ? "VÍDEO" : "CENA"
                                             color: theme.textMuted
@@ -459,6 +475,7 @@ Item {
 
                                 // Title Label
                                 Text {
+                                    renderType: Text.NativeRendering
                                     width: parent.width
                                     text: itemData.title || itemData.id
                                     color: isSelected ? theme.textStrong : theme.textMedium
@@ -544,6 +561,7 @@ Item {
                             spacing: 2
 
                             Text {
+                                renderType: Text.NativeRendering
                                 width: parent.width
                                 text: (root.wp && root.wp.selectedWallpaper) ? root.wp.selectedWallpaper.title : "Nenhum selecionado"
                                 color: theme.textStrong
@@ -553,6 +571,7 @@ Item {
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 width: parent.width
                                 text: (root.wp && root.wp.selectedWallpaper) ? ("ID: " + root.wp.selectedWallpaper.id + " • " + (root.wp.selectedWallpaper.tags ? root.wp.selectedWallpaper.tags.join(", ") : "Workshop")) : ""
                                 color: theme.textMuted
@@ -618,6 +637,7 @@ Item {
                                 }
 
                                 Text {
+                                    renderType: Text.NativeRendering
                                     width: parent.width
                                     text: root.wp && root.wp.scaling === "fit" 
                                         ? "Modo Adaptar: exibe o wallpaper 100% sem cortes, com bordas neutras."
@@ -708,6 +728,7 @@ Item {
                                                     height: 18
 
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.left: parent.left
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         text: propData.text || propData.key
@@ -716,6 +737,7 @@ Item {
                                                         font.weight: Font.Medium
                                                     }
                                                     Text {
+                                                        renderType: Text.NativeRendering
                                                         anchors.right: parent.right
                                                         anchors.verticalCenter: parent.verticalCenter
                                                         text: Number(sliderMouse.currentVal).toFixed(2)
@@ -846,12 +868,14 @@ Item {
                             spacing: theme.spacingSm
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: ""
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeSm
                             }
 
                             Text {
+                                renderType: Text.NativeRendering
                                 text: "Aplicar Wallpaper Agora"
                                 color: theme.textStrong
                                 font.pixelSize: theme.fontSizeSm

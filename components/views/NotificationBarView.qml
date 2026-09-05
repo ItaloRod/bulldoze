@@ -30,6 +30,7 @@ Item {
         visible: root.notifCount === 0
 
         Text {
+            renderType: Text.NativeRendering
             text: ""
             color: theme.indicatorInactive
             font.pixelSize: theme.iconSizeMd
@@ -37,6 +38,7 @@ Item {
         }
 
         Text {
+            renderType: Text.NativeRendering
             text: "Nenhuma notificação"
             color: theme.textMuted
             font.pixelSize: theme.fontSizeSm
@@ -69,6 +71,7 @@ Item {
             border.color: theme.glassBorderSubtle
 
             Text {
+                renderType: Text.NativeRendering
                 anchors.centerIn: parent
                 text: ""
                 color: theme.accent
@@ -113,6 +116,7 @@ Item {
             }
 
             Text {
+                renderType: Text.NativeRendering
                 anchors.centerIn: parent
                 text: ""
                 color: cCloseMouse.containsMouse ? theme.textStrong : theme.textMuted
@@ -149,6 +153,7 @@ Item {
                 spacing: 6
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: root.latestNotif ? (root.latestNotif.appName || "Sistema") : ""
                     color: theme.textMuted
                     font.pixelSize: theme.fontSizeXs
@@ -158,6 +163,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: "•"
                     color: theme.textSubtle
                     font.pixelSize: 10
@@ -165,6 +171,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     text: "agora"
                     color: theme.textSubtle
                     font.pixelSize: 10
@@ -174,6 +181,7 @@ Item {
 
             // Summary
             Text {
+                renderType: Text.NativeRendering
                 width: parent.width
                 text: root.latestNotif ? root.latestNotif.summary : ""
                 color: theme.textStrong
@@ -186,6 +194,7 @@ Item {
 
             // Body
             Text {
+                renderType: Text.NativeRendering
                 width: parent.width
                 text: root.latestNotif ? root.latestNotif.body : ""
                 color: theme.textMedium
@@ -242,6 +251,7 @@ Item {
                 }
 
                 Text {
+                    renderType: Text.NativeRendering
                     anchors.centerIn: parent
                     text: ""
                     color: clearMouse.containsMouse ? theme.textStrong : theme.textMuted
@@ -301,6 +311,7 @@ Item {
                     border.color: theme.glassBorderSubtle
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         text: ""
                         color: theme.accent
@@ -346,6 +357,7 @@ Item {
                     }
 
                     Text {
+                        renderType: Text.NativeRendering
                         anchors.centerIn: parent
                         text: ""
                         color: dCloseMouse.containsMouse ? theme.textStrong : theme.textMuted
@@ -378,6 +390,7 @@ Item {
 
                     // App Name
                     Text {
+                        renderType: Text.NativeRendering
                         width: parent.width
                         text: modelData ? (modelData.appName || "Sistema") : ""
                         color: theme.textMuted
@@ -389,6 +402,7 @@ Item {
 
                     // Summary
                     Text {
+                        renderType: Text.NativeRendering
                         width: parent.width
                         text: modelData ? modelData.summary : ""
                         color: theme.textStrong
@@ -401,6 +415,7 @@ Item {
 
                     // Body
                     Text {
+                        renderType: Text.NativeRendering
                         width: parent.width
                         text: modelData ? modelData.body : ""
                         color: theme.textMedium

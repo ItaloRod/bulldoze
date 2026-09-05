@@ -50,6 +50,7 @@ Row {
         }
 
         Text {
+            renderType: Text.NativeRendering
             anchors.centerIn: parent
             text: ""
             color: wifiMouse.containsMouse ? theme.textStrong : (root.net && root.net.available ? theme.textMedium : theme.indicatorInactive)
@@ -92,6 +93,7 @@ Row {
         }
 
         Text {
+            renderType: Text.NativeRendering
             anchors.centerIn: parent
             text: ""
             color: btMouse.containsMouse ? theme.textStrong : (root.bt && root.bt.hasConnectedDevices ? theme.textStrong : (root.bt && root.bt.enabled ? theme.textMedium : theme.indicatorInactive))
@@ -134,6 +136,7 @@ Row {
         }
 
         Text {
+            renderType: Text.NativeRendering
             anchors.centerIn: parent
             text: ""
             color: gameMouse.containsMouse ? theme.textStrong : (root.game && root.game.anyActive ? theme.textStrong : theme.textMedium)

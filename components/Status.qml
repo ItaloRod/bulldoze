@@ -57,6 +57,7 @@ Row {
             text: ""
             color: gameMouse.containsMouse ? theme.textStrong : (root.game && root.game.anyActive ? theme.textStrong : theme.textMedium)
             font.pixelSize: theme.iconSizeSm
+            renderType: Text.NativeRendering
         }
 
         MouseArea {
@@ -99,6 +100,7 @@ Row {
             text: ""
             color: settingsMouse.containsMouse ? theme.textStrong : theme.textMedium
             font.pixelSize: theme.iconSizeSm
+            renderType: Text.NativeRendering
         }
 
         MouseArea {
@@ -176,6 +178,7 @@ Row {
                 color: theme.textStrong
                 font.pixelSize: theme.fontSizeSm
                 font.weight: Font.Bold
+                renderType: Text.NativeRendering
             }
         }
 
