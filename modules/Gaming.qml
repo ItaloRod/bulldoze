@@ -39,6 +39,54 @@ QtObject {
     property bool gsAdaptiveSync: false
     property int gsFpsLimit: 0
     property string gsCustomArgs: ""
+    property bool gsForceGrabCursor: false
+    property var gamescopePresets: [
+        {
+            "id": "global_default",
+            "name": "Padrão do Sistema",
+            "game": "Global",
+            "width": 2560,
+            "height": 1440,
+            "render_width": 1920,
+            "render_height": 1080,
+            "refresh_rate": 240,
+            "fullscreen": true,
+            "borderless": false,
+            "force_grab_cursor": false,
+            "fsr": true,
+            "fsr_sharpness": 2
+        },
+        {
+            "id": "cities2_mouse_fixed",
+            "name": "Cities II - Mouse Corrigido & Nativo",
+            "game": "Cities: Skylines II",
+            "width": 1920,
+            "height": 1080,
+            "render_width": 1920,
+            "render_height": 1080,
+            "refresh_rate": 144,
+            "fullscreen": true,
+            "borderless": false,
+            "force_grab_cursor": true,
+            "fsr": false,
+            "fsr_sharpness": 0
+        },
+        {
+            "id": "cities2_perf",
+            "name": "Cities II - Performance 720p FSR",
+            "game": "Cities: Skylines II",
+            "width": 1920,
+            "height": 1080,
+            "render_width": 1280,
+            "render_height": 720,
+            "refresh_rate": 144,
+            "fullscreen": true,
+            "borderless": false,
+            "force_grab_cursor": true,
+            "fsr": true,
+            "fsr_sharpness": 5
+        }
+    ]
 
     // MangoHud Advanced Options
     property bool mhVram: true
@@ -66,6 +114,7 @@ QtObject {
         }
         if (gsFullscreen) args += " --fullscreen"
         if (gsBorderless) args += " -b"
+        if (gsForceGrabCursor) args += " --force-grab-cursor"
         if (gsHdr) args += " --hdr-enabled"
         if (gsHdrItm) args += " --hdr-itm-enabled"
         if (gsHdrSdrNits !== 400 && gsHdrSdrNits > 0) args += " --hdr-sdr-content-nits " + gsHdrSdrNits
@@ -172,6 +221,73 @@ QtObject {
         saveConfig()
     }
 
+    function applyGamescopePreset(preset) {
+        if (!preset) return
+        gsWidth = preset.width || 1920
+        gsHeight = preset.height || 1080
+        gsRenderWidth = preset.render_width || 0
+        gsRenderHeight = preset.render_height || 0
+        gsRefreshRate = preset.refresh_rate || 144
+        gsFullscreen = preset.fullscreen !== undefined ? preset.fullscreen : true
+        gsBorderless = !!preset.borderless
+        gsForceGrabCursor = !!preset.force_grab_cursor
+        gsFsr = !!preset.fsr
+        gsFsrSharpness = preset.fsr_sharpness !== undefined ? preset.fsr_sharpness : 2
+        saveConfig()
+    }
+
+    function saveCurrentAsPreset(name, gameName) {
+        const id = "preset_" + Date.now()
+        const newPreset = {
+            "id": id,
+            "name": name && name.trim() !== "" ? name.trim() : "Novo Preset",
+            "game": gameName && gameName.trim() !== "" ? gameName.trim() : "Jogo",
+            "width": gsWidth,
+            "height": gsHeight,
+            "render_width": gsRenderWidth,
+            "render_height": gsRenderHeight,
+            "refresh_rate": gsRefreshRate,
+            "fullscreen": gsFullscreen,
+            "borderless": gsBorderless,
+            "force_grab_cursor": gsForceGrabCursor,
+            "fsr": gsFsr,
+            "fsr_sharpness": gsFsrSharpness
+        }
+        const updated = []
+        for (let i = 0; i < gamescopePresets.length; i++) {
+            updated.push(gamescopePresets[i])
+        }
+        updated.push(newPreset)
+        gamescopePresets = updated
+        saveConfig()
+    }
+
+    function updatePreset(presetId, updatedData) {
+        const updated = []
+        for (let i = 0; i < gamescopePresets.length; i++) {
+            const p = gamescopePresets[i]
+            if (p.id === presetId) {
+                const copy = Object.assign({}, p, updatedData)
+                updated.push(copy)
+            } else {
+                updated.push(p)
+            }
+        }
+        gamescopePresets = updated
+        saveConfig()
+    }
+
+    function deletePreset(presetId) {
+        const updated = []
+        for (let i = 0; i < gamescopePresets.length; i++) {
+            if (gamescopePresets[i].id !== presetId) {
+                updated.push(gamescopePresets[i])
+            }
+        }
+        gamescopePresets = updated
+        saveConfig()
+    }
+
     function setResolution(w, h) {
         gsWidth = w
         gsHeight = h
@@ -267,6 +383,7 @@ QtObject {
                 "refresh_rate": gsRefreshRate,
                 "fullscreen": gsFullscreen,
                 "borderless": gsBorderless,
+                "force_grab_cursor": gsForceGrabCursor,
                 "fsr": gsFsr,
                 "fsr_sharpness": gsFsrSharpness,
                 "scaler_filter": gsScalerFilter,
@@ -276,6 +393,7 @@ QtObject {
                 "fps_limit": gsFpsLimit,
                 "custom_args": gsCustomArgs
             },
+            "gamescope_presets": gamescopePresets,
             "mangohud_config": {
                 "vram": mhVram,
                 "ram": mhRam,
@@ -347,6 +465,7 @@ QtObject {
                         root.gsRefreshRate = gc.refresh_rate || 240
                         root.gsFullscreen = gc.fullscreen !== undefined ? gc.fullscreen : true
                         root.gsBorderless = !!gc.borderless
+                        root.gsForceGrabCursor = !!gc.force_grab_cursor
                         root.gsFsr = !!gc.fsr
                         root.gsFsrSharpness = gc.fsr_sharpness !== undefined ? gc.fsr_sharpness : 2
                         root.gsScalerFilter = gc.scaler_filter || "fsr"
@@ -374,6 +493,10 @@ QtObject {
                         root.mhPosition = mc.position || "top-left"
                         root.mhFpsLimit = mc.fps_limit || 0
                         root.mhCompact = !!mc.hud_compact
+                    }
+
+                    if (parsed.gamescope_presets && Array.isArray(parsed.gamescope_presets) && parsed.gamescope_presets.length > 0) {
+                        root.gamescopePresets = parsed.gamescope_presets
                     }
                 } catch(e) {
                     // Default values

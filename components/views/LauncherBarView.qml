@@ -616,219 +616,7 @@ Item {
                         }
                     }
 
-                    // 1. Fixed Top-Left Crop Button (Canetinha para ajuste de enquadramento)
-                    Rectangle {
-                        id: homeCropBtn
-                        anchors {
-                            top: parent.top
-                            left: parent.left
-                        }
-                        width: 28
-                        height: 28
-                        radius: theme.radiusSmall
-                        color: hcMouse.containsMouse ? theme.hoverFill : (root.isCropAdjustOpen ? theme.activeFill : "transparent")
-                        border.width: 1
-                        border.color: root.isCropAdjustOpen ? theme.glassBorderStrong : (hcMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                        scale: hcMouse.pressed ? 0.90 : (hcMouse.containsMouse ? 1.10 : 1.0)
-                        transformOrigin: Item.Center
-                        z: 25
-
-                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                        Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: theme.animDurationFast
-                                easing.type: Easing.OutBack
-                                easing.overshoot: theme.buttonOvershoot
-                            }
-                        }
-
-                        Text {
-                            renderType: Text.NativeRendering
-                            anchors.centerIn: parent
-                            text: ""
-                            color: root.isCropAdjustOpen ? theme.textStrong : (hcMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                            font.pixelSize: theme.iconSizeSm
-                        }
-
-                        MouseArea {
-                            id: hcMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: root.isCropAdjustOpen = !root.isCropAdjustOpen
-                        }
-                    }
-
-                    // Popup do Slider Vertical de Enquadramento
-                    Rectangle {
-                        id: cropAdjustPopup
-                        anchors {
-                            top: homeCropBtn.bottom
-                            topMargin: 6
-                            left: homeCropBtn.left
-                        }
-                        width: 140
-                        height: 180
-                        radius: theme.radiusItem
-                        color: theme.glassFillDark
-                        border.width: 1
-                        border.color: theme.glassBorderStrong
-                        visible: root.isCropAdjustOpen
-                        z: 30
-
-                        Column {
-                            anchors.fill: parent
-                            anchors.margins: theme.spacingSm
-                            spacing: 6
-
-                            Text {
-                                renderType: Text.NativeRendering
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: "Enquadramento"
-                                color: theme.textStrong
-                                font.pixelSize: 10
-                                font.weight: Font.DemiBold
-                            }
-
-                            // Slider Vertical
-                            Item {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: 32
-                                height: 96
-
-                                Rectangle {
-                                    anchors.centerIn: parent
-                                    width: 6
-                                    height: parent.height
-                                    radius: 3
-                                    color: theme.itemFill
-                                    border.width: 1
-                                    border.color: theme.glassBorderSubtle
-                                }
-
-                                Rectangle {
-                                    id: sliderThumb
-                                    width: 18
-                                    height: 18
-                                    radius: 9
-                                    color: theme.textStrong
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    y: root.bannerCropOffset * (parent.height - height)
-
-                                    Behavior on y {
-                                        enabled: !sliderMouse.drag.active
-                                        NumberAnimation { duration: theme.animDurationFast }
-                                    }
-                                }
-
-                                MouseArea {
-                                    id: sliderMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    preventStealing: true
-
-                                    function updateFromPos(mouseY) {
-                                        const clampedY = Math.max(0, Math.min(mouseY - 9, parent.height - 18))
-                                        const val = clampedY / (parent.height - 18)
-                                        root.bannerCropOffset = Math.max(0.0, Math.min(1.0, val))
-                                        root.saveCropConfig()
-                                    }
-
-                                    onPositionChanged: mouse => {
-                                        if (pressed) updateFromPos(mouse.y)
-                                    }
-                                    onPressed: mouse => updateFromPos(mouse.y)
-                                }
-                            }
-
-                            Text {
-                                renderType: Text.NativeRendering
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: Math.round(root.bannerCropOffset * 100) + "%"
-                                color: theme.textMuted
-                                font.pixelSize: 10
-                                font.weight: Font.Medium
-                            }
-
-                            Rectangle {
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width - 8
-                                height: 20
-                                radius: theme.radiusSmall
-                                color: topResetMouse.containsMouse ? theme.hoverFill : theme.itemFill
-                                border.width: 1
-                                border.color: theme.glassBorderSubtle
-
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    anchors.centerIn: parent
-                                    text: "Início (0%)"
-                                    color: theme.textStrong
-                                    font.pixelSize: 9
-                                    font.weight: Font.Medium
-                                }
-
-                                MouseArea {
-                                    id: topResetMouse
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: {
-                                        root.bannerCropOffset = 0.0
-                                        root.saveCropConfig()
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 1. Fixed Top-Right Privacy Button
-                    Rectangle {
-                        id: homePrivacyBtn
-                        anchors {
-                            top: parent.top
-                            right: parent.right
-                        }
-                        width: 28
-                        height: 28
-                        radius: theme.radiusSmall
-                        color: hpMouse.containsMouse ? theme.hoverFill : ((root.prof && root.prof.privacyMode) ? theme.activeFill : "transparent")
-                        border.width: 1
-                        border.color: (root.prof && root.prof.privacyMode) ? theme.glassBorderStrong : (hpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                        scale: hpMouse.pressed ? 0.90 : (hpMouse.containsMouse ? 1.10 : 1.0)
-                        transformOrigin: Item.Center
-                        z: 20
-
-                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                        Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                        Behavior on scale {
-                            NumberAnimation {
-                                duration: theme.animDurationFast
-                                easing.type: Easing.OutBack
-                                easing.overshoot: theme.buttonOvershoot
-                            }
-                        }
-
-                        Text {
-                            renderType: Text.NativeRendering
-                            anchors.centerIn: parent
-                            text: (root.prof && root.prof.privacyMode) ? "" : ""
-                            color: (root.prof && root.prof.privacyMode) ? theme.textStrong : (hpMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                            font.pixelSize: theme.iconSizeSm
-                        }
-
-                        MouseArea {
-                            id: hpMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: if (root.prof) root.prof.togglePrivacy()
-                        }
-                    }
-
-                    // 2. Scrollable Home Area (Flickable)
+                    // 1. Scrollable Home Area (Flickable)
                     Flickable {
                         id: homeFlickable
                         anchors {
@@ -994,6 +782,222 @@ Item {
                                                 font.weight: Font.Bold
                                             }
                                         }
+
+                                        // Botão de Ajuste do Enquadramento (Canetinha/Pincel) no canto superior esquerdo do banner
+                                        Rectangle {
+                                            id: homeCropBtn
+                                            anchors {
+                                                top: bannerBox.top
+                                                topMargin: 10
+                                                left: bannerBox.left
+                                                leftMargin: 10
+                                            }
+                                            width: 28
+                                            height: 28
+                                            radius: theme.radiusSmall
+                                            color: hcMouse.containsMouse ? theme.hoverFill : (root.isCropAdjustOpen ? theme.activeFill : theme.glassFillDark)
+                                            border.width: 1
+                                            border.color: root.isCropAdjustOpen ? theme.glassBorderStrong : (hcMouse.containsMouse ? theme.glassBorderStrong : theme.glassBorderSubtle)
+                                            scale: hcMouse.pressed ? 0.90 : (hcMouse.containsMouse ? 1.10 : 1.0)
+                                            transformOrigin: Item.Center
+                                            z: 25
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale {
+                                                NumberAnimation {
+                                                    duration: theme.animDurationFast
+                                                    easing.type: Easing.OutBack
+                                                    easing.overshoot: theme.buttonOvershoot
+                                                }
+                                            }
+
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                anchors.centerIn: parent
+                                                text: ""
+                                                color: root.isCropAdjustOpen ? theme.textStrong : (hcMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                                                font.pixelSize: theme.iconSizeSm
+                                            }
+
+                                            MouseArea {
+                                                id: hcMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: root.isCropAdjustOpen = !root.isCropAdjustOpen
+                                            }
+                                        }
+
+                                        // Popup do Slider Vertical de Enquadramento
+                                        Rectangle {
+                                            id: cropAdjustPopup
+                                            anchors {
+                                                top: homeCropBtn.bottom
+                                                topMargin: 6
+                                                left: homeCropBtn.left
+                                            }
+                                            width: 140
+                                            height: 180
+                                            radius: theme.radiusItem
+                                            color: theme.glassFillDark
+                                            border.width: 1
+                                            border.color: theme.glassBorderStrong
+                                            visible: root.isCropAdjustOpen
+                                            z: 30
+
+                                            Column {
+                                                anchors.fill: parent
+                                                anchors.margins: theme.spacingSm
+                                                spacing: 6
+
+                                                Text {
+                                                    renderType: Text.NativeRendering
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: "Enquadramento"
+                                                    color: theme.textStrong
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.DemiBold
+                                                }
+
+                                                // Slider Vertical
+                                                Item {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    width: 32
+                                                    height: 96
+
+                                                    Rectangle {
+                                                        anchors.centerIn: parent
+                                                        width: 6
+                                                        height: parent.height
+                                                        radius: 3
+                                                        color: theme.itemFill
+                                                        border.width: 1
+                                                        border.color: theme.glassBorderSubtle
+                                                    }
+
+                                                    Rectangle {
+                                                        id: sliderThumb
+                                                        width: 18
+                                                        height: 18
+                                                        radius: 9
+                                                        color: theme.textStrong
+                                                        anchors.horizontalCenter: parent.horizontalCenter
+                                                        y: root.bannerCropOffset * (parent.height - height)
+
+                                                        Behavior on y {
+                                                            enabled: !sliderMouse.drag.active
+                                                            NumberAnimation { duration: theme.animDurationFast }
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        id: sliderMouse
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        preventStealing: true
+
+                                                        function updateFromPos(mouseY) {
+                                                            const clampedY = Math.max(0, Math.min(mouseY - 9, parent.height - 18))
+                                                            const val = clampedY / (parent.height - 18)
+                                                            root.bannerCropOffset = Math.max(0.0, Math.min(1.0, val))
+                                                            root.saveCropConfig()
+                                                        }
+
+                                                        onPositionChanged: mouse => {
+                                                            if (pressed) updateFromPos(mouse.y)
+                                                        }
+                                                        onPressed: mouse => updateFromPos(mouse.y)
+                                                    }
+                                                }
+
+                                                Text {
+                                                    renderType: Text.NativeRendering
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: Math.round(root.bannerCropOffset * 100) + "%"
+                                                    color: theme.textMuted
+                                                    font.pixelSize: 10
+                                                    font.weight: Font.Medium
+                                                }
+
+                                                Rectangle {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    width: parent.width - 8
+                                                    height: 20
+                                                    radius: theme.radiusSmall
+                                                    color: topResetMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                                                    border.width: 1
+                                                    border.color: theme.glassBorderSubtle
+
+                                                    Text {
+                                                        renderType: Text.NativeRendering
+                                                        anchors.centerIn: parent
+                                                        text: "Início (0%)"
+                                                        color: theme.textStrong
+                                                        font.pixelSize: 9
+                                                        font.weight: Font.Medium
+                                                    }
+
+                                                    MouseArea {
+                                                        id: topResetMouse
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            root.bannerCropOffset = 0.0
+                                                            root.saveCropConfig()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+
+                                        // Botão de Privacidade (Olho) no canto superior direito do banner
+                                        Rectangle {
+                                            id: homePrivacyBtn
+                                            anchors {
+                                                top: bannerBox.top
+                                                topMargin: 10
+                                                right: bannerBox.right
+                                                rightMargin: 10
+                                            }
+                                            width: 28
+                                            height: 28
+                                            radius: theme.radiusSmall
+                                            color: hpMouse.containsMouse ? theme.hoverFill : ((root.prof && root.prof.privacyMode) ? theme.activeFill : theme.glassFillDark)
+                                            border.width: 1
+                                            border.color: (root.prof && root.prof.privacyMode) ? theme.glassBorderStrong : (hpMouse.containsMouse ? theme.glassBorderStrong : theme.glassBorderSubtle)
+                                            scale: hpMouse.pressed ? 0.90 : (hpMouse.containsMouse ? 1.10 : 1.0)
+                                            transformOrigin: Item.Center
+                                            z: 20
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                                            Behavior on scale {
+                                                NumberAnimation {
+                                                    duration: theme.animDurationFast
+                                                    easing.type: Easing.OutBack
+                                                    easing.overshoot: theme.buttonOvershoot
+                                                }
+                                            }
+
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                anchors.centerIn: parent
+                                                text: (root.prof && root.prof.privacyMode) ? "" : ""
+                                                color: (root.prof && root.prof.privacyMode) ? theme.textStrong : (hpMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                                                font.pixelSize: theme.iconSizeSm
+                                            }
+
+                                            MouseArea {
+                                                id: hpMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: if (root.prof) root.prof.togglePrivacy()
+                                            }
+                                        }
                                     }
 
                                     // Espaçamento abaixo do avatar
@@ -1138,57 +1142,45 @@ Item {
                                             anchors.verticalCenter: parent.verticalCenter
                                         }
 
-                                        // Day of Week & Date Column
-                                        Column {
+                                        // Day of Week & Date
+                                        Row {
                                             anchors.verticalCenter: parent.verticalCenter
-                                            spacing: 5
+                                            spacing: theme.spacingSm
 
-                                            // Highlighted Day of Week Badge + Date
-                                            Row {
-                                                spacing: theme.spacingSm
-
-                                                Rectangle {
-                                                    height: 24
-                                                    implicitWidth: dayBadgeText.implicitWidth + 16
-                                                    radius: theme.radiusSmall
-                                                    color: theme.activeFill
-                                                    border.width: 1
-                                                    border.color: theme.glassBorderStrong
-                                                    anchors.verticalCenter: parent.verticalCenter
-
-                                                    Text {
-                                                        renderType: Text.NativeRendering
-                                                        id: dayBadgeText
-                                                        anchors.centerIn: parent
-                                                        text: {
-                                                            const d = homeTabContent.currentTime
-                                                            const str = d.toLocaleDateString(Qt.locale("pt_BR"), "dddd")
-                                                            return str.toUpperCase()
-                                                        }
-                                                        color: theme.textStrong
-                                                        font.pixelSize: theme.fontSizeSm
-                                                        font.weight: Font.Bold
-                                                    }
-                                                }
+                                            Rectangle {
+                                                height: 24
+                                                implicitWidth: dayBadgeText.implicitWidth + 16
+                                                radius: theme.radiusSmall
+                                                color: theme.activeFill
+                                                border.width: 1
+                                                border.color: theme.glassBorderStrong
+                                                anchors.verticalCenter: parent.verticalCenter
 
                                                 Text {
                                                     renderType: Text.NativeRendering
-                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    id: dayBadgeText
+                                                    anchors.centerIn: parent
                                                     text: {
                                                         const d = homeTabContent.currentTime
-                                                        return d.toLocaleDateString(Qt.locale("pt_BR"), "dd 'de' MMMM 'de' yyyy")
+                                                        const str = d.toLocaleDateString(Qt.locale("pt_BR"), "dddd")
+                                                        return str.toUpperCase()
                                                     }
-                                                    color: theme.textMedium
-                                                    font.pixelSize: theme.fontSizeMd
-                                                    font.weight: Font.Medium
+                                                    color: theme.textStrong
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    font.weight: Font.Bold
                                                 }
                                             }
 
                                             Text {
                                                 renderType: Text.NativeRendering
-                                                text: "Dia " + homeTabContent.currentTime.getDate() + " do mês • " + (root.prof ? root.prof.loginUser : "usuario") + "@archlinux"
-                                                color: theme.textMuted
-                                                font.pixelSize: theme.fontSizeXs
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                text: {
+                                                    const d = homeTabContent.currentTime
+                                                    return d.toLocaleDateString(Qt.locale("pt_BR"), "dd 'de' MMMM 'de' yyyy")
+                                                }
+                                                color: theme.textMedium
+                                                font.pixelSize: theme.fontSizeMd
+                                                font.weight: Font.Medium
                                             }
                                         }
                                     }
@@ -3565,626 +3557,16 @@ Item {
                 }
 
                 // =============================================================
-                // TAB CONTENT 4: GAMING SETTINGS
+                // TAB CONTENT 4: GAMING SETTINGS (UNIFIED SCROLL & PRESETS)
                 // =============================================================
-                Column {
+                Item {
                     anchors.fill: parent
                     visible: root.activeCategory === "gaming"
-                    spacing: theme.spacingSm
 
-                    Row {
-                        width: parent.width
-                        height: 32
-                        spacing: theme.spacingSm
-
-                        SettingPill {
-                            label: "Bulldoptimizer"
-                            active: root.activeGamingTab === "bulldoptimizer"
-                            onClicked: root.activeGamingTab = "bulldoptimizer"
-                        }
-
-                        SettingPill {
-                            label: "Gamescope"
-                            active: root.activeGamingTab === "gamescope"
-                            onClicked: root.activeGamingTab = "gamescope"
-                        }
-
-                        SettingPill {
-                            label: "MangoHud"
-                            active: root.activeGamingTab === "mangohud"
-                            onClicked: root.activeGamingTab = "mangohud"
-                        }
-                    }
-
-                    Rectangle {
-                        width: parent.width
-                        height: 1
-                        color: theme.separator
-                    }
-
-                    Flickable {
-                        width: parent.width
-                        height: parent.height - 32 - 1 - theme.spacingSm
-                        contentWidth: width
-                        contentHeight: gamingContentCol.implicitHeight + 20
-                        clip: true
-                        boundsBehavior: Flickable.StopAtBounds
-
-                        Column {
-                            id: gamingContentCol
-                            width: parent.width
-                            spacing: theme.spacingSm
-
-                            // Subtab 1: Bulldoptimizer
-                            Column {
-                                width: parent.width
-                                visible: root.activeGamingTab === "bulldoptimizer"
-                                spacing: theme.spacingSm
-
-                                SectionHeader { title: "Shell & Sistema" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Wallpaper Estático (Zero-GPU)"
-                                    subtitle: "Pausa o Wallpaper Engine e exibe imagem estática para liberar VRAM e GPU"
-                                    checked: root.game ? root.game.boWallpaperStatic : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.boWallpaperStatic = !root.game.boWallpaperStatic
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Desativar Efeitos do Hyprland"
-                                    subtitle: "Desativa blur, sombras e animações do compositor ao ativar o Bulldoptimizer"
-                                    checked: root.game ? root.game.boHyprlandEffects : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.boHyprlandEffects = !root.game.boHyprlandEffects
-                                            root.game.saveConfig()
-                                            if (root.game.bulldoptimizerEnabled) {
-                                                root.game.applyBulldoptimizer(true)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                SectionHeader { title: "Hardware & Driver GPU (AMD Radeon)" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "AMD DPM Performance (Max Clocks)"
-                                    subtitle: "Trava GPU Core e VRAM em clocks de alto desempenho para eliminar oscilações e micro-stutters"
-                                    checked: root.game ? root.game.boAmdDpm : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.boAmdDpm = !root.game.boAmdDpm
-                                            root.game.saveConfig()
-                                            if (root.game.bulldoptimizerEnabled) {
-                                                root.game.applyBulldoptimizer(true)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "⚡"
-                                    title: "AMD RADV Anti-Lag & Shader Boost"
-                                    subtitle: "Ativa compilador ACO, AMD Anti-Lag, cache de shaders de 50GB e XWayland sem esperas"
-                                    checked: root.game ? root.game.boRadvOptimizations : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.boRadvOptimizations = !root.game.boRadvOptimizations
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Subtab 2: Gamescope
-                            Column {
-                                width: parent.width
-                                visible: root.activeGamingTab === "gamescope"
-                                spacing: theme.spacingSm
-
-                                SectionHeader { title: "Visual & HDR" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "HDR Nativo (--hdr-enabled)"
-                                    subtitle: "Habilita suporte a High Dynamic Range no Gamescope"
-                                    checked: root.game ? root.game.gsHdr : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsHdr = !root.game.gsHdr
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Mapeamento Inverso SDR -> HDR (--hdr-itm-enabled)"
-                                    subtitle: "Auto-HDR para jogos clássicos em SDR"
-                                    checked: root.game ? root.game.gsHdrItm : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsHdrItm = !root.game.gsHdrItm
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Brilho SDR no HDR:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Repeater {
-                                        model: [200, 300, 400, 600, 1000]
-                                        delegate: SettingPill {
-                                            required property int modelData
-                                            width: 64
-                                            label: modelData + " nits"
-                                            active: root.game ? root.game.gsHdrSdrNits === modelData : false
-                                            onClicked: {
-                                                if (root.game) {
-                                                    root.game.gsHdrSdrNits = modelData
-                                                    root.game.saveConfig()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                SectionHeader { title: "Exibição & Sincronização" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Modo Tela Cheia Exclusiva (--fullscreen)"
-                                    subtitle: "Executa a sessão do jogo em tela cheia"
-                                    checked: root.game ? root.game.gsFullscreen : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsFullscreen = !root.game.gsFullscreen
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Janela Sem Bordas (-b)"
-                                    subtitle: "Executa em modo janela sem decorações"
-                                    checked: root.game ? root.game.gsBorderless : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsBorderless = !root.game.gsBorderless
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "⚡"
-                                    title: "Adaptive Sync / VRR (--adaptive-sync)"
-                                    subtitle: "Taxa de atualização variável para eliminar screen tearing"
-                                    checked: root.game ? root.game.gsAdaptiveSync : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsAdaptiveSync = !root.game.gsAdaptiveSync
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Taxa de Atualização:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Repeater {
-                                        model: [240, 165, 144, 120, 60]
-                                        delegate: SettingPill {
-                                            required property int modelData
-                                            width: 64
-                                            label: modelData + "Hz"
-                                            active: root.game ? root.game.gsRefreshRate === modelData : false
-                                            onClicked: {
-                                                if (root.game) root.game.setRefreshRate(modelData)
-                                            }
-                                        }
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Resolução Nativa:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "1440p"
-                                        active: root.game ? (root.game.gsWidth === 2560 && root.game.gsHeight === 1440) : false
-                                        onClicked: if (root.game) root.game.setResolution(2560, 1440)
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "1080p"
-                                        active: root.game ? (root.game.gsWidth === 1920 && root.game.gsHeight === 1080) : false
-                                        onClicked: if (root.game) root.game.setResolution(1920, 1080)
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "4K UHD"
-                                        active: root.game ? (root.game.gsWidth === 3840 && root.game.gsHeight === 2160) : false
-                                        onClicked: if (root.game) root.game.setResolution(3840, 2160)
-                                    }
-
-                                    SettingPill {
-                                        width: 84
-                                        label: "UW 3440p"
-                                        active: root.game ? (root.game.gsWidth === 3440 && root.game.gsHeight === 1440) : false
-                                        onClicked: if (root.game) root.game.setResolution(3440, 1440)
-                                    }
-                                }
-
-                                SectionHeader { title: "Upscaling & Filtros de Escala" }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰢮"
-                                    title: "AMD FidelityFX FSR (-F fsr)"
-                                    subtitle: "Reconstrução espacial de alta performance para ganhos de FPS"
-                                    checked: root.game ? root.game.gsFsr : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsFsr = !root.game.gsFsr
-                                            if (root.game.gsFsr) root.game.gsScalerFilter = "fsr"
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    visible: root.game ? root.game.gsFsr : false
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Nitidez FSR:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Repeater {
-                                        model: [
-                                            { label: "Suave (0)", val: 0 },
-                                            { label: "Padrão (2)", val: 2 },
-                                            { label: "Nítido (5)", val: 5 },
-                                            { label: "Máximo (10)", val: 10 }
-                                        ]
-                                        delegate: SettingPill {
-                                            required property var modelData
-                                            width: 86
-                                            label: modelData.label
-                                            active: root.game ? root.game.gsFsrSharpness === modelData.val : false
-                                            onClicked: {
-                                                if (root.game) {
-                                                    root.game.gsFsrSharpness = modelData.val
-                                                    root.game.saveConfig()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰹑"
-                                    title: "Integer Scaling (-S integer)"
-                                    subtitle: "Escalonamento por números inteiros (Pixel Art perfeito)"
-                                    checked: root.game ? root.game.gsIntegerScaling : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.gsIntegerScaling = !root.game.gsIntegerScaling
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Render Interno:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "Nativo"
-                                        active: root.game ? root.game.gsRenderWidth === 0 : true
-                                        onClicked: if (root.game) root.game.setRenderResolution(0, 0)
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "1080p"
-                                        active: root.game ? root.game.gsRenderWidth === 1920 : false
-                                        onClicked: if (root.game) root.game.setRenderResolution(1920, 1080)
-                                    }
-
-                                    SettingPill {
-                                        width: 72
-                                        label: "720p"
-                                        active: root.game ? root.game.gsRenderWidth === 1280 : false
-                                        onClicked: if (root.game) root.game.setRenderResolution(1280, 720)
-                                    }
-                                }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: "Limite de FPS:"
-                                        color: theme.textMedium
-                                        font.pixelSize: theme.fontSizeSm
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-
-                                    Repeater {
-                                        model: [
-                                            { label: "Sem Limite", val: 0 },
-                                            { label: "240", val: 240 },
-                                            { label: "165", val: 165 },
-                                            { label: "144", val: 144 },
-                                            { label: "120", val: 120 },
-                                            { label: "60", val: 60 }
-                                        ]
-                                        delegate: SettingPill {
-                                            required property var modelData
-                                            width: 74
-                                            label: modelData.label
-                                            active: root.game ? root.game.gsFpsLimit === modelData.val : false
-                                            onClicked: {
-                                                if (root.game) {
-                                                    root.game.gsFpsLimit = modelData.val
-                                                    root.game.saveConfig()
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-
-                            // Subtab 3: MangoHud
-                            Column {
-                                width: parent.width
-                                visible: root.activeGamingTab === "mangohud"
-                                spacing: theme.spacingSm
-
-                                SectionHeader { title: "Presets do HUD" }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    SettingPill {
-                                        width: 90
-                                        label: "Completo"
-                                        active: root.game ? (root.game.mhVram && root.game.mhGpuPower) : false
-                                        onClicked: if (root.game) root.game.applyMangohudPreset("completo")
-                                    }
-
-                                    SettingPill {
-                                        width: 90
-                                        label: "Essencial"
-                                        active: root.game ? (root.game.mhVram && !root.game.mhGpuPower) : false
-                                        onClicked: if (root.game) root.game.applyMangohudPreset("essencial")
-                                    }
-
-                                    SettingPill {
-                                        width: 90
-                                        label: "Mínimo"
-                                        active: root.game ? root.game.mhCompact : false
-                                        onClicked: if (root.game) root.game.applyMangohudPreset("minimo")
-                                    }
-                                }
-
-                                SectionHeader { title: "Métricas de Performance & GPU" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Exibir Taxa de Quadros (FPS)"
-                                    subtitle: "Contador de quadros por segundo em tempo real"
-                                    checked: root.game ? root.game.mhFps : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhFps = !root.game.mhFps
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰓅"
-                                    title: "Gráfico de Frametime"
-                                    subtitle: "Exibe o gráfico de consistência dos quadros (ms)"
-                                    checked: root.game ? root.game.mhFrametime : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhFrametime = !root.game.mhFrametime
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰢮"
-                                    title: "Uso e Temperatura da GPU"
-                                    subtitle: "Percentual de carga e temperatura (°C) do chip gráfico"
-                                    checked: root.game ? root.game.mhGpuStats : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhGpuStats = !root.game.mhGpuStats
-                                            root.game.mhGpuTemp = root.game.mhGpuStats
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰍛"
-                                    title: "Memória VRAM da GPU"
-                                    subtitle: "Exibe a alocação de memória de vídeo dedicada"
-                                    checked: root.game ? root.game.mhVram : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhVram = !root.game.mhVram
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "⚡"
-                                    title: "Potência da GPU (Watts) & Clock (MHz)"
-                                    subtitle: "Telemetria de energia e frequência do núcleo da GPU"
-                                    checked: root.game ? root.game.mhGpuPower : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhGpuPower = !root.game.mhGpuPower
-                                            root.game.mhGpuCoreClock = root.game.mhGpuPower
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SectionHeader { title: "Métricas de CPU & Sistema" }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Uso e Temperatura do Processador (CPU)"
-                                    subtitle: "Carga percentual e temperatura (°C) dos núcleos"
-                                    checked: root.game ? root.game.mhCpuStats : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhCpuStats = !root.game.mhCpuStats
-                                            root.game.mhCpuTemp = root.game.mhCpuStats
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: ""
-                                    title: "Memória RAM do Sistema"
-                                    subtitle: "Alocação e consumo de memória principal do PC"
-                                    checked: root.game ? root.game.mhRam : true
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhRam = !root.game.mhRam
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "⚡"
-                                    title: "Potência da CPU (Watts) & Frequência (MHz)"
-                                    subtitle: "Telemetria de consumo energético e clock da CPU"
-                                    checked: root.game ? root.game.mhCpuPower : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhCpuPower = !root.game.mhCpuPower
-                                            root.game.mhCpuMhz = root.game.mhCpuPower
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-
-                                SectionHeader { title: "Layout & Posição na Tela" }
-
-                                Row {
-                                    width: parent.width
-                                    spacing: theme.spacingSm
-
-                                    SettingPill {
-                                        width: 96
-                                        label: "Topo-Esquerda"
-                                        active: root.game ? root.game.mhPosition === "top-left" : true
-                                        onClicked: if (root.game) root.game.setPosition("top-left")
-                                    }
-
-                                    SettingPill {
-                                        width: 96
-                                        label: "Topo-Direita"
-                                        active: root.game ? root.game.mhPosition === "top-right" : false
-                                        onClicked: if (root.game) root.game.setPosition("top-right")
-                                    }
-
-                                    SettingPill {
-                                        width: 96
-                                        label: "Base-Esquerda"
-                                        active: root.game ? root.game.mhPosition === "bottom-left" : false
-                                        onClicked: if (root.game) root.game.setPosition("bottom-left")
-                                    }
-
-                                    SettingPill {
-                                        width: 96
-                                        label: "Base-Direita"
-                                        active: root.game ? root.game.mhPosition === "bottom-right" : false
-                                        onClicked: if (root.game) root.game.setPosition("bottom-right")
-                                    }
-                                }
-
-                                SettingToggleRow {
-                                    iconGlyph: "󰒲"
-                                    title: "Modo Linha Compacta (hud_compact)"
-                                    subtitle: "Exibe todas as métricas em uma única linha no topo"
-                                    checked: root.game ? root.game.mhCompact : false
-                                    onToggled: {
-                                        if (root.game) {
-                                            root.game.mhCompact = !root.game.mhCompact
-                                            root.game.saveConfig()
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                    GamingSettingsBarView {
+                        anchors.fill: parent
+                        gaming: root.game
+                        goBack: () => root.activeCategory = "home"
                     }
                 }
             }

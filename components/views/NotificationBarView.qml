@@ -33,7 +33,7 @@ Item {
             renderType: Text.NativeRendering
             text: ""
             color: theme.indicatorInactive
-            font.pixelSize: theme.iconSizeMd
+            font.pixelSize: 18
             anchors.verticalCenter: parent.verticalCenter
         }
 
@@ -41,7 +41,7 @@ Item {
             renderType: Text.NativeRendering
             text: "Nenhuma notificação"
             color: theme.textMuted
-            font.pixelSize: theme.fontSizeSm
+            font.pixelSize: 13
             font.weight: Font.Medium
             anchors.verticalCenter: parent.verticalCenter
         }
@@ -61,10 +61,11 @@ Item {
             id: cIconRect
             anchors {
                 left: parent.left
+                leftMargin: 4
                 verticalCenter: parent.verticalCenter
             }
-            width: 34
-            height: 34
+            width: 42
+            height: 42
             radius: theme.radiusSmall
             color: theme.itemFill
             border.width: 1
@@ -75,15 +76,15 @@ Item {
                 anchors.centerIn: parent
                 text: ""
                 color: theme.accent
-                font.pixelSize: theme.iconSizeSm
+                font.pixelSize: 20
                 visible: !cIcon.visible || cIcon.status !== Image.Ready
             }
 
             IconImage {
                 id: cIcon
                 anchors.centerIn: parent
-                width: 22
-                height: 22
+                width: 26
+                height: 26
                 source: (root.notifMod && root.latestNotif) ? root.notifMod.resolveIconSource(root.latestNotif) : ""
                 visible: source !== "" && status === Image.Ready
             }
@@ -94,10 +95,11 @@ Item {
             id: cCloseBtn
             anchors {
                 right: parent.right
+                rightMargin: 4
                 verticalCenter: parent.verticalCenter
             }
-            width: 26
-            height: 26
+            width: 28
+            height: 28
             radius: theme.radiusSmall
             color: cCloseMouse.containsMouse ? theme.hoverFill : "transparent"
             border.width: 1
@@ -120,7 +122,7 @@ Item {
                 anchors.centerIn: parent
                 text: ""
                 color: cCloseMouse.containsMouse ? theme.textStrong : theme.textMuted
-                font.pixelSize: theme.iconSizeXs
+                font.pixelSize: 14
             }
 
             MouseArea {
@@ -140,9 +142,9 @@ Item {
         Column {
             anchors {
                 left: cIconRect.right
-                leftMargin: theme.spacingSm
+                leftMargin: 10
                 right: cCloseBtn.left
-                rightMargin: theme.spacingSm
+                rightMargin: 10
                 verticalCenter: parent.verticalCenter
             }
             spacing: 2
@@ -156,7 +158,7 @@ Item {
                     renderType: Text.NativeRendering
                     text: root.latestNotif ? (root.latestNotif.appName || "Sistema") : ""
                     color: theme.textMuted
-                    font.pixelSize: theme.fontSizeXs
+                    font.pixelSize: 12
                     font.weight: Font.DemiBold
                     elide: Text.ElideRight
                     maximumLineCount: 1
@@ -166,7 +168,7 @@ Item {
                     renderType: Text.NativeRendering
                     text: "•"
                     color: theme.textSubtle
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                     anchors.verticalCenter: parent.verticalCenter
                 }
 
@@ -174,7 +176,7 @@ Item {
                     renderType: Text.NativeRendering
                     text: "agora"
                     color: theme.textSubtle
-                    font.pixelSize: 10
+                    font.pixelSize: 11
                     anchors.verticalCenter: parent.verticalCenter
                 }
             }
@@ -185,7 +187,7 @@ Item {
                 width: parent.width
                 text: root.latestNotif ? root.latestNotif.summary : ""
                 color: theme.textStrong
-                font.pixelSize: theme.fontSizeSm
+                font.pixelSize: 14
                 font.weight: Font.Bold
                 elide: Text.ElideRight
                 maximumLineCount: 1
@@ -198,7 +200,7 @@ Item {
                 width: parent.width
                 text: root.latestNotif ? root.latestNotif.body : ""
                 color: theme.textMedium
-                font.pixelSize: theme.fontSizeXs
+                font.pixelSize: 12
                 elide: Text.ElideRight
                 maximumLineCount: 1
                 visible: text !== ""
@@ -289,7 +291,7 @@ Item {
             delegate: Rectangle {
                 id: itemCard
                 width: notifListView.width
-                height: 52
+                height: 60
                 radius: theme.radiusSmall
                 color: theme.itemFill
                 border.width: 1
@@ -303,9 +305,9 @@ Item {
                         leftMargin: 8
                         verticalCenter: parent.verticalCenter
                     }
-                    width: 28
-                    height: 28
-                    radius: 4
+                    width: 32
+                    height: 32
+                    radius: 6
                     color: theme.glassFillDark
                     border.width: 1
                     border.color: theme.glassBorderSubtle
@@ -315,15 +317,15 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: theme.accent
-                        font.pixelSize: theme.iconSizeXs
+                        font.pixelSize: 15
                         visible: !dIcon.visible || dIcon.status !== Image.Ready
                     }
 
                     IconImage {
                         id: dIcon
                         anchors.centerIn: parent
-                        width: 18
-                        height: 18
+                        width: 20
+                        height: 20
                         source: (root.notifMod && modelData) ? root.notifMod.resolveIconSource(modelData) : ""
                         visible: source !== "" && status === Image.Ready
                     }
@@ -337,8 +339,8 @@ Item {
                         rightMargin: 6
                         verticalCenter: parent.verticalCenter
                     }
-                    width: 22
-                    height: 22
+                    width: 24
+                    height: 24
                     radius: theme.radiusSmall
                     color: dCloseMouse.containsMouse ? theme.hoverFill : "transparent"
                     border.width: 1
@@ -361,7 +363,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: dCloseMouse.containsMouse ? theme.textStrong : theme.textMuted
-                        font.pixelSize: 11
+                        font.pixelSize: 12
                     }
 
                     MouseArea {
@@ -394,7 +396,7 @@ Item {
                         width: parent.width
                         text: modelData ? (modelData.appName || "Sistema") : ""
                         color: theme.textMuted
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                         font.weight: Font.DemiBold
                         elide: Text.ElideRight
                         maximumLineCount: 1
@@ -406,7 +408,7 @@ Item {
                         width: parent.width
                         text: modelData ? modelData.summary : ""
                         color: theme.textStrong
-                        font.pixelSize: theme.fontSizeXs
+                        font.pixelSize: 14
                         font.weight: Font.Bold
                         elide: Text.ElideRight
                         maximumLineCount: 1
@@ -419,7 +421,7 @@ Item {
                         width: parent.width
                         text: modelData ? modelData.body : ""
                         color: theme.textMedium
-                        font.pixelSize: 10
+                        font.pixelSize: 12
                         elide: Text.ElideRight
                         maximumLineCount: 1
                         visible: text !== ""

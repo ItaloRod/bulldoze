@@ -107,6 +107,7 @@
   - Campo de busca instantânea com filtro em tempo real por título, ID ou tags.
 - **Painel de Customização & Aspect Ratio**:
   - **Proporção da Tela**: Seletor de enquadramento: `Preencher (Fill - 16:9)`, `Adaptar (Fit - Exibir inteiro sem cortes)` e `Esticar (Stretch)`.
+  - **Porta de Vídeo / Monitor**: Dropdown dinâmico com auto-detecção via Hyprland IPC e DRM, permitindo selecionar em qual saída de vídeo (`DP-1`, `HDMI-A-1`, etc.) ou no modo automático o wallpaper deve ser renderizado, com fallback inteligente caso portas sejam trocadas fisicamente.
   - **Remoção Automática de Patrocinadores/Doações**: Varredura profunda do `scene.pkg` para identificar objetos de QR code/doações (`sponsor_tip_x`, `微信赞助码`, `objeto 33`, etc.) e descarte direto na GPU via `--render-debug skip-object=<id>`.
   - **Propriedades Dinâmicas de Cena**: Mapeia automaticamente variáveis de shaders (`透视开关` / Raio-X, `透视大小` / Raio do Mouse, cores, switches e sliders).
   - **Desempenho**: Seletores de taxa de quadros (60, 120, 240 FPS), toggle de interatividade de mouse/parallax e pausa automática em janelas visíveis (áudio estritamente silenciado via `--silent`).

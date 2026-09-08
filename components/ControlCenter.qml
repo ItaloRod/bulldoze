@@ -2066,6 +2066,17 @@ PanelWindow {
                                         gaming.saveConfig()
                                     }
                                 }
+
+                                SettingToggleRow {
+                                    iconGlyph: "󰍽"
+                                    title: "Travar Cursor na Janela"
+                                    subtitle: "Corrige cliques desalinhados em jogos Unity (--force-grab-cursor)"
+                                    checked: gaming.gsForceGrabCursor
+                                    onToggled: {
+                                        gaming.gsForceGrabCursor = !gaming.gsForceGrabCursor
+                                        gaming.saveConfig()
+                                    }
+                                }
                             }
                         }
 

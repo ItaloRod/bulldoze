@@ -20,6 +20,8 @@ QtObject {
     property bool mouseEnabled: true
     property bool hideSponsor: true
     property bool pauseOnWindow: true
+    property string screen: "DP-1"
+    property var availableScreens: []
     property bool optimizerActive: false
     property int snapshotVersion: 0
 
@@ -101,6 +103,7 @@ QtObject {
         selectedId = id
 
         const payload = {
+            "screen": root.screen,
             "fps": root.fps,
             "scaling": root.scaling,
             "clamp": root.clamp,
@@ -127,6 +130,17 @@ QtObject {
                 id,
                 JSON.stringify(payload)
             ])
+        }
+    }
+
+    function setScreen(newScreen) {
+        screen = newScreen
+        saveAndApplyActive()
+    }
+
+    function loadMonitors() {
+        if (!monitorsProc.running) {
+            monitorsProc.running = true
         }
     }
 
@@ -229,9 +243,30 @@ QtObject {
                     if (cfg.mouse_enabled !== undefined) root.mouseEnabled = !!cfg.mouse_enabled
                     if (cfg.hide_sponsor !== undefined) root.hideSponsor = !!cfg.hide_sponsor
                     if (cfg.pause_on_window !== undefined) root.pauseOnWindow = !!cfg.pause_on_window
+                    if (cfg.screen) root.screen = cfg.screen
+                    if (cfg.available_monitors && Array.isArray(cfg.available_monitors)) {
+                        root.availableScreens = cfg.available_monitors
+                    }
                     if (cfg.per_wallpaper_settings) root.perWallpaperSettings = cfg.per_wallpaper_settings
                 } catch(e) {
                     console.warn("Error parsing wallpaper config:", e)
+                }
+            }
+        }
+    }
+
+    property var monitorsProc: Process {
+        id: monitorsProc
+        command: ["python3", root.scriptPath, "monitors"]
+        stdout: SplitParser {
+            onRead: data => {
+                try {
+                    const parsed = JSON.parse(data.trim())
+                    if (Array.isArray(parsed)) {
+                        root.availableScreens = parsed
+                    }
+                } catch(e) {
+                    console.warn("Error parsing monitors:", e)
                 }
             }
         }
@@ -251,6 +286,7 @@ QtObject {
     Component.onCompleted: {
         loadConfig()
         loadWallpapers()
+        loadMonitors()
         if (optimizerActive) {
             stopEngine()
         }

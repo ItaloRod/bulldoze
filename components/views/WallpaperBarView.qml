@@ -16,13 +16,16 @@ Item {
     }
 
     readonly property var wp: wallpaperEngine
+    property bool screenDropdownOpen: false
 
     onVisibleChanged: {
         if (visible) {
+            screenDropdownOpen = false
             searchField.text = ""
             if (root.wp) {
                 root.wp.loadWallpapers()
                 root.wp.loadConfig()
+                root.wp.loadMonitors()
             }
             searchField.forceActiveFocus()
         }
@@ -642,6 +645,328 @@ Item {
                                     text: root.wp && root.wp.scaling === "fit" 
                                         ? "Modo Adaptar: exibe o wallpaper 100% sem cortes, com bordas neutras."
                                         : "Modo Preencher: ajusta suavemente ao monitor 16:9 sem distorção."
+                                    color: theme.textMuted
+                                    font.pixelSize: theme.fontSizeXs
+                                    wrapMode: Text.WordWrap
+                                }
+                            }
+
+                            // Section: Video Port / Monitor Selector
+                            Column {
+                                width: parent.width
+                                spacing: 6
+
+                                SectionHeader {
+                                    title: "Porta de Vídeo / Monitor"
+                                }
+
+                                // Dropdown Header Box
+                                Rectangle {
+                                    id: screenSelectorBox
+                                    width: parent.width
+                                    height: 40
+                                    radius: theme.radiusSmall
+                                    color: screenBoxMouse.containsMouse || root.screenDropdownOpen ? theme.hoverFill : theme.itemFill
+                                    border.width: 1
+                                    border.color: root.screenDropdownOpen ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+
+                                    Row {
+                                        anchors {
+                                            left: parent.left
+                                            leftMargin: theme.spacingSm
+                                            right: arrowText.left
+                                            rightMargin: theme.spacingSm
+                                            verticalCenter: parent.verticalCenter
+                                        }
+                                        spacing: theme.spacingSm
+
+                                        Text {
+                                            renderType: Text.NativeRendering
+                                            text: ""
+                                            color: theme.textStrong
+                                            font.pixelSize: theme.fontSizeMd
+                                            anchors.verticalCenter: parent.verticalCenter
+                                        }
+
+                                        Column {
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            spacing: 1
+
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                text: {
+                                                    if (!root.wp || !root.wp.screen) return "Automático (Monitor Ativo)"
+                                                    const cur = root.wp.screen
+                                                    if (root.wp.availableScreens) {
+                                                        for (let i = 0; i < root.wp.availableScreens.length; i++) {
+                                                            const s = root.wp.availableScreens[i]
+                                                            if (s.name === cur) {
+                                                                return s.name + (s.model ? (" (" + s.model + ")") : "")
+                                                            }
+                                                        }
+                                                    }
+                                                    return cur
+                                                }
+                                                color: theme.textStrong
+                                                font.pixelSize: theme.fontSizeSm
+                                                font.weight: Font.Medium
+                                                elide: Text.ElideRight
+                                            }
+
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                text: {
+                                                    if (!root.wp || !root.wp.screen) return "Segue o monitor focado no compositor"
+                                                    const cur = root.wp.screen
+                                                    if (root.wp.availableScreens) {
+                                                        for (let i = 0; i < root.wp.availableScreens.length; i++) {
+                                                            const s = root.wp.availableScreens[i]
+                                                            if (s.name === cur) {
+                                                                if (s.width && s.height) {
+                                                                    return s.width + "x" + s.height + (s.refreshRate ? (" @" + s.refreshRate + "Hz") : "") + (s.active ? " • Conectado" : " • Desconectado")
+                                                                }
+                                                                return s.active ? "Porta Ativa" : "Porta Desconectada"
+                                                            }
+                                                        }
+                                                    }
+                                                    return "Porta de imagem selecionada"
+                                                }
+                                                color: theme.textMuted
+                                                font.pixelSize: theme.fontSizeXs
+                                                elide: Text.ElideRight
+                                            }
+                                        }
+                                    }
+
+                                    Text {
+                                        id: arrowText
+                                        renderType: Text.NativeRendering
+                                        anchors {
+                                            right: parent.right
+                                            rightMargin: theme.spacingSm
+                                            verticalCenter: parent.verticalCenter
+                                        }
+                                        text: root.screenDropdownOpen ? "▴" : "▾"
+                                        color: theme.textMuted
+                                        font.pixelSize: 11
+                                    }
+
+                                    MouseArea {
+                                        id: screenBoxMouse
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: root.screenDropdownOpen = !root.screenDropdownOpen
+                                    }
+                                }
+
+                                // Dropdown Options List
+                                Column {
+                                    id: screenOptionsContainer
+                                    width: parent.width
+                                    spacing: 4
+                                    visible: root.screenDropdownOpen && opacity > 0.01
+                                    opacity: root.screenDropdownOpen ? 1.0 : 0.0
+
+                                    Behavior on opacity {
+                                        NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
+                                    }
+
+                                    // Option: Automático
+                                    Rectangle {
+                                        width: screenOptionsContainer.width
+                                        height: 34
+                                        radius: theme.radiusSmall
+                                        color: autoMouse.containsMouse ? theme.hoverFill : ((!root.wp || !root.wp.screen) ? theme.itemFill : "transparent")
+                                        border.width: 1
+                                        border.color: (!root.wp || !root.wp.screen) ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                        Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+
+                                        Row {
+                                            anchors {
+                                                left: parent.left
+                                                leftMargin: theme.spacingSm
+                                                right: autoCheck.left
+                                                rightMargin: theme.spacingSm
+                                                verticalCenter: parent.verticalCenter
+                                            }
+                                            spacing: theme.spacingSm
+
+                                            Text {
+                                                renderType: Text.NativeRendering
+                                                text: ""
+                                                color: theme.textStrong
+                                                font.pixelSize: theme.fontSizeSm
+                                                anchors.verticalCenter: parent.verticalCenter
+                                            }
+
+                                            Column {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                spacing: 0
+
+                                                Text {
+                                                    renderType: Text.NativeRendering
+                                                    text: "Automático (Monitor Ativo)"
+                                                    color: theme.textStrong
+                                                    font.pixelSize: theme.fontSizeXs
+                                                    font.weight: (!root.wp || !root.wp.screen) ? Font.DemiBold : Font.Normal
+                                                }
+
+                                                Text {
+                                                    renderType: Text.NativeRendering
+                                                    text: "Detecta e renderiza na porta principal ativa"
+                                                    color: theme.textMuted
+                                                    font.pixelSize: 10
+                                                }
+                                            }
+                                        }
+
+                                        Text {
+                                            id: autoCheck
+                                            renderType: Text.NativeRendering
+                                            anchors {
+                                                right: parent.right
+                                                rightMargin: theme.spacingSm
+                                                verticalCenter: parent.verticalCenter
+                                            }
+                                            visible: (!root.wp || !root.wp.screen)
+                                            text: ""
+                                            color: theme.textStrong
+                                            font.pixelSize: theme.fontSizeXs
+                                        }
+
+                                        MouseArea {
+                                            id: autoMouse
+                                            anchors.fill: parent
+                                            hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: {
+                                                if (root.wp) {
+                                                    root.wp.setScreen("")
+                                                }
+                                                root.screenDropdownOpen = false
+                                            }
+                                        }
+                                    }
+
+                                    // Options: Detected Ports
+                                    Repeater {
+                                        model: (root.wp && root.wp.availableScreens && root.wp.availableScreens.length > 0)
+                                            ? root.wp.availableScreens
+                                            : []
+
+                                        delegate: Rectangle {
+                                            id: optItem
+                                            required property var modelData
+                                            required property int index
+
+                                            readonly property string portName: modelData.name || ""
+                                            readonly property string portModel: modelData.model || ""
+                                            readonly property bool isSelected: (root.wp && root.wp.screen === portName)
+                                            readonly property bool isConnected: modelData.active !== false
+
+                                            width: screenOptionsContainer.width
+                                            height: 36
+                                            radius: theme.radiusSmall
+                                            color: optMouse.containsMouse ? theme.hoverFill : (isSelected ? theme.itemFill : "transparent")
+                                            border.width: 1
+                                            border.color: isSelected ? theme.glassBorderStrong : theme.glassBorderSubtle
+
+                                            Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+
+                                            Row {
+                                                anchors {
+                                                    left: parent.left
+                                                    leftMargin: theme.spacingSm
+                                                    right: optCheck.left
+                                                    rightMargin: theme.spacingSm
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                spacing: theme.spacingSm
+
+                                                Text {
+                                                    renderType: Text.NativeRendering
+                                                    text: ""
+                                                    color: isConnected ? theme.textStrong : theme.textMuted
+                                                    font.pixelSize: theme.fontSizeSm
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                }
+
+                                                Column {
+                                                    anchors.verticalCenter: parent.verticalCenter
+                                                    spacing: 1
+
+                                                    Row {
+                                                        spacing: 6
+                                                        Text {
+                                                            renderType: Text.NativeRendering
+                                                            text: optItem.portName
+                                                            color: theme.textStrong
+                                                            font.pixelSize: theme.fontSizeXs
+                                                            font.weight: optItem.isSelected ? Font.DemiBold : Font.Normal
+                                                        }
+
+                                                        Text {
+                                                            renderType: Text.NativeRendering
+                                                            text: optItem.portModel ? ("(" + optItem.portModel + ")") : ""
+                                                            color: theme.textMuted
+                                                            font.pixelSize: theme.fontSizeXs
+                                                            visible: optItem.portModel !== ""
+                                                        }
+                                                    }
+
+                                                    Text {
+                                                        renderType: Text.NativeRendering
+                                                        text: {
+                                                            if (optItem.modelData.width && optItem.modelData.height) {
+                                                                return optItem.modelData.width + "x" + optItem.modelData.height + (optItem.modelData.refreshRate ? (" @" + optItem.modelData.refreshRate + "Hz") : "") + (optItem.isConnected ? " • Conectado" : " • Desconectado")
+                                                            }
+                                                            return optItem.isConnected ? "Porta Conectada" : "Porta Desconectada"
+                                                        }
+                                                        color: optItem.isConnected ? theme.textMuted : theme.indicatorInactive
+                                                        font.pixelSize: 10
+                                                    }
+                                                }
+                                            }
+
+                                            Text {
+                                                id: optCheck
+                                                renderType: Text.NativeRendering
+                                                anchors {
+                                                    right: parent.right
+                                                    rightMargin: theme.spacingSm
+                                                    verticalCenter: parent.verticalCenter
+                                                }
+                                                visible: optItem.isSelected
+                                                text: ""
+                                                color: theme.textStrong
+                                                font.pixelSize: theme.fontSizeXs
+                                            }
+
+                                            MouseArea {
+                                                id: optMouse
+                                                anchors.fill: parent
+                                                hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: {
+                                                    if (root.wp) {
+                                                        root.wp.setScreen(optItem.portName)
+                                                    }
+                                                    root.screenDropdownOpen = false
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Text {
+                                    renderType: Text.NativeRendering
+                                    width: parent.width
+                                    text: "Selecione a saída de vídeo (ex: DP-1, HDMI-A-1) para exibir o papel de parede."
                                     color: theme.textMuted
                                     font.pixelSize: theme.fontSizeXs
                                     wrapMode: Text.WordWrap

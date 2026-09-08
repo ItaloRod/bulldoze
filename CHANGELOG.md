@@ -4,6 +4,32 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.5.1] - 2026-09
+
+### 🎮 Gamescope: Presets de Jogos & Trava de Cursor na Janela
+- **Trava de Cursor no Gamescope (`--force-grab-cursor`) (`modules/Gaming.qml`, `scripts/bulldoze-game-run`, `components/ControlCenter.qml`)**:
+  - Implementada a opção `gsForceGrabCursor` ("Travar Cursor na Janela") para solucionar perda de foco e cliques desalinhados em jogos da engine Unity (ex: *Cities: Skylines II*).
+  - Injeção automática da flag `--force-grab-cursor` no executável `bulldoze-game-run` e toggle direto no Control Center e nas configurações de jogos.
+- **Gerenciador de Presets do Gamescope (`modules/Gaming.qml`, `GamingSettingsBarView.qml`)**:
+  - Sistema reativo de perfis de performance e resolução por jogo (`gamescopePresets`), persistido em `~/.config/bulldoze/gaming.json`.
+  - Perfis padrão integrados de fábrica:
+    - *Padrão do Sistema*: 1440p nativo / 1080p render / 240Hz com FSR.
+    - *Cities II - Mouse Corrigido & Nativo*: 1080p nativo / 144Hz / Trava de cursor ativa / FSR desligado.
+    - *Cities II - Performance 720p FSR*: 1080p nativo / 720p render / 144Hz / Trava de cursor ativa / FSR nível 5.
+  - Editor visual completo nos Ajustes de Jogos para criar, alternar, editar e excluir presets customizados de resolução, taxa de quadros e FSR.
+
+### 🖥️ Seletor Dinâmico de Saída de Vídeo / Porta de Imagem no Gerenciador de Wallpapers
+- **Detecção Inteligente e Seletor Dropdown no Painel de Wallpapers (`WallpaperBarView.qml`, `WallpaperEngine.qml`, `bulldoze-wallpaper.py`, `agents.md`)**:
+  - Implementado dropdown estilizado em vidro translúcido (`glassFillDark` / `glassBorderStrong`) para seleção explícita da saída de vídeo (DisplayPort, HDMI, etc.) onde o wallpaper deve ser renderizado.
+  - Varredura em tempo real via Hyprland IPC (`hyprctl monitors -j`) e detecção de conectores físicos DRM (`/sys/class/drm/card*-*`), exibindo resolução, taxa de atualização e status de conectividade (Conectado / Desconectado).
+  - Suporte a modo Automático (segue o monitor ativo/focado) e fallback gracioso caso o cabo de vídeo seja trocado (ex: HDMI para DisplayPort `DP-1`) sem que o wallpaper deixe de renderizar.
+  - Persistência reativa da porta selecionada em `~/.config/bulldoze/wallpaper.json` e aplicação instantânea no daemon do `linux-wallpaperengine`.
+
+### 🎨 Refinamentos na Visualização de Notificações e Geometria do Shell
+- **Ajustes de Proporção e Escala (`NotificationBarView.qml`, `shell.qml`)**:
+  - Largura da central de notificações ampliada para 400px e altura por item ajustada para 66px, aprimorando legibilidade e área de clique.
+  - Renderização nativa de fontes e ícones contextuais aprimorados no card individual de notificação.
+
 ## [3.5.0] - 2026-09
 
 ### 🔤 Correção de Nitidez e Renderização Nativa de Fontes e Ícones

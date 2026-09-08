@@ -573,13 +573,13 @@ ShellRoot {
                 readonly property real audioRight: root.borderThickness + animAudioWidth
 
                 // Notification Panel geometry (bottom-right corner)
-                readonly property int notifWidth: 380
-                readonly property int notifCollapsedHeight: 64
+                readonly property int notifWidth: 400
+                readonly property int notifCollapsedHeight: 66
                 readonly property int notifEmptyHeight: 56
                 property int notifExpandedHeight: {
                     if (globalNotifications.count === 0) return notifEmptyHeight
                     let visibleCount = Math.min(globalNotifications.count, 4)
-                    return (visibleCount * 58) + 38
+                    return (visibleCount * 66) + 38
                 }
 
                 property real targetNotifHeight: {
