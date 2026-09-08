@@ -1,0 +1,98 @@
+# Bulldoze 3.0 — GRUB Theme (QHD 2560x1440)
+# Clean design.md Glassmorphism / Frosted Card / Static RobotoMono Nerd Font
+# Strictly monochrome text (pure white/gray), no borders, no dark slab
+
+title-text: ""
+desktop-image: "background.png"
+desktop-color: "#0E0E10"
+
+# -----------------------------------------------------------------------------
+# Note: The Frosted Glass Card (560x620, x=60, y=520, radius=20px)
+# with design.md native blur and zero borders is baked directly
+# into background.png.
+# -----------------------------------------------------------------------------
+
+# -----------------------------------------------------------------------------
+# 1. Header & Branding
+# -----------------------------------------------------------------------------
++ label {
+    top = 554
+    left = 96
+    width = 490
+    align = "left"
+    color = "#FFFFFF"
+    font = "Roboto Mono Bold 22"
+    text = "BULLDOZE 3.0"
+}
+
++ label {
+    top = 588
+    left = 96
+    width = 490
+    align = "left"
+    color = "#DDDDDD"
+    font = "Roboto Mono Regular 13"
+    text = "SELETOR DE INICIALIZAÇÃO"
+}
+
+# -----------------------------------------------------------------------------
+# 2. Boot Menu (OS List with Icons)
+# -----------------------------------------------------------------------------
++ boot_menu {
+    left = 92
+    top = 624
+    width = 496
+    height = 368
+    item_font = "Roboto Mono Regular 16"
+    selected_item_font = "Roboto Mono Bold 16"
+    item_color = "#EAEAEA"
+    selected_item_color = "#FFFFFF"
+    selected_item_pixmap_style = "select_*.png"
+    item_height = 32
+    item_padding = 12
+    item_spacing = 20
+    icon_width = 24
+    icon_height = 24
+    icon_spacing = 14
+    scrollbar = false
+}
+
+# -----------------------------------------------------------------------------
+# 3. Timeout Counter
+# -----------------------------------------------------------------------------
++ label {
+    id = "__timeout__"
+    top = 1016
+    left = 96
+    width = 490
+    align = "left"
+    color = "#CCCCCC"
+    font = "Roboto Mono Regular 13"
+    text = "Iniciando automaticamente em %d segundos..."
+}
+
+# -----------------------------------------------------------------------------
+# 4. Keyboard Navigation Legend
+# -----------------------------------------------------------------------------
++ label {
+    top = 1044
+    left = 96
+    width = 490
+    align = "left"
+    color = "#BBBBBB"
+    font = "Roboto Mono Regular 13"
+    text = "↑ ↓  selecionar     Enter  iniciar     e  editar opções"
+}
+
+# -----------------------------------------------------------------------------
+# 5. Subtle Environment Badge (Bottom Right)
+# -----------------------------------------------------------------------------
++ label {
+    top = 1390
+    left = 2240
+    width = 280
+    align = "right"
+    color = "#888888"
+    font = "Roboto Mono Regular 13"
+    text = "UEFI • GRUB 2.14"
+}

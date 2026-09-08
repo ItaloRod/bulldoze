@@ -6,6 +6,22 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.1] - 2026-09
 
+### 🥾 Bulldoze GRUB 3.0: Tema QHD Estilo Spotlight, Baker de Wallpaper e Pré-visualização
+- **Tema GRUB 3.0 Nativo QHD (2560×1440) (`grub/`, `install-grub-theme.sh`, `preview-grub.sh`)**:
+  - Tema completo para o bootloader GRUB em resolução nativa 2560×1440 com estética de vidro fosco (*frosted glassmorphism*), alinhado à identidade visual do Bulldoze 3.0.
+  - Card lateral translúcido sem bordas duras, tipografia Roboto Mono monocromática e ícones de sistemas operacionais.
+  - Script de instalação (`install-grub-theme.sh`) com sincronização dinâmica em `/boot/grub/themes/bulldoze` via helper com permissão sem senha (`sudoers.d/bulldoze-grub`).
+  - Script de pré-visualização em máquina virtual QEMU (`preview-grub.sh`) com notificações e exibição contínua do cursor liberável via `Ctrl+Alt+G`.
+- **Destaque do Item Selecionado Estilo Spotlight (`theme.txt`, `select_*.png`, `bulldoze-grub-wallpaper.py`)**:
+  - Implementado sistema 9-slice pixmap (`select_*.png`) para o item ativo no menu de boot, espelhando a experiência visual do Spotlight (`BottomLauncher.qml`).
+  - Pílula translúcida com preenchimento em vidro fosco esbranquiçado iluminado e borda sutil de 1px (`glassBorderStrong`).
+  - Calibração de geometria (`item_height = 32`, `item_spacing = 20`, cantos de 8px) eliminando sobreposições e garantindo espaçamento limpo entre entradas de boot.
+- **Baker Inteligente de Wallpaper do GRUB (`bulldoze-grub-wallpaper.py`, `bulldoze-wallpaper.py`, `GrubSettingsBarView.qml`, `LauncherBarView.qml`)**:
+  - Renderização e composição de card com desfoque Gaussiano nativo diretamente no wallpaper do GRUB (`background.png`).
+  - Captura nativa em 2560×1440 de cenas do Wallpaper Engine via `linux-wallpaperengine` (`snapshot-hires`), eliminando artefatos de zoom pixelado gerados por miniaturas `preview.jpg`.
+  - Recorte proporcional com *aspect-fill* centralizado para evitar qualquer distorção de proporção em imagens fora do padrão 16:9.
+  - Nova aba "GRUB Bootloader" no Launcher Central (`LauncherBarView.qml`) e painel dedicado (`GrubSettingsBarView.qml`) para gerenciar e pré-visualizar o tema em tempo real.
+
 ### 🎮 Gamescope: Presets de Jogos & Trava de Cursor na Janela
 - **Trava de Cursor no Gamescope (`--force-grab-cursor`) (`modules/Gaming.qml`, `scripts/bulldoze-game-run`, `components/ControlCenter.qml`)**:
   - Implementada a opção `gsForceGrabCursor` ("Travar Cursor na Janela") para solucionar perda de foco e cliques desalinhados em jogos da engine Unity (ex: *Cities: Skylines II*).

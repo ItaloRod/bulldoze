@@ -21,7 +21,7 @@ Item {
     focus: true
     Keys.onEscapePressed: if (root.goBack) root.goBack()
 
-    // Sidebar Category: "home" | "wifi" | "bluetooth" | "sound" | "wallpaper" | "gaming"
+    // Sidebar Category: "home" | "wifi" | "bluetooth" | "sound" | "wallpaper" | "gaming" | "grub"
     property string activeCategory: "home"
     property string activeGamingTab: "bulldoptimizer"
 
@@ -127,6 +127,8 @@ Item {
             root.wp.loadConfig()
         } else if (activeCategory === "gaming" && root.game) {
             root.game.loadConfig()
+        } else if (activeCategory === "grub" && root.wp) {
+            root.wp.loadWallpapers()
         }
     }
 
@@ -489,6 +491,38 @@ Item {
                     hoverEnabled: true
                     cursorShape: Qt.PointingHandCursor
                     onClicked: root.activeCategory = "gaming"
+                }
+            }
+
+            // 6. GRUB Bootloader
+            Rectangle {
+                width: 42
+                height: 42
+                radius: theme.radiusSmall
+                color: root.activeCategory === "grub" ? theme.activeFill : (catGrubMouse.containsMouse ? theme.hoverFill : "transparent")
+                border.width: 1
+                border.color: root.activeCategory === "grub" ? theme.glassBorderStrong : (catGrubMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                scale: catGrubMouse.pressed ? 0.90 : (catGrubMouse.containsMouse ? 1.10 : 1.0)
+                transformOrigin: Item.Center
+
+                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: root.activeCategory === "grub" ? theme.textStrong : (catGrubMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                    font.pixelSize: theme.fontSizeXl
+                    renderType: Text.NativeRendering
+                }
+
+                MouseArea {
+                    id: catGrubMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.activeCategory = "grub"
                 }
             }
         }
@@ -3566,6 +3600,20 @@ Item {
                     GamingSettingsBarView {
                         anchors.fill: parent
                         gaming: root.game
+                        goBack: () => root.activeCategory = "home"
+                    }
+                }
+
+                // =============================================================
+                // TAB CONTENT 5: GRUB BOOTLOADER SETTINGS & WALLPAPER
+                // =============================================================
+                Item {
+                    anchors.fill: parent
+                    visible: root.activeCategory === "grub"
+
+                    GrubSettingsBarView {
+                        anchors.fill: parent
+                        wallpaperEngine: root.wp
                         goBack: () => root.activeCategory = "home"
                     }
                 }

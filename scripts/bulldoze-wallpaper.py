@@ -14,7 +14,7 @@ import json
 import glob
 import struct
 import subprocess
-from PIL import Image
+from PIL import Image, ImageFilter, ImageDraw
 
 WORKSHOP_DIR = os.path.expanduser("~/.local/share/Steam/steamapps/workshop/content/431960")
 ASSETS_DIR = os.path.expanduser("~/.local/share/Steam/steamapps/common/wallpaper_engine/assets")
@@ -329,6 +329,8 @@ def stop_running_wallpaper():
     except Exception:
         pass
 
+# Note: GRUB wallpaper is decoupled from desktop wallpaper and managed in scripts/bulldoze-grub-wallpaper.py
+
 def apply_wallpaper(wp_id=None, overrides=None):
     """Applies wallpaper with settings"""
     cfg = get_current_config()
@@ -489,6 +491,8 @@ def apply_wallpaper(wp_id=None, overrides=None):
             except Exception:
                 pass
 
+            # GRUB wallpaper is decoupled and managed independently in Launcher
+
             try:
                 subprocess.run(
                     ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
@@ -585,6 +589,8 @@ def generate_clean_snapshot(wp_id=None):
                     shutil.copy2(user_out, dst)
             except Exception:
                 pass
+
+            # GRUB wallpaper is decoupled and managed independently in Launcher
 
             try:
                 subprocess.run(
@@ -703,6 +709,8 @@ def capture_engine_hires_snapshot(wp_id=None):
                 except Exception:
                     pass
 
+                # GRUB wallpaper is decoupled and managed independently in Launcher
+
                 try:
                     subprocess.run(
                         ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
@@ -713,6 +721,8 @@ def capture_engine_hires_snapshot(wp_id=None):
                 except Exception:
                     pass
                 return {"status": "ok", "file": user_out}
+            else:
+                return {"status": "ok", "file": temp_snap}
     except Exception as e:
         sys.stderr.write(f"High-res snapshot error: {e}\n")
     return {"status": "error"}
