@@ -573,13 +573,13 @@ ShellRoot {
                 readonly property real audioRight: root.borderThickness + animAudioWidth
 
                 // Notification Panel geometry (bottom-right corner)
-                readonly property int notifWidth: 380
-                readonly property int notifCollapsedHeight: 64
+                readonly property int notifWidth: 400
+                readonly property int notifCollapsedHeight: 66
                 readonly property int notifEmptyHeight: 56
                 property int notifExpandedHeight: {
                     if (globalNotifications.count === 0) return notifEmptyHeight
                     let visibleCount = Math.min(globalNotifications.count, 4)
-                    return (visibleCount * 58) + 38
+                    return (visibleCount * 66) + 38
                 }
 
                 property real targetNotifHeight: {
@@ -1505,13 +1505,13 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Top Hover Trigger (Hotspot ampliado para a largura do launcher: 920px quando colapsado)
+                    // Interactive Top Hover Trigger (Restrito à geometria da notch fechada)
                     Item {
                         id: notchTopTrigger
-                        x: Math.round((root.width - 920) / 2)
+                        x: root.notchLeft
                         y: 0
-                        width: 920
-                        height: theme.notchHeight + 8
+                        width: root.animNotchWidth
+                        height: root.animNotchHeight
                         visible: shell.activeMode === "none" && !shell.isLauncherOpen
 
                         HoverHandler {

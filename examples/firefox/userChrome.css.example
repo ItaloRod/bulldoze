@@ -42,8 +42,12 @@
   --toolbar-bgcolor: transparent !important;
   --toolbar-color: var(--bulldoze-text-medium) !important;
   --toolbarbutton-border-radius: var(--bulldoze-radius-item) !important;
-  --toolbarbutton-hover-background: var(--bulldoze-hover-fill) !important;
-  --toolbarbutton-active-background: var(--bulldoze-active-fill) !important;
+  --toolbarbutton-hover-background: transparent !important;
+  --toolbarbutton-active-background: transparent !important;
+  --toolbarbutton-background-color-hover: transparent !important;
+  --toolbarbutton-background-color-active: transparent !important;
+  --toolbarbutton-outline-color-hover: transparent !important;
+  --toolbarbutton-outline-color-active: transparent !important;
   
   --lwt-accent-color: transparent !important;
   --lwt-text-color: var(--bulldoze-text-strong) !important;
@@ -53,6 +57,16 @@
   --tab-selected-bgcolor: var(--bulldoze-active-fill) !important;
   --tab-selected-textcolor: var(--bulldoze-text-strong) !important;
   --tab-shadow-max-size: 0 !important;
+
+  /* Native tab tokens alignment (Firefox 130+ & Nova) */
+  --tab-background-color-selected: var(--bulldoze-active-fill) !important;
+  --tab-background-color-hover: var(--bulldoze-hover-fill) !important;
+  --tab-selected-outline-color: var(--bulldoze-glass-border-strong) !important;
+  --tab-hover-outline-color: var(--bulldoze-glass-border-subtle) !important;
+  --tab-border-color-accent: var(--bulldoze-glass-border-strong) !important;
+  --tab-border-radius: var(--bulldoze-radius-item) !important;
+  --tab-box-shadow-selected: none !important;
+  --tab-outline: 1px solid transparent !important;
 
   --arrowpanel-background: var(--bulldoze-glass-fill-dark) !important;
   --arrowpanel-color: var(--bulldoze-text-medium) !important;
@@ -181,22 +195,29 @@ browser[type="content"] {
 .tab-background {
   border-radius: var(--bulldoze-radius-item) !important;
   border: 1px solid transparent !important;
+  outline: none !important;
   box-shadow: none !important;
+  background-image: none !important;
   transition: background-color 0.12s ease, border-color 0.12s ease !important;
 }
 
 /* Tab Inactive Hover */
-.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected="true"]):not([visuallyselected="true"]):not([multiselected]) {
+.tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected]):not([selected="true"]):not([visuallyselected]):not([visuallyselected="true"]):not([multiselected]) {
+  background: var(--bulldoze-hover-fill) !important;
   background-color: var(--bulldoze-hover-fill) !important;
+  background-image: none !important;
   border: 1px solid var(--bulldoze-glass-border-subtle) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
-/* Tab Active / Selected / Visually Selected */
-.tabbrowser-tab[selected="true"] > .tab-stack > .tab-background,
-.tabbrowser-tab[visuallyselected="true"] > .tab-stack > .tab-background,
-.tabbrowser-tab[multiselected] > .tab-stack > .tab-background {
+/* Tab Active / Selected / Visually Selected (Bulldoze Design Standard) */
+.tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background {
+  background: var(--bulldoze-active-fill) !important;
   background-color: var(--bulldoze-active-fill) !important;
+  background-image: none !important;
   border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  outline: none !important;
   box-shadow: none !important;
 }
 
@@ -205,10 +226,137 @@ browser[type="content"] {
   font-weight: 500 !important;
 }
 
-.tabbrowser-tab[selected="true"] .tab-label,
-.tabbrowser-tab[visuallyselected="true"] .tab-label {
+.tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"]) .tab-label {
   color: var(--bulldoze-text-strong) !important;
   font-weight: 600 !important;
+}
+
+.tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"]) .tab-icon-image {
+  opacity: 1 !important;
+}
+
+/* ==========================================================================
+   2.1 Vertical Tabs (#vertical-tabs, #tabbrowser-tabs[orient="vertical"])
+   ========================================================================== */
+
+#vertical-tabs,
+#tabbrowser-tabs[orient="vertical"],
+#tabbrowser-arrowscrollbox[orient="vertical"],
+#pinned-tabs-container[orient="vertical"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  box-shadow: none !important;
+}
+
+#tabbrowser-tabs[orient="vertical"]::after {
+  display: none !important;
+  border: none !important;
+}
+
+/* Vertical tab item layout & spacing */
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab {
+  margin-block: 2px !important;
+  padding-inline: 4px !important;
+  min-height: 34px !important;
+  box-sizing: border-box !important;
+}
+
+#tabbrowser-tabs[orient="vertical"] .tab-background {
+  border-radius: var(--bulldoze-radius-item) !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+  background-image: none !important;
+  margin-block: 1px !important;
+}
+
+/* Vertical Tab Hover */
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:hover > .tab-stack > .tab-background:not([selected]):not([selected="true"]):not([visuallyselected]):not([visuallyselected="true"]):not([multiselected]) {
+  background: var(--bulldoze-hover-fill) !important;
+  background-color: var(--bulldoze-hover-fill) !important;
+  background-image: none !important;
+  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Vertical Tab Active / Selected (Strict Bulldoze 3.0 Glass Standard) */
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background,
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[pinned]:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background,
+#pinned-tabs-container[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background {
+  background: var(--bulldoze-active-fill) !important;
+  background-color: var(--bulldoze-active-fill) !important;
+  background-image: none !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"]) .tab-label {
+  color: var(--bulldoze-text-strong) !important;
+  font-weight: 600 !important;
+}
+
+/* Collapsed sidebar mode: ensure icon is centered with clean pill selection boundary */
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .tabbrowser-tab {
+  padding-inline: 0 !important;
+  justify-content: center !important;
+}
+
+#tabbrowser-tabs[orient="vertical"]:not([expanded]) .tabbrowser-tab .tab-background {
+  margin-inline: 4px !important;
+}
+
+/* Remove default split-view shadows and outline in vertical tabs */
+#tabbrowser-tabs[orient="vertical"] tab-split-view-wrapper,
+#tabbrowser-tabs[orient="vertical"] tab-split-view-wrapper[small-stack],
+#tabbrowser-tabs[orient="vertical"] tab-split-view-wrapper[big-stack] {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Sidebar Open Tabs List & Cards Integration (sidebar-tab-row, fxview-tab-row) */
+sidebar-tab-row,
+fxview-tab-row {
+  border-radius: var(--bulldoze-radius-item) !important;
+  margin-block: 2px !important;
+}
+
+sidebar-tab-row .fxview-tab-row-main,
+fxview-tab-row .fxview-tab-row-main {
+  border-radius: var(--bulldoze-radius-item) !important;
+  border: 1px solid transparent !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
+}
+
+sidebar-tab-row:hover .fxview-tab-row-main,
+fxview-tab-row:hover .fxview-tab-row-main {
+  background-color: var(--bulldoze-hover-fill) !important;
+  border-color: var(--bulldoze-glass-border-subtle) !important;
+}
+
+sidebar-tab-row:is([selected], [current]) .fxview-tab-row-main,
+fxview-tab-row:is([selected], [current]) .fxview-tab-row-main,
+sidebar-tab-row:is([selected], [current]),
+fxview-tab-row:is([selected], [current]) {
+  background: var(--bulldoze-active-fill) !important;
+  background-color: var(--bulldoze-active-fill) !important;
+  background-image: none !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  color: var(--bulldoze-text-strong) !important;
+}
+
+.pinned-tabs moz-button.selected::part(button),
+.pinned-tabs moz-button[selected]::part(button) {
+  background: var(--bulldoze-active-fill) !important;
+  background-color: var(--bulldoze-active-fill) !important;
+  background-image: none !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  border-radius: var(--bulldoze-radius-item) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Tab Separators Removal */
@@ -254,6 +402,9 @@ browser[type="content"] {
 .tabs-newtab-button,
 .all-tabs-button {
   border-radius: var(--bulldoze-radius-item) !important;
+  border: 1px solid transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
   color: var(--bulldoze-text-medium) !important;
   transition: background-color 0.12s ease, border-color 0.12s ease !important;
 }
@@ -266,6 +417,19 @@ browser[type="content"] {
   background-color: var(--bulldoze-hover-fill) !important;
   border: 1px solid var(--bulldoze-glass-border-subtle) !important;
   color: var(--bulldoze-text-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+#tabs-newtab-button > :is(.toolbarbutton-icon, image),
+#new-tab-button > :is(.toolbarbutton-icon, image),
+#vertical-tabs-newtab-button > :is(.toolbarbutton-icon, image),
+.tabs-newtab-button > :is(.toolbarbutton-icon, image),
+.all-tabs-button > :is(.toolbarbutton-icon, image) {
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ==========================================================================
@@ -316,8 +480,32 @@ browser[type="content"] {
   color: #FFFFFF !important;
 }
 
-/* Extension chips, search buttons, search mode indicator, identity box, tracking protection & URL bar actions */
+/* Container wrappers in URL bar must remain strictly transparent so they do not produce duplicate nested selections */
 #identity-box,
+#page-action-buttons,
+#urlbar-label-box {
+  background: transparent !important;
+  background-color: transparent !important;
+  border: none !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+#identity-box:hover,
+#identity-box:hover:active,
+#identity-box[open="true"],
+#page-action-buttons:hover,
+#urlbar-label-box:hover {
+  background: transparent !important;
+  background-color: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+/* Specific interactive buttons inside URL bar */
+.identity-box-button,
 #identity-permission-box,
 #identity-icon-box,
 #notification-popup-box,
@@ -329,20 +517,20 @@ browser[type="content"] {
 .urlbar-search-button,
 #tracking-protection-icon-container,
 .urlbar-page-action,
-#page-action-buttons,
-#urlbar-label-box,
-.urlbar-label-box {
+#urlbar-go-button {
   border-radius: var(--bulldoze-radius-pill) !important;
   color: var(--bulldoze-text-strong) !important;
   fill: var(--bulldoze-text-strong) !important;
   border: 1px solid transparent !important;
   outline: none !important;
   box-shadow: none !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
 }
 
-#identity-box:hover,
+.identity-box-button:hover,
 #identity-permission-box:hover,
 #identity-icon-box:hover,
+#notification-popup-box:hover,
 #urlbar-search-mode-indicator:hover,
 #urlbar-search-button:hover,
 #search-button:hover,
@@ -357,15 +545,15 @@ browser[type="content"] {
   box-shadow: none !important;
 }
 
-#identity-box:hover:active,
-#identity-box[open="true"],
-#identity-permission-box:hover:active,
-#urlbar-search-mode-indicator:hover:active,
-#urlbar-search-mode-indicator[focused],
+.identity-box-button:is(:hover:active, [open="true"]),
+#identity-permission-box:is(:hover:active, [open="true"]),
+#identity-icon-box:is(:hover:active, [open="true"]),
+#notification-popup-box:is(:hover:active, [open="true"]),
+#urlbar-search-mode-indicator:is(:hover:active, [focused]),
 #urlbar-search-button:hover:active,
 #search-button:hover:active,
 .searchbar-search-button:hover:active,
-.urlbar-page-action:hover:active {
+.urlbar-page-action:is(:hover:active, [open="true"]) {
   background-color: var(--bulldoze-active-fill) !important;
   border-color: var(--bulldoze-glass-border-strong) !important;
   outline: none !important;
@@ -430,20 +618,47 @@ browser[type="content"] {
 }
 
 /* ==========================================================================
-   4. Buttons & Controls
+   4. Buttons & Controls (Single unified Bulldoze selection pill)
    ========================================================================== */
+
+/* Disable background & outline on all inner icon/badge wrappers so only the button gets a single selection */
+.toolbarbutton-1 > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack),
+.toolbarbutton-1:hover > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack),
+.toolbarbutton-1:is(:hover:active, [open], [checked]) > :is(.toolbarbutton-icon, .toolbarbutton-text, .toolbarbutton-badge-stack),
+toolbarbutton.bookmark-item > :is(.toolbarbutton-icon, .toolbarbutton-text),
+toolbarbutton.bookmark-item:hover > :is(.toolbarbutton-icon, .toolbarbutton-text) {
+  background: transparent !important;
+  background-color: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
 
 toolbarbutton.bookmark-item:not(.subviewbutton),
 .toolbarbutton-1 {
   border-radius: var(--bulldoze-radius-item) !important;
+  border: 1px solid transparent !important;
   color: var(--bulldoze-text-medium) !important;
-  transition: background-color 0.12s ease !important;
+  outline: none !important;
+  box-shadow: none !important;
+  transition: background-color 0.12s ease, border-color 0.12s ease !important;
 }
 
 toolbarbutton.bookmark-item:not(.subviewbutton):hover,
-.toolbarbutton-1:hover {
+.toolbarbutton-1:not([disabled]):hover {
   background-color: var(--bulldoze-hover-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-subtle) !important;
   color: var(--bulldoze-text-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+toolbarbutton.bookmark-item:not(.subviewbutton):is(:hover:active, [open="true"]),
+.toolbarbutton-1:not([disabled]):is(:hover:active, [open="true"], [checked="true"]) {
+  background-color: var(--bulldoze-active-fill) !important;
+  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  color: var(--bulldoze-text-strong) !important;
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* ==========================================================================
@@ -550,8 +765,11 @@ sidebar-main,
 #sidebar,
 .sidebar-panel,
 .sidebar-placesTree,
-#tabbrowser-tabs[vertical],
-tab-strip[orient="vertical"] {
+#vertical-tabs,
+#tabbrowser-tabs[orient="vertical"],
+tab-strip[orient="vertical"],
+#tabbrowser-arrowscrollbox[orient="vertical"],
+#pinned-tabs-container[orient="vertical"] {
   background: transparent !important;
   background-color: transparent !important;
   color: var(--bulldoze-text-medium) !important;

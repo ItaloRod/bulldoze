@@ -41,11 +41,13 @@ if [[ -f "$CONFIG_FILE" ]]; then
         GS_VRR=$(jq -r '.gamescope_config.adaptive_sync // false' "$CONFIG_FILE")
         GS_FPS_LIMIT=$(jq -r '.gamescope_config.fps_limit // 0' "$CONFIG_FILE")
         GS_CUSTOM=$(jq -r '.gamescope_config.custom_args // empty' "$CONFIG_FILE")
+        GS_FORCE_GRAB=$(jq -r '.gamescope_config.force_grab_cursor // false' "$CONFIG_FILE")
         
         GAMESCOPE_ARGS="-W $GS_W -H $GS_H -r $GS_R"
         [[ -n "$GS_RENDER_W" && -n "$GS_RENDER_H" && "$GS_RENDER_W" -gt 0 && "$GS_RENDER_H" -gt 0 ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS -w $GS_RENDER_W -h $GS_RENDER_H"
         [[ "$GS_FULLSCREEN" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --fullscreen"
         [[ "$GS_BORDERLESS" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS -b"
+        [[ "$GS_FORCE_GRAB" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --force-grab-cursor"
         [[ "$GS_HDR" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-enabled"
         [[ "$GS_HDR_ITM" == "true" ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-itm-enabled"
         [[ -n "$GS_HDR_NITS" && "$GS_HDR_NITS" != "400" && "$GS_HDR_NITS" -gt 0 ]] && GAMESCOPE_ARGS="$GAMESCOPE_ARGS --hdr-sdr-content-nits $GS_HDR_NITS"

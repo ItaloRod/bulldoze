@@ -4,6 +4,69 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.5.1] - 2026-09
+
+### 🥾 Bulldoze GRUB 3.0: Tema QHD Estilo Spotlight, Baker de Wallpaper e Pré-visualização
+- **Tema GRUB 3.0 Nativo QHD (2560×1440) (`grub/`, `install-grub-theme.sh`, `preview-grub.sh`)**:
+  - Tema completo para o bootloader GRUB em resolução nativa 2560×1440 com estética de vidro fosco (*frosted glassmorphism*), alinhado à identidade visual do Bulldoze 3.0.
+  - Card lateral translúcido sem bordas duras, tipografia Roboto Mono monocromática e ícones de sistemas operacionais.
+  - Script de instalação (`install-grub-theme.sh`) com sincronização dinâmica em `/boot/grub/themes/bulldoze` via helper com permissão sem senha (`sudoers.d/bulldoze-grub`).
+  - Script de pré-visualização em máquina virtual QEMU (`preview-grub.sh`) com notificações e exibição contínua do cursor liberável via `Ctrl+Alt+G`.
+- **Destaque do Item Selecionado Estilo Spotlight (`theme.txt`, `select_*.png`, `bulldoze-grub-wallpaper.py`)**:
+  - Implementado sistema 9-slice pixmap (`select_*.png`) para o item ativo no menu de boot, espelhando a experiência visual do Spotlight (`BottomLauncher.qml`).
+  - Pílula translúcida com preenchimento em vidro fosco esbranquiçado iluminado e borda sutil de 1px (`glassBorderStrong`).
+  - Calibração de geometria (`item_height = 32`, `item_spacing = 20`, cantos de 8px) eliminando sobreposições e garantindo espaçamento limpo entre entradas de boot.
+- **Baker Inteligente de Wallpaper do GRUB (`bulldoze-grub-wallpaper.py`, `bulldoze-wallpaper.py`, `scripts/install-grub-theme.sh`, `scripts/preview-grub.sh`)**:
+  - Renderização e composição de card com desfoque Gaussiano nativo diretamente no wallpaper do GRUB (`background.png`).
+  - Captura nativa em 2560×1440 de cenas do Wallpaper Engine via `linux-wallpaperengine` (`snapshot-hires`), eliminando artefatos de zoom pixelado gerados por miniaturas `preview.jpg`.
+  - Recorte proporcional com *aspect-fill* centralizado para evitar qualquer distorção de proporção em imagens fora do padrão 16:9.
+  - Scripts utilitários de linha de comando para gerar wallpapers, sincronizar arquivos com privilégios automáticos e testar o menu de boot via QEMU.
+
+### 🦊 Firefox: Padronização Bulldoze em Abas Verticais, Abas Fixas e Seletores Unificados
+- **Harmonização Completa com o Design System (`examples/firefox/userChrome.css.example`, `docs/design.md`)**:
+  - Pílula de seleção única (`--bulldoze-active-fill`, borda de 1px `--bulldoze-glass-border-strong`, raio de cantos `radiusItem`, sem sombras duras e sem anéis de foco coloridos) aplicada a abas tradicionais e verticais (`#vertical-tabs`, `#tabbrowser-tabs[orient="vertical"]`, `#tabbrowser-arrowscrollbox[orient="vertical"]`, `#pinned-tabs-container[orient="vertical"]`).
+  - Alinhamento de tokens nativos do Firefox 130+ / Nova (`--tab-background-color-selected`, `--tab-selected-outline-color`, `--tab-border-radius`, etc.).
+  - Eliminação de seleções aninhadas e fundos duplicados em botões da barra de ferramentas, marcadores e containers da barra de endereços (`#identity-box`, `#page-action-buttons`, `#urlbar-label-box`).
+
+### 📶 Bluetooth: Estabilidade de Conexão, Parser Limpo e Tratamento Robusto
+- **Tratamento de Exceções e Parser Aprimorado (`modules/Bluetooth.qml`)**:
+  - Sanitização de sequências de escape ANSI (`\u001b\[[0-9;]*[a-zA-Z]`) na saída do `bluetoothctl`, prevenindo quebras de formatação e nomes corrompidos de dispositivos.
+  - Limpeza inteligente de prefixos (`Name: `, `Alias: `) e filtro de propriedades internas de telemetria (`RSSI:`, `TxPower:`, `ManufacturerData`, `ServicesResolved:`, `Connected:`, `UUIDs:`, etc.), eliminando dispositivos fantasmas na lista de descoberta.
+  - Fallback direto via `bluetoothctl power on/off` quando o adaptador padrão do Quickshell não estiver imediatamente disponível no QML.
+  - Ativação prévia de `pairable on` antes de iniciar pareamento e limpeza confiável de listas de dispositivos ao desconectar.
+
+### 🎯 Notch: Calibração de Hotspot e Geometria Estrita
+- **Restrição do Gatilho Superior ao Perfil Fechado (`shell.qml`, `docs/design.md`)**:
+  - A área sensível de hover superior para acionamento do Launcher foi restrita estritamente à geometria da notch fechada (`root.notchLeft`, `animNotchWidth`, `animNotchHeight`, ~170–200px), eliminando acionamentos acidentais ao mover o mouse próximo ao topo nas laterais.
+
+### 🧹 Refatoração e Limpeza de Views
+- **Desacoplamento do Painel GRUB do Launcher Central (`components/views/LauncherBarView.qml`, `components/views/GrubSettingsBarView.qml`)**:
+  - Removida a aba do GRUB do Launcher Central, mantendo a barra de categorias focada nas 6 opções fundamentais do shell (Início, Wi-Fi, Bluetooth, Som, Wallpapers e Jogos) e delegando o gerenciamento do bootloader aos scripts dedicados da pasta `scripts/`.
+
+### 🎮 Gamescope: Presets de Jogos & Trava de Cursor na Janela
+- **Trava de Cursor no Gamescope (`--force-grab-cursor`) (`modules/Gaming.qml`, `scripts/bulldoze-game-run`, `components/ControlCenter.qml`)**:
+  - Implementada a opção `gsForceGrabCursor` ("Travar Cursor na Janela") para solucionar perda de foco e cliques desalinhados em jogos da engine Unity (ex: *Cities: Skylines II*).
+  - Injeção automática da flag `--force-grab-cursor` no executável `bulldoze-game-run` e toggle direto no Control Center e nas configurações de jogos.
+- **Gerenciador de Presets do Gamescope (`modules/Gaming.qml`, `GamingSettingsBarView.qml`)**:
+  - Sistema reativo de perfis de performance e resolução por jogo (`gamescopePresets`), persistido em `~/.config/bulldoze/gaming.json`.
+  - Perfis padrão integrados de fábrica:
+    - *Padrão do Sistema*: 1440p nativo / 1080p render / 240Hz com FSR.
+    - *Cities II - Mouse Corrigido & Nativo*: 1080p nativo / 144Hz / Trava de cursor ativa / FSR desligado.
+    - *Cities II - Performance 720p FSR*: 1080p nativo / 720p render / 144Hz / Trava de cursor ativa / FSR nível 5.
+  - Editor visual completo nos Ajustes de Jogos para criar, alternar, editar e excluir presets customizados de resolução, taxa de quadros e FSR.
+
+### 🖥️ Seletor Dinâmico de Saída de Vídeo / Porta de Imagem no Gerenciador de Wallpapers
+- **Detecção Inteligente e Seletor Dropdown no Painel de Wallpapers (`WallpaperBarView.qml`, `WallpaperEngine.qml`, `bulldoze-wallpaper.py`, `agents.md`)**:
+  - Implementado dropdown estilizado em vidro translúcido (`glassFillDark` / `glassBorderStrong`) para seleção explícita da saída de vídeo (DisplayPort, HDMI, etc.) onde o wallpaper deve ser renderizado.
+  - Varredura em tempo real via Hyprland IPC (`hyprctl monitors -j`) e detecção de conectores físicos DRM (`/sys/class/drm/card*-*`), exibindo resolução, taxa de atualização e status de conectividade (Conectado / Desconectado).
+  - Suporte a modo Automático (segue o monitor ativo/focado) e fallback gracioso caso o cabo de vídeo seja trocado (ex: HDMI para DisplayPort `DP-1`) sem que o wallpaper deixe de renderizar.
+  - Persistência reativa da porta selecionada em `~/.config/bulldoze/wallpaper.json` e aplicação instantânea no daemon do `linux-wallpaperengine`.
+
+### 🎨 Refinamentos na Visualização de Notificações e Geometria do Shell
+- **Ajustes de Proporção e Escala (`NotificationBarView.qml`, `shell.qml`)**:
+  - Largura da central de notificações ampliada para 400px e altura por item ajustada para 66px, aprimorando legibilidade e área de clique.
+  - Renderização nativa de fontes e ícones contextuais aprimorados no card individual de notificação.
+
 ## [3.5.0] - 2026-09
 
 ### 🔤 Correção de Nitidez e Renderização Nativa de Fontes e Ícones

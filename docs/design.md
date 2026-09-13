@@ -14,7 +14,7 @@ This document defines the authoritative design system specification for the **en
 Bulldoze is a cohesive, translucent, glassmorphic desktop interface composed of:
 1. **Central Morphing Top Notch (Dynamic Island Shell)**: An integrated physical glass notch attached to the top monitor bezel ($y = 0$):
    - **Resting Capsule Profile**: Fixed 32px height compact capsule (~170px width) displaying purely the centered digital Clock and localized Date (`pt-BR`).
-   - **Hover-to-Open Central Launcher**: Moving the mouse over the top resting hotspot (expanded to 920px matching the launcher width) directly morphs it into the full Central Launcher (`LauncherBarView.qml`, 920x640px) displaying the **Home** view by default. Moving the mouse out smoothly collapses it back to the resting notch.
+   - **Hover-to-Open Central Launcher**: Moving the mouse over the resting notch capsule profile (~170px–200px width) directly morphs it into the full Central Launcher (`LauncherBarView.qml`, 920x640px) displaying the **Home** view by default. Moving the mouse out smoothly collapses it back to the resting notch.
    - **Shortcut Access**: Quick Launcher & Controls (Home, Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) can also be toggled via global shortcut `Super + H` (`SUPER + H`).
 2. **Top-Right Corner Border-Fused System Tray (`TrayBarView.qml`, `shell.qml`)**:
    - Integrated directly into the top-right corner of the 8px perimeter frame in `unifiedShape` as an organic mirror to the bottom-right notification panel.
@@ -230,7 +230,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 - **Streamlined Minimalist Profile**:
   - **Fixed 32px Height**: Ultra-clean single row of 32px fixed height in resting idle state.
   - **Collapsed State (Idle)**: Compact pill ($170\text{px} \times 32\text{px}$) displaying strictly the central Clock and localized Date (`pt-BR`).
-  - **Direct Morphing (Hover & Hotspot)**: Moving the cursor over the top notch hotspot (expanded to 920px width matching the launcher) directly triggers the Central Launcher (`LauncherBarView.qml`, 920x640px) with the **Home** tab open. No intermediate expanded bar state exists.
+  - **Direct Morphing (Hover & Hotspot)**: Moving the cursor over the resting notch capsule (strictly matching the closed width ~170px–200px) directly triggers the Central Launcher (`LauncherBarView.qml`, 920x640px) with the **Home** tab open. No intermediate expanded bar state exists.
   - **Exit Behavior**: Moving the mouse outside the Central Launcher collapses it back into the resting capsule (or via `SUPER + H`).
 - **Content Encapsulation**:
   - **Center (always visible)**: Single-line Clock (Time 13px DemiBold + Date 11px Medium localized in `pt-BR`, format `"ddd, dd MMM"` via `Qt.locale("pt_BR")`).
@@ -256,7 +256,7 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 
 ## 4.4 Central Launcher / System Hub (`LauncherBarView.qml`)
 - **Central Launcher View (`LauncherBarView.qml`, 920x640px)**:
-  - Accessible via hovering the top central notch hotspot (920px wide) or global shortcut `Super + H` (`SUPER + H`).
+  - Accessible via hovering the resting closed notch or global shortcut `Super + H` (`SUPER + H`).
   - **Top Centered Horizontal Category Rail**: Centered horizontal row of 6 category icons (Home, Wi-Fi, Bluetooth, Som, Wallpapers, Gaming) independent of scroll, providing 100% full width to the content area below. Default landing category is **Home**.
   - **Home Tab (`Início`)**:
     - **Top Full-Width Welcome Card**:
@@ -336,6 +336,16 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 
 ## 4.9 Web Browser / Firefox (`userChrome.css Integration`)
 - **Physical Depth Stack**: Wallpaper → Hyprland compositor blur → translucent dark glass (`--bulldoze-glass-fill`: `rgba(14, 16, 22, 0.40)`) → 1px glass border (`--bulldoze-glass-border`: `rgba(255, 255, 255, 0.14)`).
+- **Tab & Vertical Tab Selection System (`#tabbrowser-tabs[orient="vertical"]`, `#vertical-tabs`)**:
+  - **Selected / Active Tab Pill**: Full conformance with Bulldoze selection standard:
+    - Background: `activeFill` (`rgba(255, 255, 255, 0.18)` / `--bulldoze-active-fill`). Zero solid fills or opaque blocks.
+    - Outer Boundary: Continuous 1px subtle white stroke `glassBorderStrong` (`rgba(255, 255, 255, 0.22)` / `--bulldoze-glass-border-strong`).
+    - Geometry: `radiusItem` (10px–12px rounded pill) preserving symmetric margins and padding without border clipping.
+    - Typography: `textStrong` (`rgba(255, 255, 255, 0.95)` / `--bulldoze-text-strong`), `font-weight: 600`.
+    - Zero Outlines & Shadows: Zero heavy drop shadows, zero colored/cyan focus rings (`outline: none`, `box-shadow: none`).
+  - **Hover Interaction**: `hoverFill` (`rgba(255, 255, 255, 0.11)`), 1px `glassBorderSubtle` (`rgba(255, 255, 255, 0.09)`).
+  - **Resting Inactive State**: 100% transparent fill, 1px transparent border, `textMuted` (`rgba(255, 255, 255, 0.70)`), font-weight 500.
+  - **Orientation Parity**: Identical selection geometry, pill radius, and border contrast whether rendered horizontally in the top bar or vertically in the sidebar (`#tabbrowser-tabs[orient="vertical"]`, collapsed icon-only mode, expanded label mode, pinned tabs, and sidebar open tabs list).
 
 ## 4.10 User Identity & Avatar Strategy
 - **Single Source of Truth**: Logged-in Mozilla / Firefox Sync account (`signedInUser.json`), synchronized to `~/.face` and AccountsService via `scripts/sync-profile.py`.

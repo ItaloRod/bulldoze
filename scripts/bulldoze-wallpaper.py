@@ -14,7 +14,7 @@ import json
 import glob
 import struct
 import subprocess
-from PIL import Image
+from PIL import Image, ImageFilter, ImageDraw
 
 WORKSHOP_DIR = os.path.expanduser("~/.local/share/Steam/steamapps/workshop/content/431960")
 ASSETS_DIR = os.path.expanduser("~/.local/share/Steam/steamapps/common/wallpaper_engine/assets")
@@ -229,6 +229,7 @@ def get_current_config():
 
     owui = parse_owui_settings()
     active_id = owui.get("active_id", "3522563935")
+    primary_screen = detect_primary_monitor()
     default_config = {
         "active_id": active_id,
         "fps": 60,
@@ -238,7 +239,7 @@ def get_current_config():
         "mouse_enabled": True,
         "hide_sponsor": True,
         "pause_on_window": True,
-        "screen": "HDMI-A-1",
+        "screen": primary_screen,
         "per_wallpaper_settings": {}
     }
     save_config(default_config)
@@ -250,6 +251,62 @@ def save_config(cfg):
     with open(CONFIG_FILE, "w", encoding="utf-8") as f:
         json.dump(cfg, f, indent=2, ensure_ascii=False)
 
+def get_available_monitors():
+    """Returns list of active Hyprland monitors and available DRM display ports"""
+    monitors = []
+    seen = set()
+    try:
+        out = subprocess.check_output(["hyprctl", "monitors", "-j"], text=True)
+        mons = json.loads(out)
+        if isinstance(mons, list):
+            for m in mons:
+                name = m.get("name")
+                if name:
+                    seen.add(name)
+                    desc = m.get("description") or m.get("model") or name
+                    monitors.append({
+                        "name": name,
+                        "description": desc,
+                        "model": m.get("model", ""),
+                        "width": m.get("width", 0),
+                        "height": m.get("height", 0),
+                        "refreshRate": round(float(m.get("refreshRate", 0)), 1),
+                        "focused": bool(m.get("focused", False)),
+                        "active": True
+                    })
+    except Exception:
+        pass
+
+    # Also detect other physical DRM connectors (e.g. HDMI-A-1, DP-2, etc.)
+    try:
+        for p in sorted(glob.glob("/sys/class/drm/card*-*")):
+            base = os.path.basename(p)
+            parts = base.split("-", 1)
+            if len(parts) == 2:
+                port_name = parts[1]
+                if port_name not in seen and not port_name.startswith("Writeback"):
+                    seen.add(port_name)
+                    status = "disconnected"
+                    try:
+                        with open(os.path.join(p, "status"), "r") as sf:
+                            status = sf.read().strip()
+                    except Exception:
+                        pass
+                    monitors.append({
+                        "name": port_name,
+                        "description": f"{port_name} ({'Conectado' if status == 'connected' else 'Desconectado'})",
+                        "model": "",
+                        "width": 0,
+                        "height": 0,
+                        "refreshRate": 0,
+                        "focused": False,
+                        "active": (status == "connected")
+                    })
+    except Exception:
+        pass
+
+    return monitors
+
 def detect_primary_monitor():
     """Detects active Hyprland monitor"""
     try:
@@ -258,11 +315,11 @@ def detect_primary_monitor():
         if mons and len(mons) > 0:
             for m in mons:
                 if m.get("focused"):
-                    return m.get("name", "HDMI-A-1")
-            return mons[0].get("name", "HDMI-A-1")
+                    return m.get("name", "DP-1")
+            return mons[0].get("name", "DP-1")
     except Exception:
         pass
-    return "HDMI-A-1"
+    return "DP-1"
 
 def stop_running_wallpaper():
     """Kills any running instance of linux-wallpaperengine or wallpaperd"""
@@ -271,6 +328,8 @@ def stop_running_wallpaper():
         subprocess.run(["pkill", "-9", "-f", "wallpaperd"], stderr=subprocess.DEVNULL)
     except Exception:
         pass
+
+# Note: GRUB wallpaper is decoupled from desktop wallpaper and managed in scripts/bulldoze-grub-wallpaper.py
 
 def apply_wallpaper(wp_id=None, overrides=None):
     """Applies wallpaper with settings"""
@@ -282,7 +341,17 @@ def apply_wallpaper(wp_id=None, overrides=None):
             cfg[k] = v
 
     active_id = str(cfg.get("active_id", "3522563935"))
-    screen = cfg.get("screen") or detect_primary_monitor()
+    available_monitors = get_available_monitors()
+    active_monitors = [m["name"] for m in available_monitors if m.get("active")]
+    configured_screen = cfg.get("screen")
+
+    if not configured_screen or configured_screen == "auto":
+        screen = detect_primary_monitor()
+    elif configured_screen in active_monitors:
+        screen = configured_screen
+    else:
+        screen = detect_primary_monitor()
+
     fps = int(cfg.get("fps", 60))
     scaling = cfg.get("scaling", "fill")
     clamp = cfg.get("clamp", "border")
@@ -422,6 +491,8 @@ def apply_wallpaper(wp_id=None, overrides=None):
             except Exception:
                 pass
 
+            # GRUB wallpaper is decoupled and managed independently in Launcher
+
             try:
                 subprocess.run(
                     ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
@@ -519,6 +590,8 @@ def generate_clean_snapshot(wp_id=None):
             except Exception:
                 pass
 
+            # GRUB wallpaper is decoupled and managed independently in Launcher
+
             try:
                 subprocess.run(
                     ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
@@ -543,7 +616,13 @@ def capture_engine_hires_snapshot(wp_id=None):
 
     cfg = get_current_config()
     active_id = str(wp_id) if wp_id else str(cfg.get("active_id", "3522563935"))
-    screen = cfg.get("screen") or detect_primary_monitor()
+    available_monitors = get_available_monitors()
+    active_monitors = [m["name"] for m in available_monitors if m.get("active")]
+    configured_screen = cfg.get("screen")
+    if not configured_screen or configured_screen == "auto" or configured_screen not in active_monitors:
+        screen = detect_primary_monitor()
+    else:
+        screen = configured_screen
     scaling = cfg.get("scaling", "fill")
     clamp = cfg.get("clamp", "border")
     hide_sponsor = cfg.get("hide_sponsor", True)
@@ -630,6 +709,8 @@ def capture_engine_hires_snapshot(wp_id=None):
                 except Exception:
                     pass
 
+                # GRUB wallpaper is decoupled and managed independently in Launcher
+
                 try:
                     subprocess.run(
                         ["quickshell", "ipc", "-c", "bulldoze", "call", "shell", "reloadWallpaperSnapshot"],
@@ -640,6 +721,8 @@ def capture_engine_hires_snapshot(wp_id=None):
                 except Exception:
                     pass
                 return {"status": "ok", "file": user_out}
+            else:
+                return {"status": "ok", "file": temp_snap}
     except Exception as e:
         sys.stderr.write(f"High-res snapshot error: {e}\n")
     return {"status": "error"}
@@ -665,7 +748,11 @@ def main():
 
     elif action == "config":
         cfg = get_current_config()
+        cfg["available_monitors"] = get_available_monitors()
         print(json.dumps(cfg, ensure_ascii=False))
+
+    elif action == "monitors":
+        print(json.dumps(get_available_monitors(), ensure_ascii=False))
 
     elif action == "apply":
         wp_id = sys.argv[2] if len(sys.argv) > 2 else None
