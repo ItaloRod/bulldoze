@@ -16,11 +16,32 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
   - Implementado sistema 9-slice pixmap (`select_*.png`) para o item ativo no menu de boot, espelhando a experiência visual do Spotlight (`BottomLauncher.qml`).
   - Pílula translúcida com preenchimento em vidro fosco esbranquiçado iluminado e borda sutil de 1px (`glassBorderStrong`).
   - Calibração de geometria (`item_height = 32`, `item_spacing = 20`, cantos de 8px) eliminando sobreposições e garantindo espaçamento limpo entre entradas de boot.
-- **Baker Inteligente de Wallpaper do GRUB (`bulldoze-grub-wallpaper.py`, `bulldoze-wallpaper.py`, `GrubSettingsBarView.qml`, `LauncherBarView.qml`)**:
+- **Baker Inteligente de Wallpaper do GRUB (`bulldoze-grub-wallpaper.py`, `bulldoze-wallpaper.py`, `scripts/install-grub-theme.sh`, `scripts/preview-grub.sh`)**:
   - Renderização e composição de card com desfoque Gaussiano nativo diretamente no wallpaper do GRUB (`background.png`).
   - Captura nativa em 2560×1440 de cenas do Wallpaper Engine via `linux-wallpaperengine` (`snapshot-hires`), eliminando artefatos de zoom pixelado gerados por miniaturas `preview.jpg`.
   - Recorte proporcional com *aspect-fill* centralizado para evitar qualquer distorção de proporção em imagens fora do padrão 16:9.
-  - Nova aba "GRUB Bootloader" no Launcher Central (`LauncherBarView.qml`) e painel dedicado (`GrubSettingsBarView.qml`) para gerenciar e pré-visualizar o tema em tempo real.
+  - Scripts utilitários de linha de comando para gerar wallpapers, sincronizar arquivos com privilégios automáticos e testar o menu de boot via QEMU.
+
+### 🦊 Firefox: Padronização Bulldoze em Abas Verticais, Abas Fixas e Seletores Unificados
+- **Harmonização Completa com o Design System (`examples/firefox/userChrome.css.example`, `docs/design.md`)**:
+  - Pílula de seleção única (`--bulldoze-active-fill`, borda de 1px `--bulldoze-glass-border-strong`, raio de cantos `radiusItem`, sem sombras duras e sem anéis de foco coloridos) aplicada a abas tradicionais e verticais (`#vertical-tabs`, `#tabbrowser-tabs[orient="vertical"]`, `#tabbrowser-arrowscrollbox[orient="vertical"]`, `#pinned-tabs-container[orient="vertical"]`).
+  - Alinhamento de tokens nativos do Firefox 130+ / Nova (`--tab-background-color-selected`, `--tab-selected-outline-color`, `--tab-border-radius`, etc.).
+  - Eliminação de seleções aninhadas e fundos duplicados em botões da barra de ferramentas, marcadores e containers da barra de endereços (`#identity-box`, `#page-action-buttons`, `#urlbar-label-box`).
+
+### 📶 Bluetooth: Estabilidade de Conexão, Parser Limpo e Tratamento Robusto
+- **Tratamento de Exceções e Parser Aprimorado (`modules/Bluetooth.qml`)**:
+  - Sanitização de sequências de escape ANSI (`\u001b\[[0-9;]*[a-zA-Z]`) na saída do `bluetoothctl`, prevenindo quebras de formatação e nomes corrompidos de dispositivos.
+  - Limpeza inteligente de prefixos (`Name: `, `Alias: `) e filtro de propriedades internas de telemetria (`RSSI:`, `TxPower:`, `ManufacturerData`, `ServicesResolved:`, `Connected:`, `UUIDs:`, etc.), eliminando dispositivos fantasmas na lista de descoberta.
+  - Fallback direto via `bluetoothctl power on/off` quando o adaptador padrão do Quickshell não estiver imediatamente disponível no QML.
+  - Ativação prévia de `pairable on` antes de iniciar pareamento e limpeza confiável de listas de dispositivos ao desconectar.
+
+### 🎯 Notch: Calibração de Hotspot e Geometria Estrita
+- **Restrição do Gatilho Superior ao Perfil Fechado (`shell.qml`, `docs/design.md`)**:
+  - A área sensível de hover superior para acionamento do Launcher foi restrita estritamente à geometria da notch fechada (`root.notchLeft`, `animNotchWidth`, `animNotchHeight`, ~170–200px), eliminando acionamentos acidentais ao mover o mouse próximo ao topo nas laterais.
+
+### 🧹 Refatoração e Limpeza de Views
+- **Desacoplamento do Painel GRUB do Launcher Central (`components/views/LauncherBarView.qml`, `components/views/GrubSettingsBarView.qml`)**:
+  - Removida a aba do GRUB do Launcher Central, mantendo a barra de categorias focada nas 6 opções fundamentais do shell (Início, Wi-Fi, Bluetooth, Som, Wallpapers e Jogos) e delegando o gerenciamento do bootloader aos scripts dedicados da pasta `scripts/`.
 
 ### 🎮 Gamescope: Presets de Jogos & Trava de Cursor na Janela
 - **Trava de Cursor no Gamescope (`--force-grab-cursor`) (`modules/Gaming.qml`, `scripts/bulldoze-game-run`, `components/ControlCenter.qml`)**:

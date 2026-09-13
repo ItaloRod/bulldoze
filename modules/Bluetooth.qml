@@ -7,7 +7,7 @@ QtObject {
 
     readonly property var adapter: Bluetooth.defaultAdapter
     readonly property bool available: adapter !== null
-    readonly property bool enabled: available && adapter.enabled
+    readonly property bool enabled: Boolean(adapter && adapter.enabled)
     property var connectedDevices: []
     property var pairedDevices: []
     property var discoveredDevices: []
@@ -39,10 +39,13 @@ QtObject {
     }
 
     function toggle() {
-        if (available) {
+        if (available && adapter) {
             adapter.enabled = !adapter.enabled
-            refresh()
+        } else {
+            actionProc.command = ["bluetoothctl", "power", enabled ? "off" : "on"]
+            actionProc.running = true
         }
+        refresh()
     }
 
     function connectDevice(mac) {
@@ -65,7 +68,7 @@ QtObject {
         if (!mac || root.isConnecting) return
         root.isConnecting = true
         root.lastError = ""
-        actionProc.command = ["sh", "-c", "bluetoothctl pair " + mac + " && bluetoothctl trust " + mac + " && bluetoothctl connect " + mac]
+        actionProc.command = ["sh", "-c", "bluetoothctl pairable on; bluetoothctl pair " + mac + " && bluetoothctl trust " + mac + " && bluetoothctl connect " + mac]
         actionProc.running = true
     }
 
@@ -133,9 +136,13 @@ QtObject {
         onExited: (code, status) => {
             if (code !== 0) return
             
-            const raw = btProc.buffer.trim()
+            const raw = btProc.buffer.replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "").trim()
             btProc.buffer = ""
-            if (!raw) return
+            if (!raw) {
+                root.connectedDevices = []
+                root.pairedDevices = []
+                return
+            }
             
             const sections = raw.split("---CONNECTED---")
             const pairedRaw = (sections[0] || "").trim().split("\n")
@@ -224,18 +231,31 @@ QtObject {
 
         stdout: SplitParser {
             onRead: data => {
-                const lines = data.split("\n")
+                const clean = (data || "").toString().replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "")
+                const lines = clean.split("\n")
                 const currentDiscovered = Object.assign([], root.discoveredDevices)
                 const existingMacs = new Set(root.pairedDevices.map(d => d.mac))
                 
                 for (let line of lines) {
                     const l = line.trim()
+                    if (!l) continue
                     if (l.includes("[NEW] Device ") || l.includes("[CHG] Device ") || l.startsWith("Device ")) {
-                        const match = l.match(/Device\s+([0-9A-Fa-f:]{17})\s+(.+)/)
+                        const match = l.match(/(?:\[(?:NEW|CHG)\]\s+)?Device\s+([0-9A-Fa-f:]{17})\s*(.*)/)
                         if (match) {
                             const mac = match[1]
-                            const name = match[2].replace(/\[.*?\]/g, "").trim()
-                            if (name && !name.startsWith("RSSI:") && !name.startsWith("TxPower:") && !name.startsWith("ManufacturerData:") && !existingMacs.has(mac)) {
+                            let name = (match[2] || "").replace(/\[.*?\]/g, "").trim()
+                            if (name.startsWith("Name: ")) name = name.replace("Name: ", "").trim()
+                            if (name.startsWith("Alias: ")) name = name.replace("Alias: ", "").trim()
+                            
+                            const ignorePrefixes = [
+                                "RSSI:", "TxPower:", "ManufacturerData", "ServicesResolved:",
+                                "Connected:", "Paired:", "LegacyPairing:", "Modalias:",
+                                "UUIDs:", "Class:", "Icon:", "Blocked:", "Trusted:",
+                                "Adapter:", "WakeAllowed:", "Bonded:"
+                            ]
+                            const isIgnored = ignorePrefixes.some(p => name.startsWith(p))
+                            
+                            if (name && !isIgnored && !existingMacs.has(mac)) {
                                 const idx = currentDiscovered.findIndex(d => d.mac === mac)
                                 const devObj = {
                                     mac: mac,

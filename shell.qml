@@ -1505,13 +1505,13 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Top Hover Trigger (Hotspot ampliado para a largura do launcher: 920px quando colapsado)
+                    // Interactive Top Hover Trigger (Restrito à geometria da notch fechada)
                     Item {
                         id: notchTopTrigger
-                        x: Math.round((root.width - 920) / 2)
+                        x: root.notchLeft
                         y: 0
-                        width: 920
-                        height: theme.notchHeight + 8
+                        width: root.animNotchWidth
+                        height: root.animNotchHeight
                         visible: shell.activeMode === "none" && !shell.isLauncherOpen
 
                         HoverHandler {
