@@ -28,9 +28,15 @@
 
   /* Radii Tokens */
   --bulldoze-radius-sm: 4px;
-  --bulldoze-radius-pill: 6px;
-  --bulldoze-radius-item: 10px;
-  --bulldoze-radius-card: 14px;
+  --bulldoze-radius-pill: 9999px;
+  --bulldoze-radius-item: 12px;
+  --bulldoze-radius-card: 18px;
+
+  /* Liquid Glass & Shadow Tokens (Bulldoze Dynamic Island) */
+  --bulldoze-glass-border-top: rgba(255, 255, 255, 0.30);
+  --bulldoze-glass-border-bottom: rgba(255, 255, 255, 0.08);
+  --bulldoze-glass-highlight: rgba(255, 255, 255, 0.15);
+  --bulldoze-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
 
   /* ========================================================================
      Firefox Native Custom Properties Override (Proton / Gecko)
@@ -211,14 +217,18 @@ browser[type="content"] {
   box-shadow: none !important;
 }
 
-/* Tab Active / Selected / Visually Selected (Bulldoze Design Standard) */
+/* Tab Active / Selected / Visually Selected (Bulldoze Dynamic Island & Liquid Glass) */
 .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background {
+  border-radius: var(--bulldoze-radius-pill) !important;
   background: var(--bulldoze-active-fill) !important;
   background-color: var(--bulldoze-active-fill) !important;
   background-image: none !important;
-  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  border-top: 1px solid var(--bulldoze-glass-border-top) !important;
+  border-left: 1px solid var(--bulldoze-glass-border) !important;
+  border-right: 1px solid var(--bulldoze-glass-border) !important;
+  border-bottom: 1px solid var(--bulldoze-glass-border-bottom) !important;
+  box-shadow: inset 0 1px 0 var(--bulldoze-glass-highlight), var(--bulldoze-shadow) !important;
   outline: none !important;
-  box-shadow: none !important;
 }
 
 .tab-label {
@@ -280,16 +290,20 @@ browser[type="content"] {
   box-shadow: none !important;
 }
 
-/* Vertical Tab Active / Selected (Strict Bulldoze 3.0 Glass Standard) */
+/* Vertical Tab Active / Selected (Bulldoze Dynamic Island & Liquid Glass) */
 #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background,
 #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab[pinned]:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background,
 #pinned-tabs-container[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"], [multiselected]) > .tab-stack > .tab-background {
+  border-radius: var(--bulldoze-radius-pill) !important;
   background: var(--bulldoze-active-fill) !important;
   background-color: var(--bulldoze-active-fill) !important;
   background-image: none !important;
-  border: 1px solid var(--bulldoze-glass-border-strong) !important;
+  border-top: 1px solid var(--bulldoze-glass-border-top) !important;
+  border-left: 1px solid var(--bulldoze-glass-border) !important;
+  border-right: 1px solid var(--bulldoze-glass-border) !important;
+  border-bottom: 1px solid var(--bulldoze-glass-border-bottom) !important;
+  box-shadow: inset 0 1px 0 var(--bulldoze-glass-highlight), var(--bulldoze-shadow) !important;
   outline: none !important;
-  box-shadow: none !important;
 }
 
 #tabbrowser-tabs[orient="vertical"] .tabbrowser-tab:is([selected], [selected="true"], [visuallyselected], [visuallyselected="true"]) .tab-label {
@@ -439,10 +453,13 @@ fxview-tab-row:is([selected], [current]) {
 #urlbar-background,
 #searchbar {
   background-color: var(--bulldoze-item-fill) !important;
-  border: 1px solid var(--bulldoze-glass-border) !important;
-  border-radius: var(--bulldoze-radius-item) !important;
-  box-shadow: none !important;
-  transition: border-color 0.15s ease, background-color 0.15s ease !important;
+  border-top: 1px solid var(--bulldoze-glass-border-top) !important;
+  border-left: 1px solid var(--bulldoze-glass-border) !important;
+  border-right: 1px solid var(--bulldoze-glass-border) !important;
+  border-bottom: 1px solid var(--bulldoze-glass-border-bottom) !important;
+  border-radius: var(--bulldoze-radius-pill) !important;
+  box-shadow: inset 0 1px 0 var(--bulldoze-glass-highlight), var(--bulldoze-shadow) !important;
+  transition: border-color 0.15s ease, background-color 0.15s ease, box-shadow 0.15s ease !important;
 }
 
 #urlbar:hover:not([focused="true"]):not([open]) > #urlbar-background {
@@ -455,7 +472,7 @@ fxview-tab-row:is([selected], [current]) {
 #searchbar:focus-within {
   background-color: var(--bulldoze-active-fill) !important;
   border-color: var(--bulldoze-glass-border-strong) !important;
-  box-shadow: none !important;
+  box-shadow: inset 0 1px 0 var(--bulldoze-glass-highlight), var(--bulldoze-shadow) !important;
 }
 
 #urlbar-input,

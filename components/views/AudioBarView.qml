@@ -16,10 +16,10 @@ Item {
 
     Column {
         anchors.fill: parent
-        anchors.topMargin: theme.notchConcaveWidth + 2
-        anchors.bottomMargin: theme.notchConcaveWidth + 2
+        anchors.topMargin: 12
+        anchors.bottomMargin: 12
         anchors.leftMargin: 2
-        anchors.rightMargin: 4
+        anchors.rightMargin: 2
         spacing: theme.spacingSm
 
         // 1. Mute / Volume Icon Toggle Button (Top)

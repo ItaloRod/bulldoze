@@ -494,7 +494,8 @@ Item {
         }
 
         Rectangle {
-            width: parent.width
+            anchors.horizontalCenter: parent.horizontalCenter
+            width: categoryRail.width
             height: 1
             color: theme.separator
         }

@@ -35,26 +35,28 @@ O Bulldoze busca oferecer uma experiência visual baseada em superfícies transl
 
 | Componente | Arquivo / Área | Descrição |
 | :--- | :--- | :--- |
-| **Top Bar** | `shell.qml`, `components/` | Barra superior com informações e controles do sistema. |
+| **Dynamic Islands** | `shell.qml`, `components/` | Ilhas e pílulas flutuantes superiores, inferiores e laterais com Liquid Glass. |
 | **Launcher** | `components/Launcher.qml` | Lançador de aplicativos com busca e navegação por teclado. |
 | **Gaming Hub** | `components/GamingSettingsModal.qml`, `modules/Gaming.qml` | Interface para configurar recursos relacionados a jogos e ferramentas externas. |
 | **Wallpaper Manager** | `components/WallpaperManagerModal.qml` | Interface para gerenciamento de wallpapers compatíveis com ferramentas externas. |
 | **Notificações** | `components/NotificationCenter.qml` | Exibição e histórico de notificações. |
-| **OSD** | `components/Osd.qml` | Feedback visual para ações como volume e mute. |
-| **Lock Screen** | `components/LockScreen.qml` | Tela de bloqueio da sessão. |
+| **OSD** | `components/Osd.qml` | Feedback visual para ações como volume e mute em cápsula flutuante. |
+| **Lock Screen** | `components/LockScreen.qml` | Tela de bloqueio flutuante centralizada com Liquid Glass. |
 | **Greeter** | `greeter.qml`, `components/Greeter.qml` | Interface de login destinada à integração com `greetd`. |
 
 ---
 
 ## 🎨 Design e Interface
 
-O projeto segue uma direção visual inspirada em **glassmorphism**, com foco em:
+O projeto segue uma direção visual inspirada em **glassmorphism** e **Liquid Glass**, com foco em:
 
-- superfícies translúcidas;
-- cantos e transições arredondadas;
-- animações suaves;
+- superfícies translúcidas com pontos de luz especular superior e refração interna;
+- componentes estruturados como **Dynamic Islands** e pílulas flutuantes destacadas das bordas;
+- sombra padrão unificada em todos os elementos da interface e nas janelas do compositor;
+- cantos e transições arredondadas orgânicas;
+- animações suaves calibradas para 240Hz;
 - adaptação a diferentes resoluções e taxas de atualização;
-- localização em português brasileiro (`pt-BR`).
+- localização integral em português brasileiro (`pt-BR`).
 
 Os valores de dimensões, animações, cores e outros tokens visuais podem ser encontrados no sistema de design do projeto.
 

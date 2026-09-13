@@ -129,7 +129,7 @@ WlSessionLock {
         }
 
         property bool isExpanded: false
-        readonly property int collapsedWidth: (restingClock && restingClock.implicitWidth > 0) ? Math.round(restingClock.implicitWidth + ((theme.contentInset + theme.notchConcaveWidth) * 2) + 16) : theme.notchCollapsedWidth
+        readonly property int collapsedWidth: (restingClock && restingClock.implicitWidth > 0) ? Math.round(restingClock.implicitWidth + (theme.contentInset * 2) + 16) : theme.notchCollapsedWidth
 
         property real animNotchWidth: isExpanded ? theme.notchExpandedWidth : collapsedWidth
         property real animNotchHeight: isExpanded ? 380 : theme.notchHeight
@@ -153,29 +153,30 @@ WlSessionLock {
         readonly property real notchLeft: Math.round((surface.width - animNotchWidth) / 2)
         readonly property real notchRight: notchLeft + animNotchWidth
 
-        readonly property real borderThickness: theme.borderThickness
-        readonly property real innerRadius: theme.innerRadius
-        readonly property real concaveWidth: theme.notchConcaveWidth
-        readonly property real concaveHeight: theme.notchConcaveHeight
-        readonly property real bottomRadius: theme.notchBottomRadius
-
         // =====================================================================
-        // UNIFIED FROSTED GLASS BLUR LAYER (Masked by Unified Shape)
+        // CENTRALIZED FROSTED GLASS BLUR LAYER (Masked to Floating Card)
         // =====================================================================
         Item {
-            id: frameBlurContainer
-            anchors.fill: parent
-            visible: bgImage.status === Image.Ready && parent.width > 0 && parent.height > 0
+            id: cardBlurContainer
+            anchors.centerIn: parent
+            width: surface.animNotchWidth
+            height: surface.animNotchHeight
+            visible: bgImage.status === Image.Ready && width > 0 && height > 0
             layer.enabled: true
             layer.effect: MultiEffect {
                 maskEnabled: true
-                maskSource: unifiedShapeMask
+                maskSource: cardBlurMask
             }
 
             ShaderEffectSource {
                 id: bgSample
                 anchors.fill: parent
                 sourceItem: bgImage
+                sourceRect: {
+                    if (!bgImage || width <= 0 || height <= 0) return Qt.rect(0, 0, 1, 1)
+                    const p = cardBlurContainer.mapToItem(bgImage, 0, 0)
+                    return Qt.rect(p.x, p.y, width, height)
+                }
                 live: false
             }
 
@@ -188,414 +189,15 @@ WlSessionLock {
             }
         }
 
-        // Mask Item for Frosted Blur
         Item {
-            id: unifiedShapeMask
-            anchors.fill: parent
+            id: cardBlurMask
+            anchors.fill: cardBlurContainer
             visible: false
             layer.enabled: true
-
-            Shape {
+            Rectangle {
                 anchors.fill: parent
-                antialiasing: true
-
-                ShapePath {
-                    fillRule: ShapePath.OddEvenFill
-                    fillColor: "black"
-                    strokeColor: "transparent"
-                    strokeWidth: 0
-
-                    startX: 0
-                    startY: 0
-
-                    PathLine { x: surface.width; y: 0 }
-                    PathLine { x: surface.width; y: surface.height }
-                    PathLine { x: 0; y: surface.height }
-                    PathLine { x: 0; y: 0 }
-
-                    PathMove {
-                        x: surface.notchLeft
-                        y: surface.borderThickness
-                    }
-
-                    PathCubic {
-                        x: surface.notchLeft + surface.concaveWidth
-                        y: surface.borderThickness + surface.concaveHeight
-                        control1X: surface.notchLeft + (surface.concaveWidth * 0.5)
-                        control1Y: surface.borderThickness
-                        control2X: surface.notchLeft + surface.concaveWidth
-                        control2Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                    }
-
-                    PathLine {
-                        x: surface.notchLeft + surface.concaveWidth
-                        y: surface.animNotchHeight - surface.bottomRadius
-                    }
-
-                    PathCubic {
-                        x: surface.notchLeft + surface.concaveWidth + surface.bottomRadius
-                        y: surface.animNotchHeight
-                        control1X: surface.notchLeft + surface.concaveWidth
-                        control1Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                        control2X: surface.notchLeft + surface.concaveWidth + (surface.bottomRadius * 0.5)
-                        control2Y: surface.animNotchHeight
-                    }
-
-                    PathLine {
-                        x: surface.notchRight - surface.concaveWidth - surface.bottomRadius
-                        y: surface.animNotchHeight
-                    }
-
-                    PathCubic {
-                        x: surface.notchRight - surface.concaveWidth
-                        y: surface.animNotchHeight - surface.bottomRadius
-                        control1X: surface.notchRight - surface.concaveWidth - (surface.bottomRadius * 0.5)
-                        control1Y: surface.animNotchHeight
-                        control2X: surface.notchRight - surface.concaveWidth
-                        control2Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                    }
-
-                    PathLine {
-                        x: surface.notchRight - surface.concaveWidth
-                        y: surface.borderThickness + surface.concaveHeight
-                    }
-
-                    PathCubic {
-                        x: surface.notchRight
-                        y: surface.borderThickness
-                        control1X: surface.notchRight - surface.concaveWidth
-                        control1Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                        control2X: surface.notchRight - (surface.concaveWidth * 0.5)
-                        control2Y: surface.borderThickness
-                    }
-
-                    PathLine {
-                        x: surface.width - surface.borderThickness - surface.innerRadius
-                        y: surface.borderThickness
-                    }
-
-                    PathCubic {
-                        x: surface.width - surface.borderThickness
-                        y: surface.borderThickness + surface.innerRadius
-                        control1X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                        control1Y: surface.borderThickness
-                        control2X: surface.width - surface.borderThickness
-                        control2Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                    }
-
-                    PathLine {
-                        x: surface.width - surface.borderThickness
-                        y: surface.height - surface.borderThickness - surface.innerRadius
-                    }
-
-                    PathCubic {
-                        x: surface.width - surface.borderThickness - surface.innerRadius
-                        y: surface.height - surface.borderThickness
-                        control1X: surface.width - surface.borderThickness
-                        control1Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                        control2X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                        control2Y: surface.height - surface.borderThickness
-                    }
-
-                    PathLine {
-                        x: surface.borderThickness + surface.innerRadius
-                        y: surface.height - surface.borderThickness
-                    }
-
-                    PathCubic {
-                        x: surface.borderThickness
-                        y: surface.height - surface.borderThickness - surface.innerRadius
-                        control1X: surface.borderThickness + (surface.innerRadius * 0.5)
-                        control1Y: surface.height - surface.borderThickness
-                        control2X: surface.borderThickness
-                        control2Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                    }
-
-                    PathLine {
-                        x: surface.borderThickness
-                        y: surface.borderThickness + surface.innerRadius
-                    }
-
-                    PathCubic {
-                        x: surface.borderThickness + surface.innerRadius
-                        y: surface.borderThickness
-                        control1X: surface.borderThickness
-                        control1Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                        control2X: surface.borderThickness + (surface.innerRadius * 0.5)
-                        control2Y: surface.borderThickness
-                    }
-
-                    PathLine {
-                        x: surface.notchLeft
-                        y: surface.borderThickness
-                    }
-                }
-            }
-        }
-
-        // =====================================================================
-        // UNIFIED CONTINUOUS VECTOR SHAPE (Perimeter Frame + Morphing Notch)
-        // =====================================================================
-        Shape {
-            id: unifiedShape
-            anchors.fill: parent
-            antialiasing: true
-            visible: parent.width > 0 && parent.height > 0
-
-            // 1. Unified Glass Fill
-            ShapePath {
-                fillRule: ShapePath.OddEvenFill
-                fillColor: theme.glassFill
-                strokeColor: "transparent"
-                strokeWidth: 0
-
-                startX: 0
-                startY: 0
-
-                PathLine { x: surface.width; y: 0 }
-                PathLine { x: surface.width; y: surface.height }
-                PathLine { x: 0; y: surface.height }
-                PathLine { x: 0; y: 0 }
-
-                PathMove {
-                    x: surface.notchLeft
-                    y: surface.borderThickness
-                }
-
-                PathCubic {
-                    x: surface.notchLeft + surface.concaveWidth
-                    y: surface.borderThickness + surface.concaveHeight
-                    control1X: surface.notchLeft + (surface.concaveWidth * 0.5)
-                    control1Y: surface.borderThickness
-                    control2X: surface.notchLeft + surface.concaveWidth
-                    control2Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                }
-
-                PathLine {
-                    x: surface.notchLeft + surface.concaveWidth
-                    y: surface.animNotchHeight - surface.bottomRadius
-                }
-
-                PathCubic {
-                    x: surface.notchLeft + surface.concaveWidth + surface.bottomRadius
-                    y: surface.animNotchHeight
-                    control1X: surface.notchLeft + surface.concaveWidth
-                    control1Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                    control2X: surface.notchLeft + surface.concaveWidth + (surface.bottomRadius * 0.5)
-                    control2Y: surface.animNotchHeight
-                }
-
-                PathLine {
-                    x: surface.notchRight - surface.concaveWidth - surface.bottomRadius
-                    y: surface.animNotchHeight
-                }
-
-                PathCubic {
-                    x: surface.notchRight - surface.concaveWidth
-                    y: surface.animNotchHeight - surface.bottomRadius
-                    control1X: surface.notchRight - surface.concaveWidth - (surface.bottomRadius * 0.5)
-                    control1Y: surface.animNotchHeight
-                    control2X: surface.notchRight - surface.concaveWidth
-                    control2Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.notchRight - surface.concaveWidth
-                    y: surface.borderThickness + surface.concaveHeight
-                }
-
-                PathCubic {
-                    x: surface.notchRight
-                    y: surface.borderThickness
-                    control1X: surface.notchRight - surface.concaveWidth
-                    control1Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                    control2X: surface.notchRight - (surface.concaveWidth * 0.5)
-                    control2Y: surface.borderThickness
-                }
-
-                PathLine {
-                    x: surface.width - surface.borderThickness - surface.innerRadius
-                    y: surface.borderThickness
-                }
-
-                PathCubic {
-                    x: surface.width - surface.borderThickness
-                    y: surface.borderThickness + surface.innerRadius
-                    control1X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control1Y: surface.borderThickness
-                    control2X: surface.width - surface.borderThickness
-                    control2Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.width - surface.borderThickness
-                    y: surface.height - surface.borderThickness - surface.innerRadius
-                }
-
-                PathCubic {
-                    x: surface.width - surface.borderThickness - surface.innerRadius
-                    y: surface.height - surface.borderThickness
-                    control1X: surface.width - surface.borderThickness
-                    control1Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control2X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control2Y: surface.height - surface.borderThickness
-                }
-
-                PathLine {
-                    x: surface.borderThickness + surface.innerRadius
-                    y: surface.height - surface.borderThickness
-                }
-
-                PathCubic {
-                    x: surface.borderThickness
-                    y: surface.height - surface.borderThickness - surface.innerRadius
-                    control1X: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control1Y: surface.height - surface.borderThickness
-                    control2X: surface.borderThickness
-                    control2Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.borderThickness
-                    y: surface.borderThickness + surface.innerRadius
-                }
-
-                PathCubic {
-                    x: surface.borderThickness + surface.innerRadius
-                    y: surface.borderThickness
-                    control1X: surface.borderThickness
-                    control1Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control2X: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control2Y: surface.borderThickness
-                }
-
-                PathLine {
-                    x: surface.notchLeft
-                    y: surface.borderThickness
-                }
-            }
-
-            // 2. Continuous 1px Inner Stroke
-            ShapePath {
-                fillColor: "transparent"
-                strokeColor: theme.glassBorderSubtle
-                strokeWidth: 1
-                capStyle: ShapePath.RoundCap
-
-                startX: surface.notchLeft
-                startY: surface.borderThickness + 0.5
-
-                PathCubic {
-                    x: surface.notchLeft + surface.concaveWidth + 0.5
-                    y: surface.borderThickness + surface.concaveHeight
-                    control1X: surface.notchLeft + (surface.concaveWidth * 0.5)
-                    control1Y: surface.borderThickness + 0.5
-                    control2X: surface.notchLeft + surface.concaveWidth + 0.5
-                    control2Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                }
-
-                PathLine {
-                    x: surface.notchLeft + surface.concaveWidth + 0.5
-                    y: surface.animNotchHeight - surface.bottomRadius
-                }
-
-                PathCubic {
-                    x: surface.notchLeft + surface.concaveWidth + surface.bottomRadius
-                    y: surface.animNotchHeight - 0.5
-                    control1X: surface.notchLeft + surface.concaveWidth + 0.5
-                    control1Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                    control2X: surface.notchLeft + surface.concaveWidth + (surface.bottomRadius * 0.5)
-                    control2Y: surface.animNotchHeight - 0.5
-                }
-
-                PathLine {
-                    x: surface.notchRight - surface.concaveWidth - surface.bottomRadius
-                    y: surface.animNotchHeight - 0.5
-                }
-
-                PathCubic {
-                    x: surface.notchRight - surface.concaveWidth - 0.5
-                    y: surface.animNotchHeight - surface.bottomRadius
-                    control1X: surface.notchRight - surface.concaveWidth - (surface.bottomRadius * 0.5)
-                    control1Y: surface.animNotchHeight - 0.5
-                    control2X: surface.notchRight - surface.concaveWidth - 0.5
-                    control2Y: surface.animNotchHeight - (surface.bottomRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.notchRight - surface.concaveWidth - 0.5
-                    y: surface.borderThickness + surface.concaveHeight
-                }
-
-                PathCubic {
-                    x: surface.notchRight
-                    y: surface.borderThickness + 0.5
-                    control1X: surface.notchRight - surface.concaveWidth - 0.5
-                    control1Y: surface.borderThickness + (surface.concaveHeight * 0.5)
-                    control2X: surface.notchRight - (surface.concaveWidth * 0.5)
-                    control2Y: surface.borderThickness + 0.5
-                }
-
-                PathLine {
-                    x: surface.width - surface.borderThickness - surface.innerRadius
-                    y: surface.borderThickness + 0.5
-                }
-
-                PathCubic {
-                    x: surface.width - surface.borderThickness - 0.5
-                    y: surface.borderThickness + surface.innerRadius + 0.5
-                    control1X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control1Y: surface.borderThickness + 0.5
-                    control2X: surface.width - surface.borderThickness - 0.5
-                    control2Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.width - surface.borderThickness - 0.5
-                    y: surface.height - surface.borderThickness - surface.innerRadius - 0.5
-                }
-
-                PathCubic {
-                    x: surface.width - surface.borderThickness - surface.innerRadius - 0.5
-                    y: surface.height - surface.borderThickness - 0.5
-                    control1X: surface.width - surface.borderThickness - 0.5
-                    control1Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control2X: surface.width - surface.borderThickness - (surface.innerRadius * 0.5)
-                    control2Y: surface.height - surface.borderThickness - 0.5
-                }
-
-                PathLine {
-                    x: surface.borderThickness + surface.innerRadius + 0.5
-                    y: surface.height - surface.borderThickness - 0.5
-                }
-
-                PathCubic {
-                    x: surface.borderThickness + 0.5
-                    y: surface.height - surface.borderThickness - surface.innerRadius - 0.5
-                    control1X: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control1Y: surface.height - surface.borderThickness - 0.5
-                    control2X: surface.borderThickness + 0.5
-                    control2Y: surface.height - surface.borderThickness - (surface.innerRadius * 0.5)
-                }
-
-                PathLine {
-                    x: surface.borderThickness + 0.5
-                    y: surface.borderThickness + surface.innerRadius + 0.5
-                }
-
-                PathCubic {
-                    x: surface.borderThickness + surface.innerRadius + 0.5
-                    y: surface.borderThickness + 0.5
-                    control1X: surface.borderThickness + 0.5
-                    control1Y: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control2X: surface.borderThickness + (surface.innerRadius * 0.5)
-                    control2Y: surface.borderThickness + 0.5
-                }
-
-                PathLine {
-                    x: surface.notchLeft
-                    y: surface.borderThickness + 0.5
-                }
+                radius: theme.radiusIslandLarge
+                color: "black"
             }
         }
 
@@ -673,15 +275,21 @@ WlSessionLock {
         }
 
         // =====================================================================
-        // MORPHING DYNAMIC NOTCH CONTAINER (Fused seamlessly with top border)
+        // CENTRALIZED FLOATING DYNAMIC ISLAND CARD (Liquid Glass + Shadow)
         // =====================================================================
         Item {
             id: topNotchCard
 
-            x: surface.notchLeft
-            y: 0
+            anchors.centerIn: parent
             width: surface.animNotchWidth
             height: surface.animNotchHeight
+
+            LiquidGlass {
+                anchors.fill: parent
+                radius: theme.radiusIslandLarge
+                fillColor: theme.glassFillDark
+                shadowEnabled: true
+            }
 
             // Shake Animation on wrong password
             SequentialAnimation {
@@ -724,10 +332,10 @@ WlSessionLock {
                 Column {
                     anchors {
                         top: parent.top
-                        topMargin: theme.notchConcaveHeight + theme.spacingSm
+                        topMargin: theme.spacingXl
                         horizontalCenter: parent.horizontalCenter
                     }
-                    width: parent.width - (theme.contentInset * 2) - (theme.notchConcaveWidth * 2)
+                    width: parent.width - (theme.contentInset * 2)
                     spacing: theme.spacingMd
 
                     // 1. Large Header: Digital Clock & Date

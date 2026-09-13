@@ -17,7 +17,7 @@ Item {
         id: theme
     }
 
-    readonly property int marginSpace: (theme.contentInset + theme.notchConcaveWidth) * 2
+    readonly property int marginSpace: theme.contentInset * 2
     readonly property int contentCollapsedWidth: Math.round(clockItem.implicitWidth + marginSpace + 16)
 
     // Center: Clock & Date (Always locked to the physical horizontal center of the notch)

@@ -84,10 +84,10 @@ FocusScope {
     Item {
         anchors {
             fill: parent
-            leftMargin: theme.notchConcaveWidth + theme.spacingLg
-            rightMargin: theme.notchConcaveWidth + theme.spacingLg
+            leftMargin: theme.spacingXl
+            rightMargin: theme.spacingXl
             topMargin: theme.spacingXl
-            bottomMargin: theme.borderThickness + theme.spacingMd
+            bottomMargin: theme.spacingLg
         }
 
         // -----------------------------------------------------------------

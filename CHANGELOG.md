@@ -4,6 +4,42 @@ Todas as mudanças notáveis no projeto **Bulldoze Desktop Shell** estão docume
 
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.0/) e este projeto adere ao [Versionamento Semântico](https://semver.org/).
 
+## [3.5.2] - 2026-09
+
+### 🏝️ Bulldoze Dynamic Islands: Transição para Pílulas Flutuantes, Liquid Glass e Sombra Unificada
+- **Redesign Arquitetural: Dynamic Islands Flutuantes e Remoção da Moldura Perimetral (`shell.qml`, `docs/design.md`, `agents.md`)**:
+  - Remoção completa de ~840 linhas de código vetorial da moldura perimetral contínua de 8px (`unifiedShape`) e das curvas de transição côncavas acopladas aos bezels do monitor.
+  - As bordas da tela agora são 100% livres e desimpedidas, mantendo transparência nativa e click-through Wayland através do cálculo dinâmico em `mask: Region`.
+  - Todos os componentes do shell agora flutuam como Dynamic Islands e pílulas independentes com margem padrão de 8px (`islandMargin: 8`):
+    - **Top Island**: Pílula compacta de repouso no topo ($y = 8\text{px}$) com expansão suave para o Launcher Central (920×640px).
+    - **Workspaces & Spotlight**: Pílula inferior de workspaces e dock de pesquisa flutuando a 8px da base da tela.
+    - **Barra de Áudio Lateral**: Pílula vertical flutuando a 8px da borda lateral esquerda.
+    - **Central de Notificações & System Tray**: Pílulas flutuando nos cantos inferior-direito e superior-direito com 8px de afastamento em ambos os eixos.
+- **Design System Apple Liquid Glass & Sombra Padrão Unificada (`components/LiquidGlass.qml`, `components/Theme.qml`)**:
+  - Novo componente reutilizável `LiquidGlass.qml` integrando iluminação física multicamada:
+    - Realce de luz especular superior via `ShapePath` (`glassBorderTop: "#4DFFFFFF"`).
+    - Borda sutil perimetral e realce suave inferior (`glassBorderBottom: "#14FFFFFF"`).
+    - Refração e reflexo difuso interno simulando lente de vidro curvada (`glassHighlight: "#26FFFFFF"`).
+  - Sombra padrão unificada aplicada a todos os componentes via `MultiEffect`:
+    - `shadowColor: "#59000000"` (35% alpha preto).
+    - `shadowRadius: 20`, `shadowOffsetY: 6`, `shadowOffsetX: 0`.
+  - Escala de raios adaptativa: cápsulas e pílulas compactas com raio integral `height / 2` (`radiusPill: 9999`); ilhas e modais expandidos com `radiusIsland: 28` e `radiusIslandLarge: 32`.
+- **LockScreen & Greeter: Cards Flutuantes Centralizados com Backdrop Blur (`components/LockScreen.qml`, `components/Greeter.qml`)**:
+  - Desacoplamento físico do topo: tanto a tela de bloqueio quanto o Greeter do `greetd` agora flutuam perfeitamente centralizados vertical e horizontalmente (`anchors.centerIn: parent`).
+  - Remoção de qualquer contorno perimetral externo e adição de container de desfoque de fundo recortado no raio do card (`radiusIslandLarge: 32`), preservando 100% da saturação do wallpaper subjacente sem escurecimento artificial.
+  - Acabamento completo em Liquid Glass e sombra padrão unificada.
+- **Hyprland: Calibração de Gaps, Arredondamento e Sombras de Janela (`hyprland.lua`, `examples/hyprland.lua.example`)**:
+  - Calibração proporcional de `gaps_out: top 56, right 16, bottom 16, left 16`: eliminada qualquer sobreposição da Dynamic Island sobre as janelas superiores, garantindo uma margem uniforme e proporcional de 16px de wallpaper livre abaixo da ilha e em todos os cantos.
+  - Aumento do raio de arredondamento das janelas para 12px (`rounding = 12`) harmonizando com a escala de cantos `radiusItem`.
+  - Ativação de sombra nas decorações de janela do Hyprland (`decoration.shadow`) espelhando com fidelidade os parâmetros da sombra padrão (`range = 20`, `color = "rgba(00000059)"`, `offset = "0 6"`).
+- **Padronização de Tonalidade do Terminal Kitty (`kitty.conf`, `examples/kitty.conf.example`)**:
+  - Calibração de `background_opacity` de `0.20` para `0.10` e ativação de `background_blur 1`, equalizando perfeitamente a luminosidade do vidro do terminal com o acabamento translúcido e reflexivo da Dynamic Island.
+- **Correção da Linha Divisória de Categorias nas Configurações (`LauncherBarView.qml`)**:
+  - Ajustada a linha divisória (`separator`) abaixo dos botões de categorias para centralizar e acompanhar rigorosamente a largura dos itens (`width: categoryRail.width`), eliminando a linha solta que se estendia além dos ícones na janela expandida.
+- **Harmonização Visual do Firefox & Thunar (`userChrome.css`, `gtk.css`)**:
+  - **Firefox**: Abas ativas, abas verticais e barra de endereços (URL bar) atualizadas para formato de pílula (`border-radius: 9999px`), realce de borda Liquid Glass (`--bulldoze-glass-border-top`, `--bulldoze-glass-border-bottom`) e sombra padrão unificada.
+  - **Thunar / GTK3**: Botões de navegação e barra de ferramentas padronizados em pílula com sombreamento suave, e abas com cantos superiores arredondados em 12px.
+
 ## [3.5.1] - 2026-09
 
 ### 🥾 Bulldoze GRUB 3.0: Tema QHD Estilo Spotlight, Baker de Wallpaper e Pré-visualização

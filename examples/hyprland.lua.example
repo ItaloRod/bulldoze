@@ -43,13 +43,13 @@ end)
 
 hl.config({
     general = {
-        -- Escala de espaçamento Bulldoze: 8 / 24 (Top gap 40px para o Notch Bar, 24px laterais/inferior)
+        -- Escala de espaçamento Bulldoze Dynamic Island (sem a antiga moldura de 8px)
         gaps_in = 8,
         gaps_out = {
-            top = 40,
-            right = 24,
-            bottom = 24,
-            left = 24,
+            top = 56,
+            right = 16,
+            bottom = 16,
+            left = 16,
         },
         border_size = 0,
         layout = "dwindle",
@@ -64,7 +64,7 @@ hl.config({
     -- Decoration & Glassmorphism Blur
     -- =====================================================
     decoration = {
-        rounding = 8,
+        rounding = 12,
 
         blur = {
             enabled = true,
@@ -75,7 +75,11 @@ hl.config({
         },
 
         shadow = {
-            enabled = false,
+            enabled = true,
+            range = 20,
+            render_power = 3,
+            color = "rgba(00000059)",
+            offset = "0 6",
         },
     },
 

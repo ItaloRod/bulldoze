@@ -9,6 +9,15 @@ QtObject {
     readonly property color glassBorder: "#24FFFFFF"         // ~14% alpha white (subtle 1px border)
     readonly property color glassBorderSubtle: "#18FFFFFF"   // ~9% alpha white (item borders, inner bounds)
     readonly property color glassBorderStrong: "#36FFFFFF"   // ~21% alpha white (focused/hovered borders)
+    readonly property color glassBorderTop: "#4DFFFFFF"      // ~30% alpha white (Liquid Glass top rim highlight)
+    readonly property color glassBorderBottom: "#14FFFFFF"   // ~8% alpha white (Liquid Glass bottom rim)
+    readonly property color glassHighlight: "#26FFFFFF"      // ~15% alpha white (Liquid Glass internal reflection)
+
+    // Shadow Tokens (Unique standard shadow across all components)
+    readonly property color shadowColor: "#59000000"         // ~35% alpha black
+    readonly property int shadowRadius: 20
+    readonly property int shadowOffsetY: 6
+    readonly property int shadowOffsetX: 0
 
     // Interactive States
     readonly property color itemFill: "#10FFFFFF"            // ~6% alpha white (tile background)
@@ -54,10 +63,13 @@ QtObject {
     // 3. Geometry & Corner Radii Scale
     // -------------------------------------------------------------------------
     readonly property int radiusSmall: 6                     // Minor tags, pills track
-    readonly property int radiusPill: 6                      // Workspace pills
+    readonly property int radiusPill: 9999                   // Fully rounded capsules / workspace pills
     readonly property int radiusItem: 12                     // Buttons, list rows, toggle tiles
     readonly property int radiusCard: 18                     // Notifications, Control Center, OSD
-    readonly property int radiusModal: 22                    // Launcher modal, Power menu modal
+    readonly property int radiusModal: 28                    // Launcher modal, Power menu modal
+    readonly property int radiusIsland: 28                   // Dynamic Island expanded panels
+    readonly property int radiusIslandLarge: 32              // LockScreen and Greeter floating cards
+    readonly property int islandMargin: 8                    // 8px margin from screen borders
 
     readonly property int borderThickness: 8
     readonly property int innerRadius: 8

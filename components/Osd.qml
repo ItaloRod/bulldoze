@@ -24,7 +24,7 @@ PanelWindow {
         right: true
     }
 
-    margins.bottom: 0
+    margins.bottom: theme.islandMargin
     implicitHeight: 90
 
     function show(label, amount) {
@@ -84,10 +84,7 @@ PanelWindow {
         }
 
         Column {
-            anchors {
-                centerIn: parent
-                verticalCenterOffset: -theme.notchTopRadius / 2
-            }
+            anchors.centerIn: parent
             width: 236
             spacing: theme.spacingSm
 

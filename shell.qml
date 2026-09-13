@@ -545,7 +545,7 @@ ShellRoot {
 
                 readonly property real launcherLeft: Math.round((root.width - animLauncherWidth) / 2)
                 readonly property real launcherRight: launcherLeft + animLauncherWidth
-                readonly property real launcherTop: root.height - root.borderThickness - animLauncherHeight
+                readonly property real launcherTop: root.height - theme.islandMargin - animLauncherHeight
 
                 // Left Audio Bar Morphing Properties
                 property int audioTargetWidth: shell.isAudioBarOpen ? 48 : 0
@@ -568,9 +568,10 @@ ShellRoot {
                     }
                 }
 
+                readonly property real audioLeft: theme.islandMargin
                 readonly property real audioTop: Math.round((root.height - animAudioHeight) / 2)
                 readonly property real audioBottom: audioTop + animAudioHeight
-                readonly property real audioRight: root.borderThickness + animAudioWidth
+                readonly property real audioRight: audioLeft + animAudioWidth
 
                 // Notification Panel geometry (bottom-right corner)
                 readonly property int notifWidth: 400
@@ -613,9 +614,9 @@ ShellRoot {
                     }
                 }
 
-                property real notifRight: root.width - root.borderThickness
-                property real notifLeft: notifRight - animNotifWidth
-                property real notifTop: root.height - root.borderThickness - animNotifHeight
+                readonly property real notifRight: root.width - theme.islandMargin
+                readonly property real notifLeft: notifRight - animNotifWidth
+                readonly property real notifTop: root.height - theme.islandMargin - animNotifHeight
 
                 // System Tray Panel geometry (top-right corner)
                 readonly property int trayHeight: theme.notchHeight
@@ -642,9 +643,10 @@ ShellRoot {
                     }
                 }
 
-                property real trayRight: root.width - root.borderThickness
-                property real trayLeft: trayRight - animTrayWidth
-                property real trayBottom: root.borderThickness + animTrayHeight
+                readonly property real trayRight: root.width - theme.islandMargin
+                readonly property real trayLeft: trayRight - animTrayWidth
+                readonly property real trayTop: theme.islandMargin
+                readonly property real trayBottom: trayTop + animTrayHeight
 
                 onAnimNotchWidthChanged: {
                     shell.notchActualWidth = animNotchWidth
@@ -665,851 +667,11 @@ ShellRoot {
                         }
                     }
 
-                    // Continuous unified vector shape for perimeter frame + notch
-                    Shape {
-                        id: unifiedShape
-                        anchors.fill: parent
-                        antialiasing: true
-                        visible: parent.width > 0 && parent.height > 0
-
-                        // 1. Unified Glass Fill (Flush to screen edges + seamless notch cutout)
-                        ShapePath {
-                            fillRule: ShapePath.OddEvenFill
-                            fillColor: theme.glassFill
-                            strokeColor: "transparent"
-                            strokeWidth: 0
-
-                            // Outer Boundary (Flush with physical monitor edges)
-                            startX: 0
-                            startY: 0
-
-                            PathLine { x: root.width; y: 0 }
-                            PathLine { x: root.width; y: root.height }
-                            PathLine { x: 0; y: root.height }
-                            PathLine { x: 0; y: 0 }
-
-                            // Inner Cutout (Counter-Clockwise - 16px frame seamlessly flaring down into notch)
-                            PathMove {
-                                x: root.notchLeft
-                                y: root.borderThickness
-                            }
-
-                            // Top-left smooth concave transition flaring into notch
-                            PathCubic {
-                                x: root.notchLeft + root.concaveWidth
-                                y: root.borderThickness + root.concaveHeight
-                                control1X: root.notchLeft + (root.concaveWidth * 0.5)
-                                control1Y: root.borderThickness
-                                control2X: root.notchLeft + root.concaveWidth
-                                control2Y: root.borderThickness + (root.concaveHeight * 0.5)
-                            }
-
-                            // Left vertical edge
-                            PathLine {
-                                x: root.notchLeft + root.concaveWidth
-                                y: root.animNotchHeight - root.bottomRadius
-                            }
-
-                            // Bottom-left smooth convex rounded corner
-                            PathCubic {
-                                x: root.notchLeft + root.concaveWidth + root.bottomRadius
-                                y: root.animNotchHeight
-                                control1X: root.notchLeft + root.concaveWidth
-                                control1Y: root.animNotchHeight - (root.bottomRadius * 0.5)
-                                control2X: root.notchLeft + root.concaveWidth + (root.bottomRadius * 0.5)
-                                control2Y: root.animNotchHeight
-                            }
-
-                            // Bottom horizontal edge
-                            PathLine {
-                                x: root.notchRight - root.concaveWidth - root.bottomRadius
-                                y: root.animNotchHeight
-                            }
-
-                            // Bottom-right smooth convex rounded corner
-                            PathCubic {
-                                x: root.notchRight - root.concaveWidth
-                                y: root.animNotchHeight - root.bottomRadius
-                                control1X: root.notchRight - root.concaveWidth - (root.bottomRadius * 0.5)
-                                control1Y: root.animNotchHeight
-                                control2X: root.notchRight - root.concaveWidth
-                                control2Y: root.animNotchHeight - (root.bottomRadius * 0.5)
-                            }
-
-                            // Right vertical edge
-                            PathLine {
-                                x: root.notchRight - root.concaveWidth
-                                y: root.borderThickness + root.concaveHeight
-                            }
-
-                            // Top-right smooth concave transition flaring into top bezel
-                            PathCubic {
-                                x: root.notchRight
-                                y: root.borderThickness
-                                control1X: root.notchRight - root.concaveWidth
-                                control1Y: root.borderThickness + (root.concaveHeight * 0.5)
-                                control2X: root.notchRight - (root.concaveWidth * 0.5)
-                                control2Y: root.borderThickness
-                            }
-
-                            // Top horizontal border towards top-right tray
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft - root.concaveWidth)
-                                   : (root.width - root.borderThickness - root.innerRadius)
-                                y: root.borderThickness
-                            }
-
-                            // Top-right concave transition flaring down into tray left edge
-                            PathCubic {
-                                x: root.animTrayHeight > 0
-                                   ? root.trayLeft
-                                   : (root.width - root.borderThickness)
-                                y: root.animTrayHeight > 0
-                                   ? (root.borderThickness + root.concaveHeight)
-                                   : (root.borderThickness + root.innerRadius)
-                                control1X: root.animTrayHeight > 0
-                                           ? (root.trayLeft - (root.concaveWidth * 0.5))
-                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
-                                control1Y: root.borderThickness
-                                control2X: root.animTrayHeight > 0
-                                           ? root.trayLeft
-                                           : (root.width - root.borderThickness)
-                                control2Y: root.animTrayHeight > 0
-                                           ? (root.borderThickness + (root.concaveHeight * 0.5))
-                                           : (root.borderThickness + (root.innerRadius * 0.5))
-                            }
-
-                            // Left vertical edge of tray panel
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? root.trayLeft
-                                   : (root.width - root.borderThickness)
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom - root.bottomRadius)
-                                   : (root.borderThickness + root.innerRadius)
-                            }
-
-                            // Bottom-left convex rounded corner of tray panel
-                            PathCubic {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft + root.bottomRadius)
-                                   : (root.width - root.borderThickness)
-                                y: root.animTrayHeight > 0
-                                   ? root.trayBottom
-                                   : (root.borderThickness + root.innerRadius)
-                                control1X: root.animTrayHeight > 0
-                                           ? root.trayLeft
-                                           : (root.width - root.borderThickness)
-                                control1Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom - (root.bottomRadius * 0.5))
-                                           : (root.borderThickness + root.innerRadius)
-                                control2X: root.animTrayHeight > 0
-                                           ? (root.trayLeft + (root.bottomRadius * 0.5))
-                                           : (root.width - root.borderThickness)
-                                control2Y: root.animTrayHeight > 0
-                                           ? root.trayBottom
-                                           : (root.borderThickness + root.innerRadius)
-                            }
-
-                            // Bottom horizontal edge of tray panel
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? (root.width - root.borderThickness - root.concaveHeight)
-                                   : (root.width - root.borderThickness)
-                                y: root.animTrayHeight > 0
-                                   ? root.trayBottom
-                                   : (root.borderThickness + root.innerRadius)
-                            }
-
-                            // Concave transition flaring down into right bezel
-                            PathCubic {
-                                x: root.width - root.borderThickness
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom + root.concaveWidth)
-                                   : (root.borderThickness + root.innerRadius)
-                                control1X: root.animTrayHeight > 0
-                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5))
-                                           : (root.width - root.borderThickness)
-                                control1Y: root.animTrayHeight > 0
-                                           ? root.trayBottom
-                                           : (root.borderThickness + root.innerRadius)
-                                control2X: root.width - root.borderThickness
-                                control2Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom + (root.concaveWidth * 0.5))
-                                           : (root.borderThickness + root.innerRadius)
-                            }
-
-                            // Right vertical inner border down towards notification panel
-                            PathLine {
-                                x: root.width - root.borderThickness
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop - root.concaveWidth)
-                                   : (root.height - root.borderThickness - root.innerRadius)
-                            }
-
-                            // Concave flare flaring left from right border into notification top ceiling
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? (root.width - root.borderThickness - root.concaveHeight)
-                                   : (root.width - root.borderThickness)
-                                y: root.animNotifHeight > 0
-                                   ? root.notifTop
-                                   : (root.height - root.borderThickness - root.innerRadius)
-                                control1X: root.width - root.borderThickness
-                                control1Y: root.animNotifHeight > 0
-                                           ? (root.notifTop - (root.concaveWidth * 0.5))
-                                           : (root.height - root.borderThickness - root.innerRadius)
-                                control2X: root.animNotifHeight > 0
-                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5))
-                                           : (root.width - root.borderThickness)
-                                control2Y: root.animNotifHeight > 0
-                                           ? root.notifTop
-                                           : (root.height - root.borderThickness - root.innerRadius)
-                            }
-
-                            // Top horizontal ceiling of notification panel
-                            PathLine {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft + root.topRadius)
-                                   : (root.width - root.borderThickness)
-                                y: root.animNotifHeight > 0
-                                   ? root.notifTop
-                                   : (root.height - root.borderThickness - root.innerRadius)
-                            }
-
-                            // Top-left convex corner (or screen's inner corner when closed)
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? root.notifLeft
-                                   : (root.width - root.borderThickness - root.innerRadius)
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop + root.topRadius)
-                                   : (root.height - root.borderThickness)
-                                control1X: root.animNotifHeight > 0
-                                           ? (root.notifLeft + (root.topRadius * 0.5))
-                                           : (root.width - root.borderThickness)
-                                control1Y: root.animNotifHeight > 0
-                                           ? root.notifTop
-                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
-                                control2X: root.animNotifHeight > 0
-                                           ? root.notifLeft
-                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
-                                control2Y: root.animNotifHeight > 0
-                                           ? (root.notifTop + (root.topRadius * 0.5))
-                                           : (root.height - root.borderThickness)
-                            }
-
-                            // Left vertical edge of notification panel
-                            PathLine {
-                                x: root.animNotifHeight > 0
-                                   ? root.notifLeft
-                                   : (root.width - root.borderThickness - root.innerRadius)
-                                y: root.animNotifHeight > 0
-                                   ? (root.height - root.borderThickness - root.concaveHeight)
-                                   : (root.height - root.borderThickness)
-                            }
-
-                            // Bottom-left concave transition flaring into bottom bezel
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft - root.concaveWidth)
-                                   : (root.width - root.borderThickness - root.innerRadius)
-                                y: root.height - root.borderThickness
-                                control1X: root.animNotifHeight > 0
-                                           ? root.notifLeft
-                                           : (root.width - root.borderThickness - root.innerRadius)
-                                control1Y: root.animNotifHeight > 0
-                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
-                                           : (root.height - root.borderThickness)
-                                control2X: root.animNotifHeight > 0
-                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
-                                           : (root.width - root.borderThickness - root.innerRadius)
-                                control2Y: root.height - root.borderThickness
-                            }
-
-                            // Bottom horizontal border towards launcher right
-                            PathLine {
-                                x: root.launcherRight
-                                y: root.height - root.borderThickness
-                            }
-
-                            // Bottom-right concave transition flaring into bottom dock
-                            PathCubic {
-                                x: root.launcherRight - root.dockConcaveWidth
-                                y: root.height - root.borderThickness - root.dockConcaveHeight
-                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
-                                control1Y: root.height - root.borderThickness
-                                control2X: root.launcherRight - root.dockConcaveWidth
-                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
-                            }
-
-                            // Right vertical edge of bottom dock
-                            PathLine {
-                                x: root.launcherRight - root.dockConcaveWidth
-                                y: root.launcherTop + root.dockTopRadius
-                            }
-
-                            // Top-right convex corner
-                            PathCubic {
-                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
-                                y: root.launcherTop
-                                control1X: root.launcherRight - root.dockConcaveWidth
-                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
-                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
-                                control2Y: root.launcherTop
-                            }
-
-                            // Top horizontal ceiling of bottom dock
-                            PathLine {
-                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
-                                y: root.launcherTop
-                            }
-
-                            // Top-left convex corner
-                            PathCubic {
-                                x: root.launcherLeft + root.dockConcaveWidth
-                                y: root.launcherTop + root.dockTopRadius
-                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
-                                control1Y: root.launcherTop
-                                control2X: root.launcherLeft + root.dockConcaveWidth
-                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
-                            }
-
-                            // Left vertical edge of bottom dock
-                            PathLine {
-                                x: root.launcherLeft + root.dockConcaveWidth
-                                y: root.height - root.borderThickness - root.dockConcaveHeight
-                            }
-
-                            // Bottom-left concave transition flaring into bottom bezel
-                            PathCubic {
-                                x: root.launcherLeft
-                                y: root.height - root.borderThickness
-                                control1X: root.launcherLeft + root.dockConcaveWidth
-                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
-                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
-                                control2Y: root.height - root.borderThickness
-                            }
-
-                            // Bottom horizontal border to bottom-left inner corner
-                            PathLine {
-                                x: root.borderThickness + root.innerRadius
-                                y: root.height - root.borderThickness
-                            }
-
-                            // Bottom-left inner rounded corner
-                            PathCubic {
-                                x: root.borderThickness
-                                y: root.height - root.borderThickness - root.innerRadius
-                                control1X: root.borderThickness + (root.innerRadius * 0.5)
-                                control1Y: root.height - root.borderThickness
-                                control2X: root.borderThickness
-                                control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                            }
-
-                            // Line from bottom-left corner up to audioBottom
-                            PathLine {
-                                x: root.borderThickness
-                                y: root.audioBottom
-                            }
-
-                            // Bottom concave transition flaring into left audio panel
-                            PathCubic {
-                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1X: root.borderThickness
-                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Bottom-right convex corner
-                            PathLine {
-                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-                            PathCubic {
-                                x: root.audioRight
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.audioRight
-                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Right vertical edge of left audio panel
-                            PathLine {
-                                x: root.audioRight
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Top-right convex corner
-                            PathCubic {
-                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1X: root.audioRight
-                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Top horizontal ceiling of left audio panel
-                            PathLine {
-                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Top concave transition flaring into left screen bezel
-                            PathCubic {
-                                x: root.borderThickness
-                                y: root.audioTop
-                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.borderThickness
-                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Left vertical inner border continuing to top-left corner
-                            PathLine {
-                                x: root.borderThickness
-                                y: root.borderThickness + root.innerRadius
-                            }
-
-                            // Top-left inner rounded corner
-                            PathCubic {
-                                x: root.borderThickness + root.innerRadius
-                                y: root.borderThickness
-                                control1X: root.borderThickness
-                                control1Y: root.borderThickness + (root.innerRadius * 0.5)
-                                control2X: root.borderThickness + (root.innerRadius * 0.5)
-                                control2Y: root.borderThickness
-                            }
-
-                            // Top horizontal border to notchLeft start
-                            PathLine {
-                                x: root.notchLeft
-                                y: root.borderThickness
-                            }
-                        }
-
-                        // 2. Continuous Inner Desktop 1px Stroke (Seamless single contour)
-                        ShapePath {
-                            fillColor: "transparent"
-                            strokeColor: theme.glassBorderSubtle
-                            strokeWidth: 1
-                            capStyle: ShapePath.RoundCap
-
-                            startX: root.notchLeft
-                            startY: root.borderThickness + 0.5
-
-                            // Top-left smooth concave transition
-                            PathCubic {
-                                x: root.notchLeft + root.concaveWidth + 0.5
-                                y: root.borderThickness + root.concaveHeight
-                                control1X: root.notchLeft + (root.concaveWidth * 0.5)
-                                control1Y: root.borderThickness + 0.5
-                                control2X: root.notchLeft + root.concaveWidth + 0.5
-                                control2Y: root.borderThickness + (root.concaveHeight * 0.5)
-                            }
-
-                            // Left vertical edge
-                            PathLine {
-                                x: root.notchLeft + root.concaveWidth + 0.5
-                                y: root.animNotchHeight - root.bottomRadius
-                            }
-
-                            // Bottom-left smooth convex rounded corner
-                            PathCubic {
-                                x: root.notchLeft + root.concaveWidth + root.bottomRadius
-                                y: root.animNotchHeight - 0.5
-                                control1X: root.notchLeft + root.concaveWidth + 0.5
-                                control1Y: root.animNotchHeight - (root.bottomRadius * 0.5)
-                                control2X: root.notchLeft + root.concaveWidth + (root.bottomRadius * 0.5)
-                                control2Y: root.animNotchHeight - 0.5
-                            }
-
-                            // Bottom horizontal edge
-                            PathLine {
-                                x: root.notchRight - root.concaveWidth - root.bottomRadius
-                                y: root.animNotchHeight - 0.5
-                            }
-
-                            // Bottom-right smooth convex rounded corner
-                            PathCubic {
-                                x: root.notchRight - root.concaveWidth - 0.5
-                                y: root.animNotchHeight - root.bottomRadius
-                                control1X: root.notchRight - root.concaveWidth - (root.bottomRadius * 0.5)
-                                control1Y: root.animNotchHeight - 0.5
-                                control2X: root.notchRight - root.concaveWidth - 0.5
-                                control2Y: root.animNotchHeight - (root.bottomRadius * 0.5)
-                            }
-
-                            // Right vertical edge
-                            PathLine {
-                                x: root.notchRight - root.concaveWidth - 0.5
-                                y: root.borderThickness + root.concaveHeight
-                            }
-
-                            // Top-right smooth concave transition
-                            PathCubic {
-                                x: root.notchRight
-                                y: root.borderThickness + 0.5
-                                control1X: root.notchRight - root.concaveWidth - 0.5
-                                control1Y: root.borderThickness + (root.concaveHeight * 0.5)
-                                control2X: root.notchRight - (root.concaveWidth * 0.5)
-                                control2Y: root.borderThickness + 0.5
-                            }
-
-                            // Top-right inner horizontal line towards tray
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft - root.concaveWidth)
-                                   : (root.width - root.borderThickness - root.innerRadius)
-                                y: root.borderThickness + 0.5
-                            }
-
-                            // Top-right concave transition flaring down into tray left edge
-                            PathCubic {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft + 0.5)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animTrayHeight > 0
-                                   ? (root.borderThickness + root.concaveHeight + 0.5)
-                                   : (root.borderThickness + root.innerRadius + 0.5)
-                                control1X: root.animTrayHeight > 0
-                                           ? (root.trayLeft - (root.concaveWidth * 0.5))
-                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
-                                control1Y: root.borderThickness + 0.5
-                                control2X: root.animTrayHeight > 0
-                                           ? (root.trayLeft + 0.5)
-                                           : (root.width - root.borderThickness - 0.5)
-                                control2Y: root.animTrayHeight > 0
-                                           ? (root.borderThickness + (root.concaveHeight * 0.5) + 0.5)
-                                           : (root.borderThickness + (root.innerRadius * 0.5) + 0.5)
-                            }
-
-                            // Left vertical edge of tray panel
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft + 0.5)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom - root.bottomRadius)
-                                   : (root.borderThickness + root.innerRadius + 0.5)
-                            }
-
-                            // Bottom-left convex rounded corner of tray panel
-                            PathCubic {
-                                x: root.animTrayHeight > 0
-                                   ? (root.trayLeft + root.bottomRadius)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom + 0.5)
-                                   : (root.borderThickness + root.innerRadius + 0.5)
-                                control1X: root.animTrayHeight > 0
-                                           ? (root.trayLeft + 0.5)
-                                           : (root.width - root.borderThickness - 0.5)
-                                control1Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom - (root.bottomRadius * 0.5) + 0.5)
-                                           : (root.borderThickness + root.innerRadius + 0.5)
-                                control2X: root.animTrayHeight > 0
-                                           ? (root.trayLeft + (root.bottomRadius * 0.5))
-                                           : (root.width - root.borderThickness - 0.5)
-                                control2Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom + 0.5)
-                                           : (root.borderThickness + root.innerRadius + 0.5)
-                            }
-
-                            // Bottom horizontal edge of tray panel
-                            PathLine {
-                                x: root.animTrayHeight > 0
-                                   ? (root.width - root.borderThickness - root.concaveHeight - 0.5)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom + 0.5)
-                                   : (root.borderThickness + root.innerRadius + 0.5)
-                            }
-
-                            // Concave transition flaring down into right bezel
-                            PathCubic {
-                                x: root.width - root.borderThickness - 0.5
-                                y: root.animTrayHeight > 0
-                                   ? (root.trayBottom + root.concaveWidth)
-                                   : (root.borderThickness + root.innerRadius + 0.5)
-                                control1X: root.animTrayHeight > 0
-                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5) - 0.5)
-                                           : (root.width - root.borderThickness - 0.5)
-                                control1Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom + 0.5)
-                                           : (root.borderThickness + root.innerRadius + 0.5)
-                                control2X: root.width - root.borderThickness - 0.5
-                                control2Y: root.animTrayHeight > 0
-                                           ? (root.trayBottom + (root.concaveWidth * 0.5))
-                                           : (root.borderThickness + root.innerRadius + 0.5)
-                            }
-
-                            // Right vertical inner border down towards notification panel
-                            PathLine {
-                                x: root.width - root.borderThickness - 0.5
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop - root.concaveWidth)
-                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
-                            }
-
-                            // Concave flare flaring left from right border into notification top ceiling
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? (root.width - root.borderThickness - root.concaveHeight - 0.5)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop + 0.5)
-                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
-                                control1X: root.width - root.borderThickness - 0.5
-                                control1Y: root.animNotifHeight > 0
-                                           ? (root.notifTop - (root.concaveWidth * 0.5))
-                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
-                                control2X: root.animNotifHeight > 0
-                                           ? (root.width - root.borderThickness - (root.concaveHeight * 0.5) - 0.5)
-                                           : (root.width - root.borderThickness - 0.5)
-                                control2Y: root.animNotifHeight > 0
-                                           ? (root.notifTop + 0.5)
-                                           : (root.height - root.borderThickness - root.innerRadius - 0.5)
-                            }
-
-                            // Top horizontal ceiling of notification panel
-                            PathLine {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft + root.topRadius)
-                                   : (root.width - root.borderThickness - 0.5)
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop + 0.5)
-                                   : (root.height - root.borderThickness - root.innerRadius - 0.5)
-                            }
-
-                            // Top-left convex corner (or screen's inner corner when closed)
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft + 0.5)
-                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
-                                y: root.animNotifHeight > 0
-                                   ? (root.notifTop + root.topRadius)
-                                   : (root.height - root.borderThickness - 0.5)
-                                control1X: root.animNotifHeight > 0
-                                           ? (root.notifLeft + (root.topRadius * 0.5))
-                                           : (root.width - root.borderThickness - 0.5)
-                                control1Y: root.animNotifHeight > 0
-                                           ? (root.notifTop + 0.5)
-                                           : (root.height - root.borderThickness - (root.innerRadius * 0.5))
-                                control2X: root.animNotifHeight > 0
-                                           ? (root.notifLeft + 0.5)
-                                           : (root.width - root.borderThickness - (root.innerRadius * 0.5))
-                                control2Y: root.animNotifHeight > 0
-                                           ? (root.notifTop + (root.topRadius * 0.5))
-                                           : (root.height - root.borderThickness - 0.5)
-                            }
-
-                            // Left vertical edge of notification panel
-                            PathLine {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft + 0.5)
-                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
-                                y: root.animNotifHeight > 0
-                                   ? (root.height - root.borderThickness - root.concaveHeight)
-                                   : (root.height - root.borderThickness - 0.5)
-                            }
-
-                            // Bottom-left concave transition flaring into bottom bezel
-                            PathCubic {
-                                x: root.animNotifHeight > 0
-                                   ? (root.notifLeft - root.concaveWidth)
-                                   : (root.width - root.borderThickness - root.innerRadius - 0.5)
-                                y: root.height - root.borderThickness - 0.5
-                                control1X: root.animNotifHeight > 0
-                                           ? (root.notifLeft + 0.5)
-                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
-                                control1Y: root.animNotifHeight > 0
-                                           ? (root.height - root.borderThickness - (root.concaveHeight * 0.5))
-                                           : (root.height - root.borderThickness - 0.5)
-                                control2X: root.animNotifHeight > 0
-                                           ? (root.notifLeft - (root.concaveWidth * 0.5))
-                                           : (root.width - root.borderThickness - root.innerRadius - 0.5)
-                                control2Y: root.height - root.borderThickness - 0.5
-                            }
-
-                            // Bottom horizontal border towards launcher right
-                            PathLine {
-                                x: root.launcherRight
-                                y: root.height - root.borderThickness - 0.5
-                            }
-
-                            // Bottom-right concave transition flaring into bottom dock
-                            PathCubic {
-                                x: root.launcherRight - root.dockConcaveWidth - 0.5
-                                y: root.height - root.borderThickness - root.dockConcaveHeight
-                                control1X: root.launcherRight - (root.dockConcaveWidth * 0.5)
-                                control1Y: root.height - root.borderThickness - 0.5
-                                control2X: root.launcherRight - root.dockConcaveWidth - 0.5
-                                control2Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
-                            }
-
-                            // Right vertical edge of bottom dock
-                            PathLine {
-                                x: root.launcherRight - root.dockConcaveWidth - 0.5
-                                y: root.launcherTop + root.dockTopRadius
-                            }
-
-                            // Top-right convex corner
-                            PathCubic {
-                                x: root.launcherRight - root.dockConcaveWidth - root.dockTopRadius
-                                y: root.launcherTop + 0.5
-                                control1X: root.launcherRight - root.dockConcaveWidth - 0.5
-                                control1Y: root.launcherTop + (root.dockTopRadius * 0.5)
-                                control2X: root.launcherRight - root.dockConcaveWidth - (root.dockTopRadius * 0.5)
-                                control2Y: root.launcherTop + 0.5
-                            }
-
-                            // Top horizontal ceiling of bottom dock
-                            PathLine {
-                                x: root.launcherLeft + root.dockConcaveWidth + root.dockTopRadius
-                                y: root.launcherTop + 0.5
-                            }
-
-                            // Top-left convex corner
-                            PathCubic {
-                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
-                                y: root.launcherTop + root.dockTopRadius
-                                control1X: root.launcherLeft + root.dockConcaveWidth + (root.dockTopRadius * 0.5)
-                                control1Y: root.launcherTop + 0.5
-                                control2X: root.launcherLeft + root.dockConcaveWidth + 0.5
-                                control2Y: root.launcherTop + (root.dockTopRadius * 0.5)
-                            }
-
-                            // Left vertical edge of bottom dock
-                            PathLine {
-                                x: root.launcherLeft + root.dockConcaveWidth + 0.5
-                                y: root.height - root.borderThickness - root.dockConcaveHeight
-                            }
-
-                            // Bottom-left concave transition flaring into bottom bezel
-                            PathCubic {
-                                x: root.launcherLeft
-                                y: root.height - root.borderThickness - 0.5
-                                control1X: root.launcherLeft + root.dockConcaveWidth + 0.5
-                                control1Y: root.height - root.borderThickness - (root.dockConcaveHeight * 0.5)
-                                control2X: root.launcherLeft + (root.dockConcaveWidth * 0.5)
-                                control2Y: root.height - root.borderThickness - 0.5
-                            }
-
-                            // Bottom horizontal border to bottom-left inner corner
-                            PathLine {
-                                x: root.borderThickness + root.innerRadius + 0.5
-                                y: root.height - root.borderThickness - 0.5
-                            }
-
-                            // Bottom-left inner rounded corner
-                            PathCubic {
-                                x: root.borderThickness + 0.5
-                                y: root.height - root.borderThickness - root.innerRadius - 0.5
-                                control1X: root.borderThickness + (root.innerRadius * 0.5)
-                                control1Y: root.height - root.borderThickness - 0.5
-                                control2X: root.borderThickness + 0.5
-                                control2Y: root.height - root.borderThickness - (root.innerRadius * 0.5)
-                            }
-
-                            // Line from bottom-left corner up to audioBottom
-                            PathLine {
-                                x: root.borderThickness + 0.5
-                                y: root.audioBottom
-                            }
-
-                            // Bottom concave transition
-                            PathCubic {
-                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1X: root.borderThickness + 0.5
-                                control1Y: root.audioBottom - (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Bottom horizontal line towards audioRight
-                            PathLine {
-                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
-                            }
-
-                            // Bottom-right convex corner
-                            PathCubic {
-                                x: root.audioRight + 0.5
-                                y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control1Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - 0.5
-                                control2X: root.audioRight + 0.5
-                                control2Y: root.audioBottom - (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Right vertical edge of left audio panel
-                            PathLine {
-                                x: root.audioRight + 0.5
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Top-right convex corner
-                            PathCubic {
-                                x: root.audioRight - (root.bottomRadius * (root.animAudioWidth > 0 ? 1 : 0))
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                control1X: root.audioRight + 0.5
-                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2X: root.audioRight - (root.bottomRadius * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                                control2Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                            }
-
-                            // Top horizontal ceiling of left audio panel
-                            PathLine {
-                                x: root.borderThickness + (root.concaveHeight * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                            }
-
-                            // Top concave transition
-                            PathCubic {
-                                x: root.borderThickness + 0.5
-                                y: root.audioTop
-                                control1X: root.borderThickness + (root.concaveHeight * 0.5 * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                control1Y: root.audioTop + (root.concaveWidth * (root.animAudioWidth > 0 ? 1 : 0)) + 0.5
-                                control2X: root.borderThickness + 0.5
-                                control2Y: root.audioTop + (root.concaveWidth * 0.5 * (root.animAudioWidth > 0 ? 1 : 0))
-                            }
-
-                            // Left vertical inner border
-                            PathLine {
-                                x: root.borderThickness + 0.5
-                                y: root.borderThickness + root.innerRadius + 0.5
-                            }
-
-                            // Top-left inner rounded corner
-                            PathCubic {
-                                x: root.borderThickness + root.innerRadius + 0.5
-                                y: root.borderThickness + 0.5
-                                control1X: root.borderThickness + 0.5
-                                control1Y: root.borderThickness + (root.innerRadius * 0.5)
-                                control2X: root.borderThickness + (root.innerRadius * 0.5)
-                                control2Y: root.borderThickness + 0.5
-                            }
-
-                            // Top-left inner horizontal line to notchLeft
-                            PathLine {
-                                x: root.notchLeft
-                                y: root.borderThickness + 0.5
-                            }
-                        }
-                    }
-
-                    // Interactive Top Hover Trigger (Restrito à geometria da notch fechada)
+                    // Interactive Top Hover Trigger (Restrito à geometria da ilha fechada)
                     Item {
                         id: notchTopTrigger
                         x: root.notchLeft
-                        y: 0
+                        y: theme.islandMargin
                         width: root.animNotchWidth
                         height: root.animNotchHeight
                         visible: shell.activeMode === "none" && !shell.isLauncherOpen
@@ -1528,13 +690,20 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Notch Container
+                    // Interactive Dynamic Island Top Bar Container
                     Item {
                         id: notchContainer
                         x: root.notchLeft
-                        y: 0
+                        y: theme.islandMargin
                         width: root.animNotchWidth
                         height: root.animNotchHeight
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: (root.animNotchHeight <= 48) ? (root.animNotchHeight / 2) : theme.radiusIsland
+                            fillColor: theme.glassFill
+                            shadowEnabled: true
+                        }
 
                         HoverHandler {
                             id: notchHover
@@ -1647,17 +816,24 @@ ShellRoot {
                         onClicked: shell.isLauncherOpen = false
                     }
 
-                    // Interactive Bottom Launcher / Workspace Container
+                    // Interactive Bottom Launcher / Workspace Container (Dynamic Island)
                     Item {
                         id: bottomLauncherContainer
                         x: root.launcherLeft
                         y: root.launcherTop
                         width: root.animLauncherWidth
-                        height: root.animLauncherHeight + root.borderThickness
-                        clip: true
+                        height: root.animLauncherHeight
+                        clip: false
                         visible: shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0
                         focus: shell.isLauncherOpen
                         z: 100
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: (root.animLauncherHeight <= 48) ? (root.animLauncherHeight / 2) : theme.radiusIsland
+                            fillColor: theme.glassFillDark
+                            shadowEnabled: true
+                        }
 
                         BottomLauncher {
                             anchors.fill: parent
@@ -1669,13 +845,7 @@ ShellRoot {
                         // Minimalist Bottom Workspace View
                         Item {
                             id: bottomWorkspaceView
-                            anchors {
-                                top: parent.top
-                                left: parent.left
-                                right: parent.right
-                                bottom: parent.bottom
-                                bottomMargin: root.borderThickness
-                            }
+                            anchors.fill: parent
                             visible: !shell.isLauncherOpen && (shell.isWorkspaceOpen || root.animLauncherHeight > 0)
                             opacity: (!shell.isLauncherOpen && shell.isWorkspaceOpen) ? 1.0 : 0.0
 
@@ -1709,13 +879,13 @@ ShellRoot {
                         }
                     }
 
-                    // Bottom Center Workspace Trigger Hot Zone (Screen Bezel)
+                    // Bottom Center Workspace Trigger Hot Zone
                     Item {
                         id: workspaceBottomTrigger
                         x: Math.round((root.width - Math.max(240, root.workspaceTargetWidth)) / 2)
-                        y: root.height - root.borderThickness - 16
+                        y: root.height - theme.islandMargin - 28
                         width: Math.max(240, root.workspaceTargetWidth)
-                        height: root.borderThickness + 16
+                        height: 28 + theme.islandMargin
                         visible: !shell.isWorkspaceOpen && !shell.isLauncherOpen
 
                         HoverHandler {
@@ -1727,15 +897,22 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Left Audio Bar Container (integrated with left border)
+                    // Interactive Left Audio Bar Container (Floating Capsule)
                     Item {
                         id: leftAudioBarContainer
-                        x: 0
+                        x: root.audioLeft
                         y: root.audioTop
-                        width: root.animAudioWidth + root.borderThickness
+                        width: root.animAudioWidth
                         height: root.animAudioHeight
-                        clip: true
+                        clip: false
                         visible: shell.isAudioBarOpen || root.animAudioWidth > 0
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: root.animAudioWidth / 2
+                            fillColor: theme.glassFillDark
+                            shadowEnabled: true
+                        }
 
                         HoverHandler {
                             id: sideBarHover
@@ -1751,12 +928,7 @@ ShellRoot {
                         }
 
                         AudioBarView {
-                            anchors {
-                                left: parent.left
-                                leftMargin: root.borderThickness
-                                top: parent.top
-                                bottom: parent.bottom
-                            }
+                            anchors.fill: parent
                             width: 48
                             audio: globalAudio
                             openSettings: () => {
@@ -1767,15 +939,22 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Bottom-Right Notification Container
+                    // Interactive Bottom-Right Notification Container (Floating Pill)
                     Item {
                         id: bottomNotifContainer
                         x: root.notifLeft
                         y: root.notifTop
-                        width: root.animNotifWidth + root.borderThickness
-                        height: root.animNotifHeight + root.borderThickness
-                        clip: true
+                        width: root.animNotifWidth
+                        height: root.animNotifHeight
+                        clip: false
                         visible: shell.isNotifOpen || root.animNotifHeight > 0
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: (root.animNotifHeight <= 66) ? 20 : theme.radiusIsland
+                            fillColor: theme.glassFillDark
+                            shadowEnabled: true
+                        }
 
                         HoverHandler {
                             id: bottomNotifHover
@@ -1792,13 +971,8 @@ ShellRoot {
                         }
 
                         NotificationBarView {
-                            anchors {
-                                fill: parent
-                                topMargin: 6
-                                bottomMargin: root.borderThickness + 4
-                                leftMargin: 12
-                                rightMargin: root.borderThickness + 6
-                            }
+                            anchors.fill: parent
+                            anchors.margins: 10
                             notifications: globalNotifications
                             isExpanded: shell.isNotifExpanded
                             dismissAll: () => globalNotifications.dismissAll()
@@ -1809,10 +983,10 @@ ShellRoot {
                     // Bottom-Right Corner Trigger Hot Zone
                     Item {
                         id: notifCornerTrigger
-                        x: root.width - root.borderThickness - 48
-                        y: root.height - root.borderThickness - 48
-                        width: root.borderThickness + 48
-                        height: root.borderThickness + 48
+                        x: root.width - theme.islandMargin - 48
+                        y: root.height - theme.islandMargin - 48
+                        width: 48 + theme.islandMargin
+                        height: 48 + theme.islandMargin
                         visible: !shell.isNotifOpen
 
                         HoverHandler {
@@ -1824,15 +998,22 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Top-Right System Tray Container
+                    // Interactive Top-Right System Tray Container (Floating Pill)
                     Item {
                         id: topTrayContainer
                         x: root.trayLeft
-                        y: 0
-                        width: root.animTrayWidth + root.borderThickness
-                        height: root.animTrayHeight + root.borderThickness
-                        clip: true
+                        y: root.trayTop
+                        width: root.animTrayWidth
+                        height: root.animTrayHeight
+                        clip: false
                         visible: (shell.isTrayOpen || root.animTrayHeight > 0) && shell.trayItemCount > 0
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: root.animTrayHeight / 2
+                            fillColor: theme.glassFillDark
+                            shadowEnabled: true
+                        }
 
                         HoverHandler {
                             id: topTrayHover
@@ -1845,13 +1026,7 @@ ShellRoot {
 
                         TrayBarView {
                             id: topTrayView
-                            anchors {
-                                fill: parent
-                                topMargin: root.borderThickness
-                                bottomMargin: 0
-                                leftMargin: 0
-                                rightMargin: root.borderThickness
-                            }
+                            anchors.centerIn: parent
                             onIsAnyMenuOpenChanged: {
                                 shell.isTrayMenuOpen = isAnyMenuOpen
                                 if (!isAnyMenuOpen && !topTrayHover.hovered) {
@@ -1864,10 +1039,10 @@ ShellRoot {
                     // Top-Right Corner Trigger Hot Zone (Screen Bezel)
                     Item {
                         id: trayCornerTrigger
-                        x: root.width - root.borderThickness - 48
+                        x: root.width - theme.islandMargin - 48
                         y: 0
-                        width: root.borderThickness + 48
-                        height: root.borderThickness + 48
+                        width: 48 + theme.islandMargin
+                        height: 48 + theme.islandMargin
                         visible: !shell.isTrayOpen && shell.trayItemCount > 0 && !shell.isLauncherOpen
 
                         HoverHandler {

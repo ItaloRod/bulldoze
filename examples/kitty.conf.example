@@ -17,7 +17,7 @@ editor vim
 shell zsh
 
 # Glassmorphism & Background Transparency
-background_opacity 0.20
+background_opacity 0.10
 background_blur    1
 
 foreground #FFFFFF

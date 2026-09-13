@@ -18,9 +18,9 @@ Item {
     Item {
         anchors {
             left: parent.left
-            leftMargin: theme.contentInset + theme.notchConcaveWidth
+            leftMargin: theme.contentInset
             right: parent.right
-            rightMargin: theme.contentInset + theme.notchConcaveWidth
+            rightMargin: theme.contentInset
             verticalCenter: parent.verticalCenter
         }
         height: parent.height

@@ -14,7 +14,7 @@ Item {
 
     readonly property var game: gaming
 
-    readonly property int idealWidth: Math.round(controlsRow.implicitWidth + ((theme.contentInset + theme.notchConcaveWidth) * 2))
+    readonly property int idealWidth: Math.round(controlsRow.implicitWidth + (theme.contentInset * 2))
 
     Item {
         anchors.centerIn: parent
