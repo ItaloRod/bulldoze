@@ -5,7 +5,7 @@ import Quickshell.Services.Notifications
 QtObject {
     id: root
 
-    readonly property int maxBuffer: 7
+    readonly property int maxBuffer: 15
     property var buffer: []
 
     readonly property var list: buffer

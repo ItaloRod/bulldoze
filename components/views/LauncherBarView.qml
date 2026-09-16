@@ -17,6 +17,17 @@ Item {
     property var wallpaperEngine
     property var userProfile
     property var lockScreen
+    property var requestConfirm
+    property var appearance
+
+    function confirmPowerAction(title, desc, action, icon) {
+        if (root.requestConfirm) {
+            root.requestConfirm(title, desc, action, icon || "")
+        }
+        if (root.goBack) {
+            root.goBack()
+        }
+    }
 
     focus: true
     Keys.onEscapePressed: if (root.goBack) root.goBack()
@@ -289,221 +300,273 @@ Item {
         }
     }
 
-    Column {
+    Row {
         anchors.fill: parent
-        anchors.margins: theme.spacingXxl
-        spacing: theme.spacingMd
+        spacing: 0
 
-        // 1. TOP HORIZONTAL CATEGORY BAR (Centralizada e independente do scroll)
-        Row {
-            anchors.horizontalCenter: parent.horizontalCenter
-            height: 42
-            spacing: theme.spacingMd
-
-            // 0. Home
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "home" ? theme.activeFill : (catHomeMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "home" ? theme.glassBorderStrong : (catHomeMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catHomeMouse.pressed ? 0.90 : (catHomeMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "home" ? theme.textStrong : (catHomeMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catHomeMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "home"
-                }
-            }
-
-            // 1. Wi-Fi
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "wifi" ? theme.activeFill : (catWifiMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "wifi" ? theme.glassBorderStrong : (catWifiMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catWifiMouse.pressed ? 0.90 : (catWifiMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "wifi" ? theme.textStrong : (catWifiMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catWifiMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "wifi"
-                }
-            }
-
-            // 2. Bluetooth
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "bluetooth" ? theme.activeFill : (catBtMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "bluetooth" ? theme.glassBorderStrong : (catBtMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catBtMouse.pressed ? 0.90 : (catBtMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "bluetooth" ? theme.textStrong : (catBtMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catBtMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "bluetooth"
-                }
-            }
-
-            // 3. Som
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : (catSoundMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catSoundMouse.pressed ? 0.90 : (catSoundMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "sound" ? theme.textStrong : (catSoundMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catSoundMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "sound"
-                }
-            }
-
-            // 4. Wallpaper
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "wallpaper" ? theme.activeFill : (catWpMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "wallpaper" ? theme.glassBorderStrong : (catWpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catWpMouse.pressed ? 0.90 : (catWpMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "wallpaper" ? theme.textStrong : (catWpMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catWpMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "wallpaper"
-                }
-            }
-
-            // 5. Gaming
-            Rectangle {
-                width: 42
-                height: 42
-                radius: theme.radiusSmall
-                color: root.activeCategory === "gaming" ? theme.activeFill : (catGamingMouse.containsMouse ? theme.hoverFill : "transparent")
-                border.width: 1
-                border.color: root.activeCategory === "gaming" ? theme.glassBorderStrong : (catGamingMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                scale: catGamingMouse.pressed ? 0.90 : (catGamingMouse.containsMouse ? 1.10 : 1.0)
-                transformOrigin: Item.Center
-
-                Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
-                Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
-
-                Text {
-                    anchors.centerIn: parent
-                    text: ""
-                    color: root.activeCategory === "gaming" ? theme.textStrong : (catGamingMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                    font.pixelSize: theme.fontSizeXl
-                    renderType: Text.NativeRendering
-                }
-
-                MouseArea {
-                    id: catGamingMouse
-                    anchors.fill: parent
-                    hoverEnabled: true
-                    cursorShape: Qt.PointingHandCursor
-                    onClicked: root.activeCategory = "gaming"
-                }
-            }
-        }
-
-        Rectangle {
-            anchors.horizontalCenter: parent.horizontalCenter
-            width: categoryRail.width
-            height: 1
-            color: theme.separator
-        }
-
-        // 2. CONTENT CONTAINER (Largura total)
+        // 1. LEFT VERTICAL SIDEBAR (Ícones das abas na vertical)
         Item {
-            width: parent.width
-            height: parent.height - 42 - 1 - theme.spacingMd * 2
+            id: leftSidebar
+            width: 72
+            height: parent.height
+
+            Column {
+                anchors {
+                    top: parent.top
+                    topMargin: 24
+                    horizontalCenter: parent.horizontalCenter
+                }
+                spacing: 16
+
+                // 0. Home
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "home" ? theme.activeFill : (catHomeMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "home" ? theme.glassBorderStrong : (catHomeMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catHomeMouse.pressed ? 0.90 : (catHomeMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "home" ? theme.textStrong : (catHomeMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catHomeMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "home"
+                    }
+                }
+
+                // 1. Wi-Fi
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "wifi" ? theme.activeFill : (catWifiMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "wifi" ? theme.glassBorderStrong : (catWifiMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catWifiMouse.pressed ? 0.90 : (catWifiMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "wifi" ? theme.textStrong : (catWifiMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catWifiMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "wifi"
+                    }
+                }
+
+                // 2. Bluetooth
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "bluetooth" ? theme.activeFill : (catBtMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "bluetooth" ? theme.glassBorderStrong : (catBtMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catBtMouse.pressed ? 0.90 : (catBtMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "bluetooth" ? theme.textStrong : (catBtMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catBtMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "bluetooth"
+                    }
+                }
+
+                // 3. Som
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : (catSoundMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catSoundMouse.pressed ? 0.90 : (catSoundMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "sound" ? theme.textStrong : (catSoundMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catSoundMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "sound"
+                    }
+                }
+
+                // 4. Wallpaper
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "wallpaper" ? theme.activeFill : (catWpMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "wallpaper" ? theme.glassBorderStrong : (catWpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catWpMouse.pressed ? 0.90 : (catWpMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "wallpaper" ? theme.textStrong : (catWpMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catWpMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "wallpaper"
+                    }
+                }
+
+                // 5. Gaming
+                Rectangle {
+                    width: 44
+                    height: 44
+                    radius: theme.radiusSmall
+                    color: root.activeCategory === "gaming" ? theme.activeFill : (catGamingMouse.containsMouse ? theme.hoverFill : "transparent")
+                    border.width: 1
+                    border.color: root.activeCategory === "gaming" ? theme.glassBorderStrong : (catGamingMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
+                    scale: catGamingMouse.pressed ? 0.90 : (catGamingMouse.containsMouse ? 1.10 : 1.0)
+                    transformOrigin: Item.Center
+
+                    Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on border.color { ColorAnimation { duration: theme.animDurationFast } }
+                    Behavior on scale { NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutBack; easing.overshoot: theme.buttonOvershoot } }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: ""
+                        color: root.activeCategory === "gaming" ? theme.textStrong : (catGamingMouse.containsMouse ? theme.textStrong : theme.textMuted)
+                        font.pixelSize: theme.fontSizeXl
+                        renderType: Text.NativeRendering
+                    }
+
+                    MouseArea {
+                        id: catGamingMouse
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: root.activeCategory = "gaming"
+                    }
+                }
+            }
+
+            Rectangle {
+                anchors {
+                    top: parent.top
+                    bottom: parent.bottom
+                    right: parent.right
+                }
+                width: 1
+                color: theme.separator
+            }
+        }
+
+        // 2. MAIN CONTENT AREA (Responsivo, largura total restante)
+        Item {
+            id: mainContentArea
+            width: parent.width - leftSidebar.width
+            height: parent.height
+
+            // Close Button ("X") no canto superior direito
+            Rectangle {
+                id: topCloseButton
+                anchors {
+                    top: parent.top
+                    topMargin: 20
+                    right: parent.right
+                    rightMargin: 24
+                }
+                width: 32
+                height: 32
+                radius: 16
+                color: closeMouse.containsMouse ? theme.hoverFill : theme.itemFill
+                border.width: 1
+                border.color: theme.glassBorderSubtle
+                z: 100
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: theme.textStrong
+                    font.pixelSize: 13
+                    renderType: Text.NativeRendering
+                }
+
+                MouseArea {
+                    id: closeMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: if (root.goBack) root.goBack()
+                }
+            }
+
+            Item {
+                id: tabContentWrapper
+                anchors.fill: parent
+                anchors.margins: theme.spacingLg
+
 
                 // =============================================================
                 // TAB CONTENT 0: HOME SETTINGS
@@ -517,9 +580,6 @@ Item {
                     property int currentDay: currentTime.getDate()
                     property string uptimeStr: "0m"
                     property string kernelStr: ""
-                    property string pendingAction: ""
-                    property string confirmTitle: ""
-                    property string confirmDesc: ""
 
                     Timer {
                         interval: 1000
@@ -954,14 +1014,14 @@ Item {
                                             }
                                         }
 
-                                        // Botão de Privacidade (Olho) no canto superior direito do banner
+                                        // Botão de Privacidade (Olho) no canto inferior esquerdo do banner
                                         Rectangle {
                                             id: homePrivacyBtn
                                             anchors {
-                                                top: bannerBox.top
-                                                topMargin: 10
-                                                right: bannerBox.right
-                                                rightMargin: 10
+                                                bottom: bannerBox.bottom
+                                                bottomMargin: 10
+                                                left: bannerBox.left
+                                                leftMargin: 10
                                             }
                                             width: 28
                                             height: 28
@@ -1573,6 +1633,68 @@ Item {
                                     }
                                 }
                             }
+
+                            // =========================================================
+                            // OPÇÃO: COR DOS ÍCONES DA BARRA SUPERIOR (#000000 ou #ffffff)
+                            // =========================================================
+                            Rectangle {
+                                width: parent.width
+                                implicitHeight: topBarColorRow.implicitHeight + (theme.spacingMd * 2)
+                                radius: theme.radiusSmall
+                                color: theme.itemFill
+                                border.width: 1
+                                border.color: theme.glassBorderSubtle
+
+                                Row {
+                                    id: topBarColorRow
+                                    anchors {
+                                        left: parent.left
+                                        leftMargin: theme.spacingMd
+                                        right: parent.right
+                                        rightMargin: theme.spacingMd
+                                        verticalCenter: parent.verticalCenter
+                                    }
+                                    spacing: theme.spacingMd
+
+                                    Column {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: parent.width - 240
+                                        spacing: 2
+
+                                        Text {
+                                            text: "Cor dos Ícones da Barra Superior"
+                                            color: theme.textStrong
+                                            font.pixelSize: theme.fontSizeSm
+                                            font.weight: Font.Medium
+                                            renderType: Text.NativeRendering
+                                        }
+
+                                        Text {
+                                            text: "Alternar entre ícones e texto em branco (#ffffff) ou preto (#000000)"
+                                            color: theme.textMuted
+                                            font.pixelSize: theme.fontSizeXs
+                                            renderType: Text.NativeRendering
+                                        }
+                                    }
+
+                                    Row {
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        spacing: 8
+
+                                        SettingPill {
+                                            label: "Branco (#ffffff)"
+                                            active: root.appearance ? root.appearance.topBarIconColor === "white" : true
+                                            onClicked: if (root.appearance) root.appearance.setTopBarIconColor("white")
+                                        }
+
+                                        SettingPill {
+                                            label: "Preto (#000000)"
+                                            active: root.appearance ? root.appearance.topBarIconColor === "black" : false
+                                            onClicked: if (root.appearance) root.appearance.setTopBarIconColor("black")
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -1760,9 +1882,7 @@ Item {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        homeTabContent.confirmTitle = "Encerrar Sessão"
-                                        homeTabContent.confirmDesc = "Deseja realmente encerrar a sessão do usuário?"
-                                        homeTabContent.pendingAction = "hyprctl dispatch exit || loginctl terminate-user $USER"
+                                        root.confirmPowerAction("Encerrar Sessão", "Deseja realmente encerrar a sessão do usuário?", "hyprctl dispatch exit || loginctl terminate-user $USER", "")
                                     }
                                 }
                             }
@@ -1796,9 +1916,7 @@ Item {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        homeTabContent.confirmTitle = "Reiniciar Sistema"
-                                        homeTabContent.confirmDesc = "Deseja realmente reiniciar o computador?"
-                                        homeTabContent.pendingAction = "systemctl reboot"
+                                        root.confirmPowerAction("Reiniciar Sistema", "Deseja realmente reiniciar o computador?", "systemctl reboot", "")
                                     }
                                 }
                             }
@@ -1832,133 +1950,7 @@ Item {
                                     hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: {
-                                        homeTabContent.confirmTitle = "Desligar Sistema"
-                                        homeTabContent.confirmDesc = "Deseja realmente desligar o computador agora?"
-                                        homeTabContent.pendingAction = "systemctl poweroff"
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // 4. Confirmation Dialog Modal
-                    Rectangle {
-                        id: confirmOverlay
-                        anchors.fill: parent
-                        color: "#90000000"
-                        visible: homeTabContent.pendingAction !== ""
-                        z: 50
-
-                        MouseArea {
-                            anchors.fill: parent
-                            onClicked: homeTabContent.pendingAction = ""
-                        }
-
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: 380
-                            height: 170
-                            radius: theme.radiusItem
-                            color: theme.glassFillDark
-                            border.width: 1
-                            border.color: theme.glassBorderStrong
-
-                            Column {
-                                anchors.fill: parent
-                                anchors.margins: theme.spacingLg
-                                spacing: theme.spacingMd
-
-                                Row {
-                                    spacing: theme.spacingSm
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: ""
-                                        color: theme.textStrong
-                                        font.pixelSize: theme.fontSizeXl
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                    Text {
-                                        renderType: Text.NativeRendering
-                                        text: homeTabContent.confirmTitle
-                                        color: theme.textStrong
-                                        font.pixelSize: theme.fontSizeLg
-                                        font.weight: Font.Bold
-                                        anchors.verticalCenter: parent.verticalCenter
-                                    }
-                                }
-
-                                Text {
-                                    renderType: Text.NativeRendering
-                                    width: parent.width
-                                    text: homeTabContent.confirmDesc
-                                    color: theme.textMedium
-                                    font.pixelSize: theme.fontSizeSm
-                                    wrapMode: Text.WordWrap
-                                }
-
-                                Item { width: 1; height: 1 }
-
-                                Row {
-                                    anchors.right: parent.right
-                                    spacing: theme.spacingSm
-
-                                    // Cancelar
-                                    Rectangle {
-                                        width: 90
-                                        height: 32
-                                        radius: theme.radiusSmall
-                                        color: cancelMouse.containsMouse ? theme.hoverFill : theme.itemFill
-                                        border.width: 1
-                                        border.color: theme.glassBorderSubtle
-
-                                        Text {
-                                            renderType: Text.NativeRendering
-                                            anchors.centerIn: parent
-                                            text: "Cancelar"
-                                            color: theme.textMedium
-                                            font.pixelSize: theme.fontSizeXs
-                                            font.weight: Font.Medium
-                                        }
-
-                                        MouseArea {
-                                            id: cancelMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: homeTabContent.pendingAction = ""
-                                        }
-                                    }
-
-                                    // Confirmar
-                                    Rectangle {
-                                        width: 90
-                                        height: 32
-                                        radius: theme.radiusSmall
-                                        color: confirmMouse.containsMouse ? theme.hoverFill : theme.activeFill
-                                        border.width: 1
-                                        border.color: theme.glassBorderStrong
-
-                                        Text {
-                                            renderType: Text.NativeRendering
-                                            anchors.centerIn: parent
-                                            text: "Confirmar"
-                                            color: theme.textStrong
-                                            font.pixelSize: theme.fontSizeXs
-                                            font.weight: Font.Bold
-                                        }
-
-                                        MouseArea {
-                                            id: confirmMouse
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: {
-                                                const act = homeTabContent.pendingAction
-                                                homeTabContent.pendingAction = ""
-                                                if (root.goBack) root.goBack()
-                                                proc.exec(["sh", "-c", act])
-                                            }
-                                        }
+                                        root.confirmPowerAction("Desligar Sistema", "Deseja realmente desligar o computador agora?", "systemctl poweroff", "")
                                     }
                                 }
                             }
@@ -3020,7 +3012,7 @@ Item {
                     spacing: theme.spacingMd
 
                     Column {
-                        width: Math.round((parent.width - theme.spacingMd) * 0.52)
+                        width: Math.round((parent.width - theme.spacingMd) * 0.56)
                         height: parent.height
                         spacing: theme.spacingSm
 
@@ -3073,8 +3065,8 @@ Item {
                             id: wpGalleryGrid
                             width: parent.width
                             height: parent.height - 34 - theme.spacingSm
-                            cellWidth: Math.floor(wpGalleryGrid.width / 2)
-                            cellHeight: 140
+                            cellWidth: Math.floor(wpGalleryGrid.width / 4)
+                            cellHeight: 180
                             clip: true
                             boundsBehavior: Flickable.StopAtBounds
 
@@ -3110,11 +3102,11 @@ Item {
                                     Column {
                                         anchors.fill: parent
                                         anchors.margins: 5
-                                        spacing: 4
+                                        spacing: 6
 
                                         Item {
                                             width: parent.width
-                                            height: 84
+                                            height: 130
 
                                             Image {
                                                 id: thumbImg
@@ -3203,7 +3195,7 @@ Item {
                     }
 
                     Rectangle {
-                        width: Math.round((parent.width - theme.spacingMd) * 0.48)
+                        width: Math.round((parent.width - theme.spacingMd) * 0.44)
                         height: parent.height
                         radius: theme.radiusItem
                         color: theme.itemFill
@@ -3573,3 +3565,4 @@ Item {
             }
         }
     }
+}

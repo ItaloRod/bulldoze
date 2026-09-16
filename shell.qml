@@ -12,12 +12,22 @@ import "modules"
 ShellRoot {
     id: shell
 
-    property string activeMode: "none" // "none" | "wifi" | "bluetooth" | "audio" | "gaming" | "gaming-settings" | "wallpaper" | "launcher" | "settings" | "power" | "profile" | "notifications"
+    property string activeMode: "none" // "none" | "launcher" | "settings" | "wallpaper" | "gaming"
     property string activeLauncherTab: "home"
     property alias activeSettingsTab: shell.activeLauncherTab
     property bool isFullscreenActive: false
     property bool isLauncherOpen: false
-    property real notchActualWidth: 200
+    property bool isSpotlightOpen: false
+    property bool isNotifOpen: false
+    property bool isConfirmOpen: false
+    property string confirmTitle: ""
+    property string confirmDesc: ""
+    property string confirmAction: ""
+    property string confirmIcon: ""
+
+    Process {
+        id: confirmActionProc
+    }
 
     Process {
         id: hyprEventsProc
@@ -31,6 +41,10 @@ ShellRoot {
                 }
             }
         }
+    }
+
+    Appearance {
+        id: globalAppearance
     }
 
     Theme {
@@ -62,12 +76,6 @@ ShellRoot {
         id: globalNotifications
         property bool ready: false
 
-        onNotificationReceived: notif => {
-            if (ready && !shell.isLauncherOpen) {
-                shell.showNotificationOsd()
-            }
-        }
-
         Component.onCompleted: {
             readyTimer.start()
         }
@@ -83,13 +91,13 @@ ShellRoot {
         property bool ready: false
 
         onVolumeChanged: {
-            if (ready && !((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") && !shell.isLauncherOpen) {
+            if (ready && !(shell.isLauncherOpen && shell.activeLauncherTab === "sound")) {
                 shell.showAudioBar()
             }
         }
 
         onMutedChanged: {
-            if (ready && !((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") && !shell.isLauncherOpen) {
+            if (ready && !(shell.isLauncherOpen && shell.activeLauncherTab === "sound")) {
                 shell.showAudioBar()
             }
         }
@@ -119,9 +127,6 @@ ShellRoot {
     property var currentFocusedWorkspace: Hyprland.focusedWorkspace
     onCurrentFocusedWorkspaceChanged: {
         if (shell.wsReady) {
-            if (shell.isLauncherOpen) {
-                shell.isLauncherOpen = false
-            }
             shell.showWorkspaceBar(2000)
         }
     }
@@ -144,32 +149,9 @@ ShellRoot {
         }
     }
 
-    property bool isNotifOpen: false
-    property bool isNotifExpanded: false
-
-    property var notifDismissTimer: Timer {
-        id: notifDismissTimer
-        interval: 2500
-        repeat: false
-        onTriggered: {
-            shell.closeNotification()
-        }
-    }
-
-    property var notifExpandTimer: Timer {
-        id: notifExpandTimer
-        interval: 2000
-        repeat: false
-        onTriggered: {
-            if (shell.isNotifOpen && globalNotifications.count > 1) {
-                shell.isNotifExpanded = true
-            }
-        }
-    }
-
     function showAudioBar() {
         if (shell.isFullscreenActive) return
-        if ((shell.activeMode === "launcher" || shell.activeMode === "settings") && shell.activeLauncherTab === "sound") return
+        if (shell.isLauncherOpen && shell.activeLauncherTab === "sound") return
         shell.isAudioBarOpen = true
         audioBarTimer.restart()
     }
@@ -184,30 +166,8 @@ ShellRoot {
         }
     }
 
-    function showNotificationOsd() {
-        if (shell.isFullscreenActive) return
-        shell.isNotifExpanded = false
-        shell.isNotifOpen = true
-        notifDismissTimer.restart()
-    }
-
-    function showNotificationCorner() {
-        if (shell.isFullscreenActive) return
-        notifDismissTimer.stop()
-        shell.isNotifExpanded = false
-        shell.isNotifOpen = true
-    }
-
-    function closeNotification() {
-        notifDismissTimer.stop()
-        notifExpandTimer.stop()
-        shell.isNotifOpen = false
-        shell.isNotifExpanded = false
-    }
-
     function showWorkspaceBar(timeout) {
         if (shell.isFullscreenActive) return
-        if (shell.isLauncherOpen) return
         shell.isWorkspaceOpen = true
         if (timeout > 0) {
             workspaceBarTimer.interval = timeout
@@ -222,62 +182,23 @@ ShellRoot {
         shell.isWorkspaceOpen = false
     }
 
-    property bool isTrayOpen: false
-    property bool isTrayMenuOpen: false
-    readonly property int trayItemCount: (SystemTray.items && SystemTray.items.values) ? SystemTray.items.values.length : 0
-
-    function showTrayBar() {
-        if (shell.isFullscreenActive) return
-        if (shell.trayItemCount === 0) return
-        shell.isTrayOpen = true
-    }
-
-    function closeTrayBar() {
-        if (shell.isTrayMenuOpen) return
-        shell.isTrayOpen = false
-    }
-
-    function toggleMode(mode) {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
-        if (activeMode === mode) {
-            activeMode = "none"
-        } else {
-            activeMode = mode
-        }
-    }
-
-    property bool preventAutoOpenSettings: false
-
-    function closeActiveMode(manual) {
-        if (manual && (shell.activeMode === "launcher" || shell.activeMode === "settings")) {
-            shell.preventAutoOpenSettings = true
-        } else {
-            shell.preventAutoOpenSettings = false
-        }
-        activeMode = "none"
-    }
-
     function toggleLauncher() {
         if (shell.isLauncherOpen) {
-            shell.isLauncherOpen = false
+            shell.closeLauncher()
         } else {
-            shell.closeWorkspaceBar()
-            shell.closeActiveMode()
-            shell.isLauncherOpen = true
+            shell.openLauncherTab("home")
         }
-    }
-
-    function toggleGamingModal() {
-        shell.toggleMode("gaming-settings")
     }
 
     function openLauncherTab(tab) {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
+        shell.closeWorkspaceBar()
+        shell.closeSpotlight()
+        shell.closeNotification()
         shell.isAudioBarOpen = false
         shell.audioBarTimer.stop()
-        shell.preventAutoOpenSettings = false
         shell.activeLauncherTab = tab || "home"
         shell.activeMode = "launcher"
+        shell.isLauncherOpen = true
     }
 
     function openSettingsTab(tab) {
@@ -285,23 +206,62 @@ ShellRoot {
     }
 
     function toggleLauncherBar() {
-        if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
-            shell.closeActiveMode(true)
-        } else {
-            shell.openLauncherTab("home")
-        }
+        shell.toggleLauncher()
     }
 
     function toggleSettings() {
-        shell.toggleLauncherBar()
+        shell.toggleLauncher()
     }
 
-    function toggleWallpaperModal() {
-        shell.toggleMode("wallpaper")
+    function closeLauncher() {
+        shell.isLauncherOpen = false
+        shell.activeMode = "none"
+    }
+
+    function closeActiveMode() {
+        shell.closeLauncher()
+    }
+
+    function toggleSpotlight() {
+        if (shell.isSpotlightOpen) {
+            shell.closeSpotlight()
+        } else {
+            shell.closeLauncher()
+            shell.closeNotification()
+            shell.isSpotlightOpen = true
+        }
+    }
+
+    function openSpotlight() {
+        shell.closeLauncher()
+        shell.closeNotification()
+        shell.isSpotlightOpen = true
+    }
+
+    function closeSpotlight() {
+        shell.isSpotlightOpen = false
+    }
+
+    function toggleNotifications() {
+        if (shell.isNotifOpen) {
+            shell.closeNotification()
+        } else {
+            shell.closeSpotlight()
+            shell.isNotifOpen = true
+        }
+    }
+
+    function openNotifications() {
+        shell.closeSpotlight()
+        shell.isNotifOpen = true
+    }
+
+    function closeNotification() {
+        shell.isNotifOpen = false
     }
 
     function activateWorkspace(id) {
-        if (shell.isLauncherOpen) shell.isLauncherOpen = false
+        if (shell.isLauncherOpen) shell.closeLauncher()
         for (const workspace of Hyprland.workspaces.values) {
             if (workspace.id === id) {
                 workspace.activate()
@@ -311,32 +271,64 @@ ShellRoot {
     }
 
     function lockScreen() {
-        shell.closeActiveMode()
+        shell.closeLauncher()
+        shell.closeSpotlight()
+        shell.closeNotification()
         globalLockScreen.lock()
+    }
+
+    function requestConfirm(title, desc, action, icon) {
+        shell.closeLauncher()
+        shell.closeSpotlight()
+        shell.closeNotification()
+        shell.confirmTitle = title || "Confirmação"
+        shell.confirmDesc = desc || "Deseja realmente prosseguir?"
+        shell.confirmAction = action || ""
+        shell.confirmIcon = icon || ""
+        shell.isConfirmOpen = true
+    }
+
+    function cancelConfirm() {
+        shell.isConfirmOpen = false
+        shell.confirmAction = ""
+    }
+
+    function acceptConfirm() {
+        const act = shell.confirmAction
+        shell.isConfirmOpen = false
+        shell.confirmAction = ""
+        if (act) {
+            confirmActionProc.exec(["sh", "-c", act])
+        }
     }
 
     IpcHandler {
         target: "shell"
         function toggleLauncher() { shell.toggleLauncher() }
-        function toggleSearch() { shell.toggleLauncher() }
+        function toggleSearch() { shell.toggleSpotlight() }
+        function toggleSpotlight() { shell.toggleSpotlight() }
+        function openSpotlight() { shell.openSpotlight() }
+        function closeSpotlight() { shell.closeSpotlight() }
         function toggleWorkspaces() { if (shell.isWorkspaceOpen) shell.closeWorkspaceBar(); else shell.showWorkspaceBar(2000) }
         function showWorkspaces() { shell.showWorkspaceBar(2000) }
         function toggleAudio() { shell.toggleAudioBar() }
         function toggleGaming() { shell.openLauncherTab("gaming") }
-        function toggleGamingSettings() { shell.toggleMode("gaming-settings") }
-        function toggleSettings() { shell.toggleLauncherBar() }
-        function toggleLauncherBar() { shell.toggleLauncherBar() }
+        function toggleGamingSettings() { shell.openLauncherTab("gaming") }
+        function toggleSettings() { shell.toggleLauncher() }
+        function toggleLauncherBar() { shell.toggleLauncher() }
         function openSettings(tab: string) { shell.openLauncherTab(tab) }
         function openLauncher(tab: string) { shell.openLauncherTab(tab) }
-        function toggleWallpaper() { shell.toggleMode("wallpaper") }
-        function toggleWallpaperModal() { shell.toggleWallpaperModal() }
+        function toggleWallpaper() { shell.openLauncherTab("wallpaper") }
+        function toggleWallpaperModal() { shell.openLauncherTab("wallpaper") }
         function toggleProfile() { shell.openLauncherTab("home") }
         function togglePowerMenu() { shell.openLauncherTab("home") }
-        function toggleNotifications() { if (shell.isNotifOpen) shell.closeNotification(); else shell.showNotificationCorner() }
-        function expandNotifications() { shell.isNotifOpen = true; shell.isNotifExpanded = true }
+        function toggleNotifications() { shell.toggleNotifications() }
+        function expandNotifications() { shell.openNotifications() }
         function toggleControlCenter() { shell.openLauncherTab("home") }
-        function closeActiveMode() { shell.closeActiveMode(true); shell.isLauncherOpen = false }
+        function closeActiveMode() { shell.closeLauncher() }
         function lockScreen() { shell.lockScreen() }
+        function requestConfirm(title: string, desc: string, action: string, icon: string) { shell.requestConfirm(title, desc, action, icon) }
+        function cancelConfirm() { shell.cancelConfirm() }
         function raiseVolume() { globalAudio.stepVolume(0.05); shell.showAudioBar() }
         function lowerVolume() { globalAudio.stepVolume(-0.05); shell.showAudioBar() }
         function toggleMute() { globalAudio.toggleMute(); shell.showAudioBar() }
@@ -393,7 +385,41 @@ ShellRoot {
         }
     }
 
-    // Unified Morphing Top Notch Bar & Screen Border Frame
+    // Top Bar (Continuous 100% width macOS style, 32px height, transparent background)
+    Variants {
+        model: Quickshell.screens
+
+        delegate: Component {
+            PanelWindow {
+                required property var modelData
+                screen: modelData
+
+                WlrLayershell.namespace: "bulldoze-top-bar"
+                WlrLayershell.layer: WlrLayer.Top
+                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+                exclusiveZone: 32
+                focusable: false
+                visible: !shell.isFullscreenActive && !shell.isLauncherOpen
+                color: "transparent"
+
+                anchors {
+                    top: true
+                    left: true
+                    right: true
+                }
+                implicitHeight: 32
+
+                TopBar {
+                    anchors.fill: parent
+                    iconColor: globalAppearance.topBarColor
+                    openLauncher: () => shell.toggleLauncher()
+                    toggleNotifications: () => shell.toggleNotifications()
+                }
+            }
+        }
+    }
+
+    // Main Overlay Window: Handles Fullscreen Launcher, Spotlight, Notification Center, Audio Bar, Workspace Dock, and Confirm Dialog
     Variants {
         model: Quickshell.screens
 
@@ -403,12 +429,12 @@ ShellRoot {
                 required property var modelData
                 screen: modelData
 
-                WlrLayershell.namespace: "bulldoze-bar"
-                WlrLayershell.layer: shell.isLauncherOpen ? WlrLayer.Overlay : WlrLayer.Top
-                WlrLayershell.keyboardFocus: (shell.isLauncherOpen || shell.activeMode === "wallpaper") ? WlrKeyboardFocus.Exclusive : ((shell.activeMode === "launcher" || shell.activeMode === "settings") ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None)
-                exclusiveZone: 0
-                focusable: shell.isLauncherOpen || shell.activeMode === "wallpaper" || shell.activeMode === "launcher" || shell.activeMode === "settings"
-                visible: (!shell.isFullscreenActive || shell.activeMode !== "none" || shell.isLauncherOpen) && mainContainer.opacity > 0.001
+                WlrLayershell.namespace: "bulldoze-overlay"
+                WlrLayershell.layer: (shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen) ? WlrLayer.Overlay : WlrLayer.Top
+                WlrLayershell.keyboardFocus: (shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen || shell.isNotifOpen) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
+                exclusiveZone: -1
+                focusable: shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen || shell.isNotifOpen
+                visible: (!shell.isFullscreenActive || shell.isLauncherOpen || shell.isSpotlightOpen || shell.isConfirmOpen || shell.isNotifOpen) && mainContainer.opacity > 0.001
                 color: "transparent"
 
                 anchors {
@@ -419,41 +445,38 @@ ShellRoot {
                 }
 
                 mask: Region {
-                    item: shell.isLauncherOpen ? fullscreenOverlay : notchContainer
-
-                    Region {
-                        item: (shell.activeMode === "none" && !shell.isLauncherOpen && typeof notchTopTrigger !== "undefined") ? notchTopTrigger : null
-                    }
+                    item: shell.isConfirmOpen ? confirmDialog :
+                          shell.isLauncherOpen ? fullscreenLauncherModal :
+                          shell.isSpotlightOpen ? spotlightModal :
+                          shell.isNotifOpen ? notifCenter : null
 
                     Region {
                         item: (shell.isAudioBarOpen || root.animAudioWidth > 0) ? leftAudioBarContainer : null
                     }
 
                     Region {
-                        item: (shell.isNotifOpen || root.animNotifHeight > 0) ? (typeof bottomNotifContainer !== "undefined" ? bottomNotifContainer : null) : (typeof notifCornerTrigger !== "undefined" ? notifCornerTrigger : null)
+                        item: (!shell.isNotifOpen && notifCenter.toastVisible) ? notifCenter.toastContainer : null
                     }
 
                     Region {
-                        item: (shell.trayItemCount > 0)
-                            ? ((shell.isTrayOpen || root.animTrayHeight > 0)
-                                ? (typeof topTrayContainer !== "undefined" ? topTrayContainer : null)
-                                : (typeof trayCornerTrigger !== "undefined" ? trayCornerTrigger : null))
-                            : null
-                    }
-
-                    Region {
-                        item: (shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0)
-                            ? (typeof bottomLauncherContainer !== "undefined" ? bottomLauncherContainer : null)
-                            : (typeof workspaceBottomTrigger !== "undefined" ? workspaceBottomTrigger : null)
+                        item: (shell.isWorkspaceOpen || root.animLauncherHeight > 0)
+                            ? bottomLauncherContainer
+                            : workspaceBottomTrigger
                     }
                 }
 
                 HyprlandFocusGrab {
                     windows: [root]
-                    active: shell.isLauncherOpen
+                    active: shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen || shell.isNotifOpen
                     onCleared: {
-                        if (shell.isLauncherOpen) {
-                            shell.isLauncherOpen = false
+                        if (shell.isConfirmOpen) {
+                            shell.cancelConfirm()
+                        } else if (shell.isSpotlightOpen) {
+                            shell.closeSpotlight()
+                        } else if (shell.isLauncherOpen) {
+                            shell.closeLauncher()
+                        } else if (shell.isNotifOpen) {
+                            shell.closeNotification()
                         }
                     }
                 }
@@ -461,91 +484,6 @@ ShellRoot {
                 Theme {
                     id: theme
                 }
-
-                readonly property real borderThickness: 8
-                readonly property real innerRadius: 8
-                readonly property real concaveWidth: theme.notchConcaveWidth
-                readonly property real concaveHeight: theme.notchConcaveHeight
-                readonly property real bottomRadius: theme.notchBottomRadius
-                readonly property real topRadius: 18
-
-                property bool isHovered: (typeof notchHover !== "undefined" && typeof topHoverHandler !== "undefined") ? (notchHover.hovered || topHoverHandler.hovered) : false
-                property int collapsedWidth: (defaultBarView && defaultBarView.contentCollapsedWidth > 0) ? defaultBarView.contentCollapsedWidth : 170
-
-                property int targetWidth: {
-                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") return 920
-                    if (shell.activeMode === "wallpaper") return 920
-                    if (shell.activeMode === "gaming-settings") return 720
-                    return collapsedWidth
-                }
-
-                property int targetHeight: {
-                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") return 640
-                    if (shell.activeMode === "wallpaper") return 620
-                    if (shell.activeMode === "gaming-settings") return 580
-                    return theme.notchHeight
-                }
-
-                property real animNotchWidth: targetWidth
-                property real animNotchHeight: targetHeight
-
-                Behavior on animNotchWidth {
-                    NumberAnimation {
-                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : theme.notchCollapseDuration
-                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : Easing.InOutCubic
-                        easing.overshoot: theme.stickyOvershoot
-                    }
-                }
-
-                Behavior on animNotchHeight {
-                    NumberAnimation {
-                        duration: shell.activeMode !== "none" ? theme.animDurationSlow : theme.notchCollapseDuration
-                        easing.type: shell.activeMode !== "none" ? Easing.OutBack : Easing.InOutCubic
-                        easing.overshoot: theme.stickyOvershoot
-                    }
-                }
-
-                readonly property real notchLeft: Math.round((root.width - animNotchWidth) / 2)
-                readonly property real notchRight: notchLeft + animNotchWidth
-
-                // Bottom Morphing Dock (Launcher & Workspace View)
-                readonly property int workspaceCount: {
-                    let count = 0
-                    for (const ws of Hyprland.workspaces.values) {
-                        if (ws && ws.id > 0) count++
-                    }
-                    return Math.max(1, count)
-                }
-                readonly property int workspacePillsWidth: 22 + (12 * (workspaceCount - 1))
-                property int workspaceTargetWidth: Math.max(80, workspacePillsWidth + (theme.contentInset * 2) + (root.concaveWidth * 2))
-                property int launcherTargetHeight: shell.isLauncherOpen ? 480 : (shell.isWorkspaceOpen ? 32 : 0)
-                property int launcherTargetWidth: shell.isLauncherOpen ? 640 : root.workspaceTargetWidth
-                property real animLauncherHeight: launcherTargetHeight
-                property real animLauncherWidth: launcherTargetWidth
-
-                readonly property real dockCurveFactor: Math.min(1.0, Math.max(0.0, animLauncherHeight / (concaveHeight + topRadius)))
-                readonly property real dockConcaveHeight: concaveHeight * dockCurveFactor
-                readonly property real dockConcaveWidth: concaveWidth * dockCurveFactor
-                readonly property real dockTopRadius: topRadius * dockCurveFactor
-
-                Behavior on animLauncherHeight {
-                    NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
-                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
-                        easing.overshoot: 1.15
-                    }
-                }
-
-                Behavior on animLauncherWidth {
-                    NumberAnimation {
-                        duration: shell.isLauncherOpen ? theme.animDurationSlow : (shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit)
-                        easing.type: (shell.isLauncherOpen || shell.isWorkspaceOpen) ? Easing.OutBack : Easing.InQuad
-                    }
-                }
-
-                readonly property real launcherLeft: Math.round((root.width - animLauncherWidth) / 2)
-                readonly property real launcherRight: launcherLeft + animLauncherWidth
-                readonly property real launcherTop: root.height - theme.islandMargin - animLauncherHeight
 
                 // Left Audio Bar Morphing Properties
                 property int audioTargetWidth: shell.isAudioBarOpen ? 48 : 0
@@ -570,95 +508,50 @@ ShellRoot {
 
                 readonly property real audioLeft: theme.islandMargin
                 readonly property real audioTop: Math.round((root.height - animAudioHeight) / 2)
-                readonly property real audioBottom: audioTop + animAudioHeight
-                readonly property real audioRight: audioLeft + animAudioWidth
 
-                // Notification Panel geometry (bottom-right corner)
-                readonly property int notifWidth: 400
-                readonly property int notifCollapsedHeight: 66
-                readonly property int notifEmptyHeight: 56
-                property int notifExpandedHeight: {
-                    if (globalNotifications.count === 0) return notifEmptyHeight
-                    let visibleCount = Math.min(globalNotifications.count, 4)
-                    return (visibleCount * 66) + 38
+                // Bottom Workspace Dock
+                readonly property real concaveWidth: theme.notchConcaveWidth
+                readonly property real concaveHeight: theme.notchConcaveHeight
+                readonly property real bottomRadius: theme.notchBottomRadius
+                readonly property real topRadius: 18
+
+                readonly property int workspaceCount: {
+                    let count = 0
+                    for (const ws of Hyprland.workspaces.values) {
+                        if (ws && ws.id > 0) count++
+                    }
+                    return Math.max(1, count)
                 }
+                readonly property int workspacePillsWidth: 22 + (12 * (workspaceCount - 1))
+                property int workspaceTargetWidth: Math.max(80, workspacePillsWidth + (theme.contentInset * 2) + (root.concaveWidth * 2))
+                property int launcherTargetHeight: shell.isWorkspaceOpen ? 32 : 0
+                property int launcherTargetWidth: root.workspaceTargetWidth
+                property real animLauncherHeight: launcherTargetHeight
+                property real animLauncherWidth: launcherTargetWidth
 
-                property real targetNotifHeight: {
-                    if (!shell.isNotifOpen) return 0
-                    if (shell.isNotifExpanded) return notifExpandedHeight
-                    if (globalNotifications.count === 0) return notifEmptyHeight
-                    return notifCollapsedHeight
-                }
-
-                property real targetNotifWidth: {
-                    if (!shell.isNotifOpen && animNotifHeight === 0) return 0
-                    return notifWidth
-                }
-
-                property real animNotifWidth: targetNotifWidth
-                property real animNotifHeight: targetNotifHeight
-
-                Behavior on animNotifWidth {
+                Behavior on animLauncherHeight {
                     NumberAnimation {
-                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
-                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
-                        easing.overshoot: 1.05
+                        duration: shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit
+                        easing.type: shell.isWorkspaceOpen ? Easing.OutBack : Easing.InQuad
+                        easing.overshoot: 1.15
                     }
                 }
 
-                Behavior on animNotifHeight {
+                Behavior on animLauncherWidth {
                     NumberAnimation {
-                        duration: shell.isNotifOpen ? theme.animDurationFast : theme.animDurationExit
-                        easing.type: shell.isNotifOpen ? Easing.OutBack : Easing.InCubic
-                        easing.overshoot: 1.05
+                        duration: shell.isWorkspaceOpen ? theme.animDurationNormal : theme.animDurationExit
+                        easing.type: shell.isWorkspaceOpen ? Easing.OutBack : Easing.InQuad
                     }
                 }
 
-                readonly property real notifRight: root.width - theme.islandMargin
-                readonly property real notifLeft: notifRight - animNotifWidth
-                readonly property real notifTop: root.height - theme.islandMargin - animNotifHeight
-
-                // System Tray Panel geometry (top-right corner)
-                readonly property int trayHeight: theme.notchHeight
-                property int trayTargetWidth: (topTrayView && topTrayView.idealWidth > 0) ? topTrayView.idealWidth : 48
-                property real targetTrayWidth: (shell.isTrayOpen && shell.trayItemCount > 0) ? trayTargetWidth : 0
-                property real targetTrayHeight: (shell.isTrayOpen && shell.trayItemCount > 0) ? trayHeight : 0
-
-                property real animTrayWidth: targetTrayWidth
-                property real animTrayHeight: targetTrayHeight
-
-                Behavior on animTrayWidth {
-                    NumberAnimation {
-                        duration: shell.isTrayOpen ? theme.animDurationFast : theme.animDurationExit
-                        easing.type: shell.isTrayOpen ? Easing.OutBack : Easing.InCubic
-                        easing.overshoot: 1.05
-                    }
-                }
-
-                Behavior on animTrayHeight {
-                    NumberAnimation {
-                        duration: shell.isTrayOpen ? theme.animDurationFast : theme.animDurationExit
-                        easing.type: shell.isTrayOpen ? Easing.OutBack : Easing.InCubic
-                        easing.overshoot: 1.05
-                    }
-                }
-
-                readonly property real trayRight: root.width - theme.islandMargin
-                readonly property real trayLeft: trayRight - animTrayWidth
-                readonly property real trayTop: theme.islandMargin
-                readonly property real trayBottom: trayTop + animTrayHeight
-
-                onAnimNotchWidthChanged: {
-                    shell.notchActualWidth = animNotchWidth
-                }
-                Component.onCompleted: {
-                    shell.notchActualWidth = animNotchWidth
-                }
+                readonly property real launcherLeft: Math.round((root.width - animLauncherWidth) / 2)
+                readonly property real launcherRight: launcherLeft + animLauncherWidth
+                readonly property real launcherTop: root.height - theme.islandMargin - animLauncherHeight
 
                 Item {
                     id: mainContainer
                     anchors.fill: parent
-                    opacity: (shell.isFullscreenActive && shell.activeMode === "none" && !shell.isLauncherOpen) ? 0.0 : 1.0
+                    opacity: (shell.isFullscreenActive && !shell.isLauncherOpen && !shell.isSpotlightOpen && !shell.isConfirmOpen && !shell.isNotifOpen) ? 0.0 : 1.0
 
                     Behavior on opacity {
                         NumberAnimation {
@@ -667,156 +560,117 @@ ShellRoot {
                         }
                     }
 
-                    // Interactive Top Hover Trigger (Restrito à geometria da ilha fechada)
-                    Item {
-                        id: notchTopTrigger
-                        x: root.notchLeft
-                        y: theme.islandMargin
-                        width: root.animNotchWidth
-                        height: root.animNotchHeight
-                        visible: shell.activeMode === "none" && !shell.isLauncherOpen
+                    // Centered Spotlight Search Modal
+                    Spotlight {
+                        id: spotlightModal
+                        anchors.fill: parent
+                        open: shell.isSpotlightOpen
+                        onCloseRequested: shell.closeSpotlight()
+                        z: 160
+                    }
 
-                        HoverHandler {
-                            id: topHoverHandler
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    if (!shell.preventAutoOpenSettings && shell.activeMode === "none" && !shell.isLauncherOpen) {
-                                        shell.openLauncherTab("home")
-                                    }
-                                } else {
-                                    shell.preventAutoOpenSettings = false
-                                }
-                            }
+                    // Fullscreen Launcher with iOS-style blur backdrop
+                    Item {
+                        id: fullscreenLauncherModal
+                        anchors.fill: parent
+                        visible: shell.isLauncherOpen
+                        opacity: shell.isLauncherOpen ? 1.0 : 0.0
+                        z: 150
+
+                        Behavior on opacity {
+                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                        }
+
+                        // Transparent glass backdrop (matches kitty 10% opacity)
+                        Rectangle {
+                            anchors.fill: parent
+                            color: theme.glassFill
+                        }
+
+                        LauncherBarView {
+                            id: launcherBarView
+                            anchors.fill: parent
+                            activeCategory: shell.activeLauncherTab
+                            network: globalNetwork
+                            bluetooth: globalBluetooth
+                            audio: globalAudio
+                            gaming: globalGaming
+                            wallpaperEngine: globalWallpaper
+                            userProfile: globalUserProfile
+                            appearance: globalAppearance
+                            lockScreen: () => shell.lockScreen()
+                            goBack: () => shell.closeLauncher()
+                            requestConfirm: (title, desc, action, icon) => shell.requestConfirm(title, desc, action, icon)
                         }
                     }
 
-                    // Interactive Dynamic Island Top Bar Container
+                    // Notification Center & Floating Toast
+                    NotificationCenter {
+                        id: notifCenter
+                        anchors.fill: parent
+                        notifications: globalNotifications
+                        open: shell.isNotifOpen
+                        onCloseRequested: shell.closeNotification()
+                        z: 140
+                    }
+
+                    // Centered Confirmation Dialog Modal (Power / Reboot / Logout actions)
+                    ConfirmDialog {
+                        id: confirmDialog
+                        anchors.fill: parent
+                        open: shell.isConfirmOpen
+                        title: shell.confirmTitle
+                        description: shell.confirmDesc
+                        icon: shell.confirmIcon
+                        onConfirm: () => shell.acceptConfirm()
+                        onCancel: () => shell.cancelConfirm()
+                        z: 200
+                    }
+
+                    // Interactive Left Audio Bar Container (Floating Capsule)
                     Item {
-                        id: notchContainer
-                        x: root.notchLeft
-                        y: theme.islandMargin
-                        width: root.animNotchWidth
-                        height: root.animNotchHeight
+                        id: leftAudioBarContainer
+                        x: root.audioLeft
+                        y: root.audioTop
+                        width: root.animAudioWidth
+                        height: root.animAudioHeight
+                        clip: false
+                        visible: shell.isAudioBarOpen || root.animAudioWidth > 0
+                        z: 80
 
                         LiquidGlass {
                             anchors.fill: parent
-                            radius: (root.animNotchHeight <= 48) ? (root.animNotchHeight / 2) : theme.radiusIsland
-                            fillColor: theme.glassFill
+                            radius: root.animAudioWidth / 2
+                            fillColor: theme.glassFillDark
                             shadowEnabled: true
                         }
 
                         HoverHandler {
-                            id: notchHover
+                            id: sideBarHover
                             onHoveredChanged: {
                                 if (hovered) {
-                                    launcherExitTimer.stop()
+                                    shell.audioBarTimer.stop()
                                 } else {
-                                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
-                                        launcherExitTimer.restart()
+                                    if (shell.isAudioBarOpen) {
+                                        shell.audioBarTimer.restart()
                                     }
                                 }
                             }
                         }
 
-                        Timer {
-                            id: launcherExitTimer
-                            interval: 280
-                            repeat: false
-                            onTriggered: {
-                                if (!notchHover.hovered && !topHoverHandler.hovered) {
-                                    if (shell.activeMode === "launcher" || shell.activeMode === "settings") {
-                                        shell.closeActiveMode(false)
-                                    }
-                                }
-                            }
-                        }
-
-                        Item {
-                            id: viewsContainer
+                        AudioBarView {
                             anchors.fill: parent
-                            clip: true
-
-                            // View 0: Default Bar View (Clock & Date)
-                            DefaultBarView {
-                                id: defaultBarView
-                                anchors.fill: parent
-                                clip: true
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "none" ? 1.0 : 0.0
-
-                                gaming: globalGaming
-                                notifications: globalNotifications
-                                userProfile: globalUserProfile
-
-                                activateLauncher: () => shell.toggleLauncher()
-                                activateWorkspace: workspaceId => shell.activateWorkspace(workspaceId)
-                                toggleNotifications: () => shell.toggleMode("notifications")
-                                toggleSettings: () => shell.toggleLauncherBar()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 7: Bulldoze Wallpaper Handler View (Full Notch Grid & Inspector)
-                            WallpaperBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "wallpaper" ? 1.0 : 0.0
-                                wallpaperEngine: globalWallpaper
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 8: Advanced Gaming Settings Notch View
-                            GamingSettingsBarView {
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: shell.activeMode === "gaming-settings" ? 1.0 : 0.0
-                                gaming: globalGaming
-                                goBack: () => shell.closeActiveMode()
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
-                            }
-
-                            // View 9: Central Launcher View (WiFi + Bluetooth + Som + Wallpapers + Gaming)
-                            LauncherBarView {
-                                id: launcherBarView
-                                anchors.fill: parent
-                                visible: opacity > 0.001
-                                opacity: (shell.activeMode === "launcher" || shell.activeMode === "settings") ? 1.0 : 0.0
-                                activeCategory: shell.activeLauncherTab
-                                network: globalNetwork
-                                bluetooth: globalBluetooth
-                                audio: globalAudio
-                                gaming: globalGaming
-                                wallpaperEngine: globalWallpaper
-                                userProfile: globalUserProfile
-                                lockScreen: () => shell.lockScreen()
-                                goBack: () => shell.closeActiveMode(true)
-
-                                Behavior on opacity {
-                                    NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
-                                }
+                            width: 48
+                            audio: globalAudio
+                            openSettings: () => {
+                                shell.isAudioBarOpen = false
+                                shell.audioBarTimer.stop()
+                                shell.openSettingsTab("sound")
                             }
                         }
                     }
 
-                    // Dismiss overlay for bottom launcher
-                    MouseArea {
-                        id: fullscreenOverlay
-                        anchors.fill: parent
-                        visible: shell.isLauncherOpen
-                        z: 50
-                        onClicked: shell.isLauncherOpen = false
-                    }
-
-                    // Interactive Bottom Launcher / Workspace Container (Dynamic Island)
+                    // Interactive Bottom Workspace Container
                     Item {
                         id: bottomLauncherContainer
                         x: root.launcherLeft
@@ -824,9 +678,8 @@ ShellRoot {
                         width: root.animLauncherWidth
                         height: root.animLauncherHeight
                         clip: false
-                        visible: shell.isLauncherOpen || shell.isWorkspaceOpen || root.animLauncherHeight > 0
-                        focus: shell.isLauncherOpen
-                        z: 100
+                        visible: shell.isWorkspaceOpen || root.animLauncherHeight > 0
+                        z: 70
 
                         LiquidGlass {
                             anchors.fill: parent
@@ -835,19 +688,12 @@ ShellRoot {
                             shadowEnabled: true
                         }
 
-                        BottomLauncher {
-                            anchors.fill: parent
-                            visible: shell.isLauncherOpen
-                            open: shell.isLauncherOpen
-                            closeLauncher: () => shell.isLauncherOpen = false
-                        }
-
                         // Minimalist Bottom Workspace View
                         Item {
                             id: bottomWorkspaceView
                             anchors.fill: parent
-                            visible: !shell.isLauncherOpen && (shell.isWorkspaceOpen || root.animLauncherHeight > 0)
-                            opacity: (!shell.isLauncherOpen && shell.isWorkspaceOpen) ? 1.0 : 0.0
+                            visible: shell.isWorkspaceOpen || root.animLauncherHeight > 0
+                            opacity: shell.isWorkspaceOpen ? 1.0 : 0.0
 
                             Behavior on opacity {
                                 NumberAnimation { duration: theme.animDurationFast; easing.type: Easing.OutCubic }
@@ -886,169 +732,12 @@ ShellRoot {
                         y: root.height - theme.islandMargin - 28
                         width: Math.max(240, root.workspaceTargetWidth)
                         height: 28 + theme.islandMargin
-                        visible: !shell.isWorkspaceOpen && !shell.isLauncherOpen
+                        visible: !shell.isWorkspaceOpen && !shell.isLauncherOpen && !shell.isConfirmOpen
 
                         HoverHandler {
                             onHoveredChanged: {
                                 if (hovered && !shell.isLauncherOpen) {
                                     shell.showWorkspaceBar(0)
-                                }
-                            }
-                        }
-                    }
-
-                    // Interactive Left Audio Bar Container (Floating Capsule)
-                    Item {
-                        id: leftAudioBarContainer
-                        x: root.audioLeft
-                        y: root.audioTop
-                        width: root.animAudioWidth
-                        height: root.animAudioHeight
-                        clip: false
-                        visible: shell.isAudioBarOpen || root.animAudioWidth > 0
-
-                        LiquidGlass {
-                            anchors.fill: parent
-                            radius: root.animAudioWidth / 2
-                            fillColor: theme.glassFillDark
-                            shadowEnabled: true
-                        }
-
-                        HoverHandler {
-                            id: sideBarHover
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    shell.audioBarTimer.stop()
-                                } else {
-                                    if (shell.isAudioBarOpen) {
-                                        shell.audioBarTimer.restart()
-                                    }
-                                }
-                            }
-                        }
-
-                        AudioBarView {
-                            anchors.fill: parent
-                            width: 48
-                            audio: globalAudio
-                            openSettings: () => {
-                                shell.isAudioBarOpen = false
-                                shell.audioBarTimer.stop()
-                                shell.openSettingsTab("sound")
-                            }
-                        }
-                    }
-
-                    // Interactive Bottom-Right Notification Container (Floating Pill)
-                    Item {
-                        id: bottomNotifContainer
-                        x: root.notifLeft
-                        y: root.notifTop
-                        width: root.animNotifWidth
-                        height: root.animNotifHeight
-                        clip: false
-                        visible: shell.isNotifOpen || root.animNotifHeight > 0
-
-                        LiquidGlass {
-                            anchors.fill: parent
-                            radius: (root.animNotifHeight <= 66) ? 20 : theme.radiusIsland
-                            fillColor: theme.glassFillDark
-                            shadowEnabled: true
-                        }
-
-                        HoverHandler {
-                            id: bottomNotifHover
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    shell.notifDismissTimer.stop()
-                                    if (globalNotifications.count > 1) {
-                                        shell.notifExpandTimer.restart()
-                                    }
-                                } else {
-                                    shell.closeNotification()
-                                }
-                            }
-                        }
-
-                        NotificationBarView {
-                            anchors.fill: parent
-                            anchors.margins: 10
-                            notifications: globalNotifications
-                            isExpanded: shell.isNotifExpanded
-                            dismissAll: () => globalNotifications.dismissAll()
-                            dismissOne: notif => globalNotifications.dismiss(notif)
-                        }
-                    }
-
-                    // Bottom-Right Corner Trigger Hot Zone
-                    Item {
-                        id: notifCornerTrigger
-                        x: root.width - theme.islandMargin - 48
-                        y: root.height - theme.islandMargin - 48
-                        width: 48 + theme.islandMargin
-                        height: 48 + theme.islandMargin
-                        visible: !shell.isNotifOpen
-
-                        HoverHandler {
-                            onHoveredChanged: {
-                                if (hovered) {
-                                    shell.showNotificationCorner()
-                                }
-                            }
-                        }
-                    }
-
-                    // Interactive Top-Right System Tray Container (Floating Pill)
-                    Item {
-                        id: topTrayContainer
-                        x: root.trayLeft
-                        y: root.trayTop
-                        width: root.animTrayWidth
-                        height: root.animTrayHeight
-                        clip: false
-                        visible: (shell.isTrayOpen || root.animTrayHeight > 0) && shell.trayItemCount > 0
-
-                        LiquidGlass {
-                            anchors.fill: parent
-                            radius: root.animTrayHeight / 2
-                            fillColor: theme.glassFillDark
-                            shadowEnabled: true
-                        }
-
-                        HoverHandler {
-                            id: topTrayHover
-                            onHoveredChanged: {
-                                if (!hovered && !shell.isTrayMenuOpen) {
-                                    shell.closeTrayBar()
-                                }
-                            }
-                        }
-
-                        TrayBarView {
-                            id: topTrayView
-                            anchors.centerIn: parent
-                            onIsAnyMenuOpenChanged: {
-                                shell.isTrayMenuOpen = isAnyMenuOpen
-                                if (!isAnyMenuOpen && !topTrayHover.hovered) {
-                                    shell.closeTrayBar()
-                                }
-                            }
-                        }
-                    }
-
-                    // Top-Right Corner Trigger Hot Zone (Screen Bezel)
-                    Item {
-                        id: trayCornerTrigger
-                        x: root.width - theme.islandMargin - 48
-                        y: 0
-                        width: 48 + theme.islandMargin
-                        height: 48 + theme.islandMargin
-                        visible: !shell.isTrayOpen && shell.trayItemCount > 0 && !shell.isLauncherOpen
-
-                        HoverHandler {
-                            onHoveredChanged: {
-                                if (hovered && !shell.isLauncherOpen && shell.trayItemCount > 0) {
-                                    shell.showTrayBar()
                                 }
                             }
                         }
@@ -1061,10 +750,4 @@ ShellRoot {
     LockScreen {
         id: globalLockScreen
     }
-
-    NotificationCenter {
-        notifications: globalNotifications
-    }
 }
-
-

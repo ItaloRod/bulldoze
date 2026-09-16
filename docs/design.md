@@ -343,9 +343,15 @@ Bulldoze motion design implements organic, tactile, and responsive micro-interac
 - **Surface Geometry**: Floating capsule (`radiusPill: 9999` / `height / 2`), Liquid Glass lighting, and standard drop shadow.
 - **Motion**: Sticky vertical slide-up ($y: 28 \to 0$) + scale ($0.90 \to 1.0$) with `animDurationSticky` (320ms), `Easing.OutBack` (overshoot 1.15) on entry and `animDurationExit` (200ms) on dismiss.
 
-## 4.9 File Manager / Dolphin & Thunar (`KDE / GTK Integration`)
-- **Physical Depth Stack**: Wallpaper → Hyprland native blur → 20%-25% translucent dark glass → 1px glass border (`rgba(ffffff24)`) → content.
-- **Thunar / GTK3 Integration (`~/.config/gtk-3.0/gtk.css`)**:
+## 4.9 File Manager / Dolphin (`KDE / Bulldoze Integration`)
+- **Physical Depth Stack**: Wallpaper → Hyprland native blur → 22% translucent dark glass (`opacity: 0.78`) → 12px window rounding (`rounding: 12`) → content.
+- **Default File Manager Association**: `xdg-mime default org.kde.dolphin.desktop inode/directory` with `SUPER + E` global binding.
+- **Dolphin & KDE Theming (`~/.config/kdeglobals`, `~/.config/dolphinrc`, `~/.local/share/color-schemes/Bulldoze.colors`)**:
+  - Palette: Dark monochromatic surfaces (`#0e0e11` sidebar, `#121215` view area, `#1a1a1f` buttons/inputs, `#2d2d32` selection with `#ffffff` text, `#88C0D0` Nord Cyan focus highlights).
+  - Icon Theme: `Colloid-Teal-Nord-Dark`.
+  - Typography: `Roboto 10px` and `RobotoMono Nerd Font`.
+  - UI Layout: Menubar hidden by default (`MenuBar=Disabled`), clean streamlined toolbar, 22px places icons, double-click to open (`SingleClick=false`).
+- **Thunar / GTK3 Integration (`~/.config/gtk-3.0/gtk.css`)** *(Legacy / Fallback)*:
   - Window rounding: 12px.
   - Toolbar, navigation, and action buttons: pill shapes (`border-radius: 9999px`) with subtle shadow (`box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35)`).
   - Notebook tabs: rounded top corners (`12px 12px 0 0`).

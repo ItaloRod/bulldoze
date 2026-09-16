@@ -6,6 +6,25 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.2] - 2026-09
 
+### 🔍 Spotlight Superpowers & Integração Nativa com Dolphin e qView
+- **Spotlight: Listagem Completa de Aplicativos (`*`) e Pesquisa Web no Firefox (`/`) (`components/Spotlight.qml`)**:
+  - Implementado modo estrito `*` (`isAllAppsMode`): exibe a lista completa de todos os aplicativos instalados no sistema ordenados de A a Z com seus respectivos ícones do tema, navegáveis por teclado e mouse.
+  - Implementado modo web `/` (`isWebSearchMode`): permite pesquisar diretamente na internet via Firefox com o comando `firefox --search`, transformando dinamicamente o ícone de busca no logotipo do Firefox (`` em `#FF7139`).
+  - Suporte a abertura direta de URLs iniciadas por `http://` ou `https://`.
+  - Placeholder dinâmico e inteligente com orientações de uso (`* todos, / web, > comando`), com auto-reset do índice de seleção ao alternar o texto.
+- **Gerenciador de Arquivos Padrão: Transição do Thunar para o Dolphin (`docs/design.md`, `agents.md`, `hyprland.lua`)**:
+  - Dolphin definido como o gerenciador de arquivos padrão do sistema (`inode/directory` via `xdg-mime` e `gio`).
+  - Harmonização visual completa do Dolphin com o Bulldoze Design System: paleta escura monocromática (`#0e0e11` / `#121215` / `#2d2d32`), acentos em ciano Nord `#88C0D0`, ícones `Colloid-Teal-Nord-Dark` e tipografia `Roboto 10px`.
+  - Ocultação da barra de menus legada por padrão (`MenuBar=Disabled`), toolbar compacta e ícones de lugares padronizados em 22px.
+  - Atalho global `SUPER + E` configurado no Hyprland para abertura instantânea do Dolphin, com opacidade de 78%, cantos arredondados de 12px e blur translúcido.
+- **Visualizador de Imagens Minimalista: Integração com o qView (`hyprland.lua`)**:
+  - Associação do `qView` como aplicativo padrão para todos os formatos de imagem (`PNG`, `JPEG`, `WebP`, `GIF`, `SVG`, `BMP`, `AVIF`, etc.).
+  - Regra de janela no Hyprland configurada para modo flutuante centralizado (`float = true`, `center = true`), preservando o dimensionamento nativo e proporção das imagens.
+- **Modularização e Calibração dos Componentes do Shell (`shell.qml`, `TopBar.qml`, `NotificationCenter.qml`, `ConfirmDialog.qml`, `Appearance.qml`, `Theme.qml`)**:
+  - Desacoplamento da TopBar em componentes especializados (`TopBar.qml`, `TopBarClock.qml`, `TopBarTray.qml`).
+  - Nova central de notificações com buffer expandido (`maxBuffer: 15`) e diálogo de confirmação universal de ações do sistema (`ConfirmDialog.qml`).
+  - Calibração de tokens de vidro translúcido (`glassFill: "#1A000000"`, `glassFillDark: "#20000000"`) e sombras suaves para evitar escurecimento excessivo do blur do wallpaper.
+
 ### 🏝️ Bulldoze Dynamic Islands: Transição para Pílulas Flutuantes, Liquid Glass e Sombra Unificada
 - **Redesign Arquitetural: Dynamic Islands Flutuantes e Remoção da Moldura Perimetral (`shell.qml`, `docs/design.md`, `agents.md`)**:
   - Remoção completa de ~840 linhas de código vetorial da moldura perimetral contínua de 8px (`unifiedShape`) e das curvas de transição côncavas acopladas aos bezels do monitor.

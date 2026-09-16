@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Shapes
 import QtQuick.Effects
 import "."
 
@@ -85,43 +84,6 @@ Item {
                 GradientStop { position: 0.0; color: theme.glassHighlight }
                 GradientStop { position: 0.25; color: Qt.rgba(1, 1, 1, 0.04) }
                 GradientStop { position: 0.60; color: "transparent" }
-            }
-        }
-    }
-
-    // 4. Liquid Glass Top Specular Rim Light (Brilliant top edge highlight)
-    Shape {
-        id: topRimHighlight
-        anchors.fill: parent
-        antialiasing: true
-        visible: root.highlightEnabled && root.width > 0 && root.height > 0
-
-        ShapePath {
-            strokeWidth: 1.2
-            strokeColor: theme.glassBorderTop
-            fillColor: "transparent"
-            capStyle: ShapePath.RoundCap
-
-            startX: root.radius > 0 ? (root.radius * 0.5) : 0
-            startY: root.radius > 0 ? Math.min(root.height * 0.25, root.radius * 0.3) : 0.6
-
-            PathArc {
-                x: Math.max(root.radius, 1)
-                y: 0.6
-                radiusX: Math.max(root.radius, 1)
-                radiusY: Math.max(root.radius, 1)
-            }
-
-            PathLine {
-                x: Math.max(root.radius, root.width - root.radius)
-                y: 0.6
-            }
-
-            PathArc {
-                x: root.radius > 0 ? (root.width - (root.radius * 0.5)) : root.width
-                y: root.radius > 0 ? Math.min(root.height * 0.25, root.radius * 0.3) : 0.6
-                radiusX: Math.max(root.radius, 1)
-                radiusY: Math.max(root.radius, 1)
             }
         }
     }

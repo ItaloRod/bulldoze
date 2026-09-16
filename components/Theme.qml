@@ -4,8 +4,8 @@ QtObject {
     // -------------------------------------------------------------------------
     // 1. Surface & Glass Tokens (Hex #AARRGGBB)
     // -------------------------------------------------------------------------
-    readonly property color glassFill: "#33000000"           // ~20% alpha black (top notch)
-    readonly property color glassFillDark: "#40000000"       // ~25% alpha black (cards, modals, popups)
+    readonly property color glassFill: "#1A000000"           // ~10% alpha black (exact match with kitty background_opacity 0.10)
+    readonly property color glassFillDark: "#20000000"       // ~12% alpha black (subtle frosted glass for modals/cards)
     readonly property color glassBorder: "#24FFFFFF"         // ~14% alpha white (subtle 1px border)
     readonly property color glassBorderSubtle: "#18FFFFFF"   // ~9% alpha white (item borders, inner bounds)
     readonly property color glassBorderStrong: "#36FFFFFF"   // ~21% alpha white (focused/hovered borders)
@@ -13,10 +13,10 @@ QtObject {
     readonly property color glassBorderBottom: "#14FFFFFF"   // ~8% alpha white (Liquid Glass bottom rim)
     readonly property color glassHighlight: "#26FFFFFF"      // ~15% alpha white (Liquid Glass internal reflection)
 
-    // Shadow Tokens (Unique standard shadow across all components)
-    readonly property color shadowColor: "#59000000"         // ~35% alpha black
-    readonly property int shadowRadius: 20
-    readonly property int shadowOffsetY: 6
+    // Shadow Tokens (Soft and transparent, avoids darkening the blur)
+    readonly property color shadowColor: "#1A000000"         // ~10% alpha black
+    readonly property int shadowRadius: 16
+    readonly property int shadowOffsetY: 4
     readonly property int shadowOffsetX: 0
 
     // Interactive States

@@ -147,8 +147,9 @@ hl.layer_rule({
 })
 ```
 
-### 4.2 Firefox & Thunar
+### 4.2 Firefox, Dolphin & Thunar
 - **Firefox (`userChrome.css`)**: Abas ativas, abas verticais e barra de URL em formato pílula (`border-radius: 9999px`), realce especular superior (`--bulldoze-glass-border-top`), reflexo sutil inferior (`--bulldoze-glass-border-bottom`) e sombra unificada.
+- **Dolphin (`kdeglobals`, `dolphinrc`, `Bulldoze.colors`)**: Paleta Bulldoze escura (`#0e0e11` / `#121215` / `#2d2d32`), ícones `Colloid-Teal-Nord-Dark`, tipografia `Roboto 10px`, cantos de 12px e opacidade 78% com blur nativo do Hyprland.
 - **Thunar / GTK3 (`~/.config/gtk-3.0/gtk.css`)**: Janelas com cantos de 12px, botões de navegação e barra de ferramentas em pílula (`border-radius: 9999px`) com sombra suave.
 
 ---
