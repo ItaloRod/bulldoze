@@ -30,9 +30,17 @@ Item {
         id: defaultBarClickArea
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
-        onClicked: {
-            if (root.toggleSettings) {
-                root.toggleSettings()
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
+        hoverEnabled: true
+        onClicked: mouse => {
+            if (mouse.button === Qt.RightButton) {
+                if (root.toggleNotifications) {
+                    root.toggleNotifications()
+                }
+            } else {
+                if (root.toggleSettings) {
+                    root.toggleSettings()
+                }
             }
         }
     }

@@ -5,8 +5,9 @@ import Quickshell.Services.Notifications
 QtObject {
     id: root
 
-    readonly property int maxBuffer: 15
+    readonly property int maxBuffer: 25
     property var buffer: []
+    property var timestamps: ({})
 
     readonly property var list: buffer
     readonly property int count: buffer ? buffer.length : 0
@@ -41,6 +42,9 @@ QtObject {
             for (let i = vals.length - 1; i >= 0 && cur.length < maxBuffer; i--) {
                 if (vals[i]) {
                     cur.push(vals[i])
+                    if (vals[i].id !== undefined && !root.timestamps[vals[i].id]) {
+                        root.timestamps[vals[i].id] = Date.now()
+                    }
                     try {
                         vals[i].closed.connect(() => root.remove(vals[i]))
                     } catch(e) {}
@@ -71,12 +75,16 @@ QtObject {
 
         // Push to top of stack (index 0)
         cur.unshift(notif)
+        if (notif.id !== undefined) {
+            root.timestamps[notif.id] = Date.now()
+        }
 
-        // Enforce maximum capacity of 7 (FILO: drop oldest at the bottom)
+        // Enforce maximum capacity of 25 (FILO: drop oldest at the bottom)
         while (cur.length > root.maxBuffer) {
             let oldest = cur.pop()
             if (oldest) {
                 oldest.tracked = false
+                if (oldest.id !== undefined) delete root.timestamps[oldest.id]
                 try { oldest.dismiss() } catch(e) {}
             }
         }
@@ -98,6 +106,7 @@ QtObject {
         let topNotif = cur.shift() // Remove top of stack
         if (topNotif) {
             topNotif.tracked = false
+            if (topNotif.id !== undefined) delete root.timestamps[topNotif.id]
             try { topNotif.dismiss() } catch(e) {}
         }
         root.buffer = cur
@@ -106,6 +115,7 @@ QtObject {
 
     function remove(notif) {
         if (!notif || !root.buffer) return
+        if (notif.id !== undefined) delete root.timestamps[notif.id]
         let cur = root.buffer.slice()
         let idx = -1
         for (let i = 0; i < cur.length; i++) {
@@ -140,7 +150,24 @@ QtObject {
                 } catch(e) {}
             }
         }
+        root.timestamps = ({})
         root.buffer = []
+    }
+
+    function getRelativeTime(notif) {
+        if (!notif || notif.id === undefined) return ""
+        let ts = root.timestamps[notif.id]
+        if (!ts) return ""
+        let diffSec = Math.max(0, Math.floor((Date.now() - ts) / 1000))
+        if (diffSec < 30) return "agora"
+        if (diffSec < 60) return "há 1 min"
+        if (diffSec < 3600) return "há " + Math.floor(diffSec / 60) + " min"
+        if (diffSec < 86400) {
+            let h = Math.floor(diffSec / 3600)
+            return h === 1 ? "há 1 hora" : ("há " + h + " horas")
+        }
+        let d = Math.floor(diffSec / 86400)
+        return d === 1 ? "há 1 dia" : ("há " + d + " dias")
     }
 
     function resolveIconSource(notif) {

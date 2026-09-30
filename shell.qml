@@ -149,6 +149,29 @@ ShellRoot {
         }
     }
 
+    property bool isTrayOpen: false
+    property bool isTrayMenuOpen: false
+    readonly property int trayItemCount: (SystemTray.items && SystemTray.items.values) ? SystemTray.items.values.length : 0
+
+    function showTrayBar() {
+        if (shell.isFullscreenActive) return
+        if (shell.trayItemCount === 0) return
+        shell.isTrayOpen = true
+    }
+
+    function closeTrayBar() {
+        if (shell.isTrayMenuOpen) return
+        shell.isTrayOpen = false
+    }
+
+    function toggleTrayBar() {
+        if (shell.isTrayOpen) {
+            shell.closeTrayBar()
+        } else {
+            shell.showTrayBar()
+        }
+    }
+
     function showAudioBar() {
         if (shell.isFullscreenActive) return
         if (shell.isLauncherOpen && shell.activeLauncherTab === "sound") return
@@ -315,6 +338,9 @@ ShellRoot {
         function toggleGaming() { shell.openLauncherTab("gaming") }
         function toggleGamingSettings() { shell.openLauncherTab("gaming") }
         function toggleSettings() { shell.toggleLauncher() }
+        function toggleTray() { shell.toggleTrayBar() }
+        function showTray() { shell.showTrayBar() }
+        function closeTray() { shell.closeTrayBar() }
         function toggleLauncherBar() { shell.toggleLauncher() }
         function openSettings(tab: string) { shell.openLauncherTab(tab) }
         function openLauncher(tab: string) { shell.openLauncherTab(tab) }
@@ -326,6 +352,7 @@ ShellRoot {
         function expandNotifications() { shell.openNotifications() }
         function toggleControlCenter() { shell.openLauncherTab("home") }
         function closeActiveMode() { shell.closeLauncher() }
+        function closeLauncher() { shell.closeLauncher() }
         function lockScreen() { shell.lockScreen() }
         function requestConfirm(title: string, desc: string, action: string, icon: string) { shell.requestConfirm(title, desc, action, icon) }
         function cancelConfirm() { shell.cancelConfirm() }
@@ -385,41 +412,7 @@ ShellRoot {
         }
     }
 
-    // Top Bar (Continuous 100% width macOS style, 32px height, transparent background)
-    Variants {
-        model: Quickshell.screens
-
-        delegate: Component {
-            PanelWindow {
-                required property var modelData
-                screen: modelData
-
-                WlrLayershell.namespace: "bulldoze-top-bar"
-                WlrLayershell.layer: WlrLayer.Top
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-                exclusiveZone: 32
-                focusable: false
-                visible: !shell.isFullscreenActive && !shell.isLauncherOpen
-                color: "transparent"
-
-                anchors {
-                    top: true
-                    left: true
-                    right: true
-                }
-                implicitHeight: 32
-
-                TopBar {
-                    anchors.fill: parent
-                    iconColor: globalAppearance.topBarColor
-                    openLauncher: () => shell.toggleLauncher()
-                    toggleNotifications: () => shell.toggleNotifications()
-                }
-            }
-        }
-    }
-
-    // Main Overlay Window: Handles Fullscreen Launcher, Spotlight, Notification Center, Audio Bar, Workspace Dock, and Confirm Dialog
+    // Main Bulldoze Shell Window: Dynamic Island, Tray, Launcher, Spotlight, Notifications, Audio, Workspaces & Confirm Dialog
     Variants {
         model: Quickshell.screens
 
@@ -429,7 +422,7 @@ ShellRoot {
                 required property var modelData
                 screen: modelData
 
-                WlrLayershell.namespace: "bulldoze-overlay"
+                WlrLayershell.namespace: "bulldoze-bar"
                 WlrLayershell.layer: (shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen) ? WlrLayer.Overlay : WlrLayer.Top
                 WlrLayershell.keyboardFocus: (shell.isConfirmOpen || shell.isLauncherOpen || shell.isSpotlightOpen || shell.isNotifOpen) ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
                 exclusiveZone: -1
@@ -446,9 +439,19 @@ ShellRoot {
 
                 mask: Region {
                     item: shell.isConfirmOpen ? confirmDialog :
-                          shell.isLauncherOpen ? fullscreenLauncherModal :
+                          shell.isLauncherOpen ? launcherDismissOverlay :
                           shell.isSpotlightOpen ? spotlightModal :
                           shell.isNotifOpen ? notifCenter : null
+
+                    Region {
+                        item: (!shell.isFullscreenActive) ? notchContainer : null
+                    }
+
+                    Region {
+                        item: (!shell.isLauncherOpen && !shell.isFullscreenActive)
+                            ? topTrayContainer
+                            : null
+                    }
 
                     Region {
                         item: (shell.isAudioBarOpen || root.animAudioWidth > 0) ? leftAudioBarContainer : null
@@ -484,6 +487,63 @@ ShellRoot {
                 Theme {
                     id: theme
                 }
+
+                // Dynamic Island Top Bar Geometry & Animation (Collapsed vs Expanded Launcher)
+                property int collapsedWidth: (defaultBarView && defaultBarView.contentCollapsedWidth > 0) ? defaultBarView.contentCollapsedWidth : 170
+                property real targetNotchWidth: shell.isLauncherOpen ? Math.round(root.width * 0.33) : collapsedWidth
+                property real targetNotchHeight: shell.isLauncherOpen ? Math.round(root.height * 0.50) : theme.notchHeight
+
+                property real animNotchWidth: targetNotchWidth
+                property real animNotchHeight: targetNotchHeight
+
+                Behavior on animNotchWidth {
+                    NumberAnimation {
+                        duration: shell.isLauncherOpen ? 320 : theme.animDurationFast
+                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.OutCubic
+                        easing.overshoot: shell.isLauncherOpen ? 1.06 : 1.15
+                    }
+                }
+
+                Behavior on animNotchHeight {
+                    NumberAnimation {
+                        duration: shell.isLauncherOpen ? 320 : theme.animDurationFast
+                        easing.type: shell.isLauncherOpen ? Easing.OutBack : Easing.OutCubic
+                        easing.overshoot: shell.isLauncherOpen ? 1.06 : 1.15
+                    }
+                }
+
+                readonly property real notchLeft: Math.round((root.width - animNotchWidth) / 2)
+                readonly property real notchRight: notchLeft + animNotchWidth
+
+                // System Tray Panel geometry (top-right corner floating pill)
+                readonly property int trayHeight: theme.notchHeight
+                property int trayTargetWidth: (topTrayView && topTrayView.idealWidth > 0) ? topTrayView.idealWidth : 48
+                property real targetTrayWidth: trayTargetWidth
+                property real targetTrayHeight: trayHeight
+
+                property real animTrayWidth: targetTrayWidth
+                property real animTrayHeight: targetTrayHeight
+
+                Behavior on animTrayWidth {
+                    NumberAnimation {
+                        duration: theme.animDurationFast
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                Behavior on animTrayHeight {
+                    NumberAnimation {
+                        duration: theme.animDurationFast
+                        easing.type: Easing.OutBack
+                        easing.overshoot: 1.05
+                    }
+                }
+
+                readonly property real trayRight: root.width - theme.islandMargin
+                readonly property real trayLeft: trayRight - animTrayWidth
+                readonly property real trayTop: theme.islandMargin
+                readonly property real trayBottom: trayTop + animTrayHeight
 
                 // Left Audio Bar Morphing Properties
                 property int audioTargetWidth: shell.isAudioBarOpen ? 48 : 0
@@ -569,39 +629,13 @@ ShellRoot {
                         z: 160
                     }
 
-                    // Fullscreen Launcher with iOS-style blur backdrop
-                    Item {
-                        id: fullscreenLauncherModal
+                    // Transparent Dismiss Overlay when Floating Launcher is expanded
+                    MouseArea {
+                        id: launcherDismissOverlay
                         anchors.fill: parent
                         visible: shell.isLauncherOpen
-                        opacity: shell.isLauncherOpen ? 1.0 : 0.0
-                        z: 150
-
-                        Behavior on opacity {
-                            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
-                        }
-
-                        // Transparent glass backdrop (matches kitty 10% opacity)
-                        Rectangle {
-                            anchors.fill: parent
-                            color: theme.glassFill
-                        }
-
-                        LauncherBarView {
-                            id: launcherBarView
-                            anchors.fill: parent
-                            activeCategory: shell.activeLauncherTab
-                            network: globalNetwork
-                            bluetooth: globalBluetooth
-                            audio: globalAudio
-                            gaming: globalGaming
-                            wallpaperEngine: globalWallpaper
-                            userProfile: globalUserProfile
-                            appearance: globalAppearance
-                            lockScreen: () => shell.lockScreen()
-                            goBack: () => shell.closeLauncher()
-                            requestConfirm: (title, desc, action, icon) => shell.requestConfirm(title, desc, action, icon)
-                        }
+                        z: 95
+                        onClicked: shell.closeLauncher()
                     }
 
                     // Notification Center & Floating Toast
@@ -625,6 +659,128 @@ ShellRoot {
                         onConfirm: () => shell.acceptConfirm()
                         onCancel: () => shell.cancelConfirm()
                         z: 200
+                    }
+
+                    // Interactive Dynamic Island Top Bar Container (Floating Pill / Expanded Floating Launcher)
+                    Item {
+                        id: notchContainer
+                        x: root.notchLeft
+                        y: theme.islandMargin
+                        width: root.animNotchWidth
+                        height: root.animNotchHeight
+                        visible: !shell.isFullscreenActive
+                        z: 100
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: shell.isLauncherOpen ? 24 : (root.animNotchHeight / 2)
+                            fillColor: shell.isLauncherOpen ? theme.glassFillDark : theme.glassFill
+                            shadowEnabled: true
+
+                            Behavior on radius {
+                                NumberAnimation { duration: 250; easing.type: Easing.OutCubic }
+                            }
+                        }
+
+                        // Relógio / Barra Padrão (visível quando Launcher FECHADO)
+                        DefaultBarView {
+                            id: defaultBarView
+                            anchors.fill: parent
+                            clip: true
+                            opacity: shell.isLauncherOpen ? 0.0 : 1.0
+                            visible: opacity > 0.001
+
+                            Behavior on opacity {
+                                NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+                            }
+
+                            gaming: globalGaming
+                            notifications: globalNotifications
+                            userProfile: globalUserProfile
+
+                            activateLauncher: () => shell.toggleLauncher()
+                            activateWorkspace: workspaceId => shell.activateWorkspace(workspaceId)
+                            toggleNotifications: () => shell.toggleNotifications()
+                            toggleSettings: () => shell.toggleLauncher()
+                        }
+
+                        // Launcher Flutuante Expandido (visível quando Launcher ABERTO)
+                        LauncherBarView {
+                            id: launcherBarView
+                            anchors.fill: parent
+                            clip: true
+                            opacity: shell.isLauncherOpen ? 1.0 : 0.0
+                            visible: opacity > 0.001
+
+                            Behavior on opacity {
+                                NumberAnimation { duration: 220; easing.type: Easing.OutCubic }
+                            }
+
+                            activeCategory: shell.activeLauncherTab
+                            network: globalNetwork
+                            bluetooth: globalBluetooth
+                            audio: globalAudio
+                            gaming: globalGaming
+                            wallpaperEngine: globalWallpaper
+                            userProfile: globalUserProfile
+                            appearance: globalAppearance
+                            lockScreen: () => shell.lockScreen()
+                            goBack: () => shell.closeLauncher()
+                            requestConfirm: (title, desc, action, icon) => shell.requestConfirm(title, desc, action, icon)
+                        }
+
+                        // Dwell Timer de 250ms para acionamento suave no hover
+                        Timer {
+                            id: notchHoverDwellTimer
+                            interval: 250
+                            repeat: false
+                            onTriggered: {
+                                if (notchHover.hovered && !shell.isLauncherOpen && !shell.isFullscreenActive) {
+                                    shell.openLauncherTab("home")
+                                }
+                            }
+                        }
+
+                        HoverHandler {
+                            id: notchHover
+                            enabled: !shell.isLauncherOpen
+                            onHoveredChanged: {
+                                if (hovered) {
+                                    notchHoverDwellTimer.restart()
+                                } else {
+                                    notchHoverDwellTimer.stop()
+                                }
+                            }
+                        }
+                    }
+
+                    // Interactive Top-Right System Tray Container (Floating Pill)
+                    Item {
+                        id: topTrayContainer
+                        x: root.trayLeft
+                        y: root.trayTop
+                        width: root.animTrayWidth
+                        height: root.animTrayHeight
+                        clip: false
+                        visible: !shell.isFullscreenActive && !shell.isLauncherOpen
+                        z: 90
+
+                        LiquidGlass {
+                            anchors.fill: parent
+                            radius: root.animTrayHeight / 2
+                            fillColor: theme.glassFillDark
+                            shadowEnabled: true
+                        }
+
+                        TrayBarView {
+                            id: topTrayView
+                            anchors.centerIn: parent
+                            notifications: globalNotifications
+                            toggleNotifications: () => shell.toggleNotifications()
+                            onIsAnyMenuOpenChanged: {
+                                shell.isTrayMenuOpen = isAnyMenuOpen
+                            }
+                        }
                     }
 
                     // Interactive Left Audio Bar Container (Floating Capsule)

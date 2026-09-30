@@ -300,33 +300,33 @@ Item {
         }
     }
 
-    Row {
+    Column {
         anchors.fill: parent
         spacing: 0
 
-        // 1. LEFT VERTICAL SIDEBAR (Ícones das abas na vertical)
+        // 1. TOP HORIZONTAL TAB BAR (Abas superiores sem texto, apenas ícones)
         Item {
-            id: leftSidebar
-            width: 72
-            height: parent.height
+            id: topTabBar
+            width: parent.width
+            height: 48
 
-            Column {
+            Row {
                 anchors {
-                    top: parent.top
-                    topMargin: 24
-                    horizontalCenter: parent.horizontalCenter
+                    left: parent.left
+                    leftMargin: 16
+                    verticalCenter: parent.verticalCenter
                 }
-                spacing: 16
+                spacing: 8
 
                 // 0. Home
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "home" ? theme.activeFill : (catHomeMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "home" ? theme.glassBorderStrong : (catHomeMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catHomeMouse.pressed ? 0.90 : (catHomeMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catHomeMouse.pressed ? 0.90 : (catHomeMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -337,7 +337,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "home" ? theme.textStrong : (catHomeMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -352,13 +352,13 @@ Item {
 
                 // 1. Wi-Fi
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "wifi" ? theme.activeFill : (catWifiMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "wifi" ? theme.glassBorderStrong : (catWifiMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catWifiMouse.pressed ? 0.90 : (catWifiMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catWifiMouse.pressed ? 0.90 : (catWifiMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -369,7 +369,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "wifi" ? theme.textStrong : (catWifiMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -384,13 +384,13 @@ Item {
 
                 // 2. Bluetooth
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "bluetooth" ? theme.activeFill : (catBtMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "bluetooth" ? theme.glassBorderStrong : (catBtMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catBtMouse.pressed ? 0.90 : (catBtMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catBtMouse.pressed ? 0.90 : (catBtMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -401,7 +401,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "bluetooth" ? theme.textStrong : (catBtMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -416,13 +416,13 @@ Item {
 
                 // 3. Som
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "sound" ? theme.activeFill : (catSoundMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "sound" ? theme.glassBorderStrong : (catSoundMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catSoundMouse.pressed ? 0.90 : (catSoundMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catSoundMouse.pressed ? 0.90 : (catSoundMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -433,7 +433,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "sound" ? theme.textStrong : (catSoundMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -448,13 +448,13 @@ Item {
 
                 // 4. Wallpaper
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "wallpaper" ? theme.activeFill : (catWpMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "wallpaper" ? theme.glassBorderStrong : (catWpMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catWpMouse.pressed ? 0.90 : (catWpMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catWpMouse.pressed ? 0.90 : (catWpMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -465,7 +465,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "wallpaper" ? theme.textStrong : (catWpMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -480,13 +480,13 @@ Item {
 
                 // 5. Gaming
                 Rectangle {
-                    width: 44
-                    height: 44
+                    width: 36
+                    height: 36
                     radius: theme.radiusSmall
                     color: root.activeCategory === "gaming" ? theme.activeFill : (catGamingMouse.containsMouse ? theme.hoverFill : "transparent")
                     border.width: 1
                     border.color: root.activeCategory === "gaming" ? theme.glassBorderStrong : (catGamingMouse.containsMouse ? theme.glassBorderSubtle : "transparent")
-                    scale: catGamingMouse.pressed ? 0.90 : (catGamingMouse.containsMouse ? 1.10 : 1.0)
+                    scale: catGamingMouse.pressed ? 0.90 : (catGamingMouse.containsMouse ? 1.08 : 1.0)
                     transformOrigin: Item.Center
 
                     Behavior on color { ColorAnimation { duration: theme.animDurationFast } }
@@ -497,7 +497,7 @@ Item {
                         anchors.centerIn: parent
                         text: ""
                         color: root.activeCategory === "gaming" ? theme.textStrong : (catGamingMouse.containsMouse ? theme.textStrong : theme.textMuted)
-                        font.pixelSize: theme.fontSizeXl
+                        font.pixelSize: 15
                         renderType: Text.NativeRendering
                     }
 
@@ -511,35 +511,17 @@ Item {
                 }
             }
 
-            Rectangle {
-                anchors {
-                    top: parent.top
-                    bottom: parent.bottom
-                    right: parent.right
-                }
-                width: 1
-                color: theme.separator
-            }
-        }
-
-        // 2. MAIN CONTENT AREA (Responsivo, largura total restante)
-        Item {
-            id: mainContentArea
-            width: parent.width - leftSidebar.width
-            height: parent.height
-
             // Close Button ("X") no canto superior direito
             Rectangle {
                 id: topCloseButton
                 anchors {
-                    top: parent.top
-                    topMargin: 20
                     right: parent.right
-                    rightMargin: 24
+                    rightMargin: 16
+                    verticalCenter: parent.verticalCenter
                 }
-                width: 32
-                height: 32
-                radius: 16
+                width: 28
+                height: 28
+                radius: 14
                 color: closeMouse.containsMouse ? theme.hoverFill : theme.itemFill
                 border.width: 1
                 border.color: theme.glassBorderSubtle
@@ -549,7 +531,7 @@ Item {
                     anchors.centerIn: parent
                     text: ""
                     color: theme.textStrong
-                    font.pixelSize: 13
+                    font.pixelSize: 11
                     renderType: Text.NativeRendering
                 }
 
@@ -562,10 +544,28 @@ Item {
                 }
             }
 
+            Rectangle {
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                    bottom: parent.bottom
+                }
+                height: 1
+                color: theme.separator
+            }
+        }
+
+        // 2. MAIN CONTENT AREA (Responsivo, largura total restante)
+        Item {
+            id: mainContentArea
+            width: parent.width
+            height: parent.height - topTabBar.height
+            clip: true
+
             Item {
                 id: tabContentWrapper
                 anchors.fill: parent
-                anchors.margins: theme.spacingLg
+                anchors.margins: 14
 
 
                 // =============================================================

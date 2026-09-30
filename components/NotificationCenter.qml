@@ -2,6 +2,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Services.Notifications
+import Quickshell.Io
 import "."
 
 Item {
@@ -16,6 +17,10 @@ Item {
 
     Theme {
         id: theme
+    }
+
+    Process {
+        id: execProc
     }
 
     readonly property var notifMod: notifications
@@ -59,13 +64,107 @@ Item {
     }
 
     // -------------------------------------------------------------------------
+    // Deeplink Handler (Actions, Web URLs, Hyprland window focus / App launch)
+    // -------------------------------------------------------------------------
+    function handleDeeplink(notif) {
+        if (!notif) return
+
+        let handled = false
+
+        // 1. Invoke default action if provided
+        if (notif.actions && notif.actions.length > 0) {
+            let defaultAction = null
+            for (let i = 0; i < notif.actions.length; i++) {
+                if (notif.actions[i] && notif.actions[i].identifier === "default") {
+                    defaultAction = notif.actions[i]
+                    break
+                }
+            }
+            if (!defaultAction) {
+                defaultAction = notif.actions[0]
+            }
+            if (defaultAction) {
+                try {
+                    defaultAction.invoke()
+                    handled = true
+                } catch(e) {
+                    console.log("Error invoking notification action:", e)
+                }
+            }
+        }
+
+        // 2. Extract and open URL (web notifications, browsers, etc.)
+        let url = extractUrl(notif)
+        if (url) {
+            try {
+                Qt.openUrlExternally(url)
+                handled = true
+            } catch(e) {
+                try {
+                    execProc.exec(["xdg-open", url])
+                    handled = true
+                } catch(e2) {}
+            }
+        }
+
+        // 3. Focus active window or launch app via desktop entry / appName
+        if (!handled) {
+            focusOrLaunchApp(notif)
+        }
+
+        root.closeRequested()
+    }
+
+    function extractUrl(notif) {
+        if (!notif) return null
+        if (notif.hints) {
+            if (typeof notif.hints["url"] === "string" && notif.hints["url"].startsWith("http")) {
+                return notif.hints["url"]
+            }
+            if (typeof notif.hints["x-kde-urls"] === "string" && notif.hints["x-kde-urls"].startsWith("http")) {
+                return notif.hints["x-kde-urls"]
+            }
+            if (Array.isArray(notif.hints["x-kde-urls"]) && notif.hints["x-kde-urls"].length > 0) {
+                return notif.hints["x-kde-urls"][0]
+            }
+        }
+        let text = ((notif.summary || "") + " " + (notif.body || ""))
+        let match = text.match(/https?:\/\/[^\s<>"')]+/)
+        if (match) return match[0]
+        return null
+    }
+
+    function focusOrLaunchApp(notif) {
+        if (!notif) return
+        let target = (notif.desktopEntry || notif.appName || "").trim()
+        if (!target) return
+
+        let cleanName = target.toLowerCase().replace(".desktop", "")
+        execProc.exec(["hyprctl", "dispatch", "focuswindow", "class:(?i).*" + cleanName + ".*"])
+
+        if (typeof DesktopEntries !== "undefined" && DesktopEntries && DesktopEntries.applications) {
+            let apps = DesktopEntries.applications.values || DesktopEntries.applications
+            for (let i = 0; i < apps.length; i++) {
+                let app = apps[i]
+                if (!app) continue
+                let appId = (app.id || "").toLowerCase()
+                let appTitle = (app.name || "").toLowerCase()
+                if (appId.includes(cleanName) || appTitle.includes(cleanName)) {
+                    try { app.execute() } catch(e) {}
+                    break
+                }
+            }
+        }
+    }
+
+    // -------------------------------------------------------------------------
     // 1. Temporary Toast Pop-up Card (When Notification Center is CLOSED)
     // -------------------------------------------------------------------------
     Item {
         id: toastCardContainer
         anchors {
             top: parent.top
-            topMargin: 40
+            topMargin: 48
             right: parent.right
             rightMargin: 12
         }
@@ -85,21 +184,20 @@ Item {
             color: theme.glassFillDark
             border.width: 1
             border.color: theme.glassBorderSubtle
-            implicitHeight: Math.max(72, toastContentCol.implicitHeight + 24)
+            implicitHeight: Math.max(76, toastLayoutRow.implicitHeight + 24)
 
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
                 onClicked: {
-                    if (root.toastNotif && root.toastNotif.actions && root.toastNotif.actions.length > 0) {
-                        try { root.toastNotif.actions[0].execute() } catch(e) {}
-                    }
+                    root.handleDeeplink(root.toastNotif)
                     root.toastVisible = false
                 }
             }
 
-            Column {
-                id: toastContentCol
+            Row {
+                id: toastLayoutRow
                 anchors {
                     left: parent.left
                     leftMargin: 14
@@ -108,264 +206,277 @@ Item {
                     top: parent.top
                     topMargin: 12
                 }
-                spacing: 6
+                spacing: 12
 
-                Row {
-                    width: parent.width
-                    spacing: 8
+                // App Icon Container
+                Rectangle {
+                    width: 36
+                    height: 36
+                    radius: 8
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                    anchors.top: parent.top
 
                     IconImage {
-                        width: 18
-                        height: 18
-                        anchors.verticalCenter: parent.verticalCenter
+                        id: toastAppIcon
+                        anchors.centerIn: parent
+                        width: 24
+                        height: 24
                         source: root.notifMod ? root.notifMod.resolveIconSource(root.toastNotif) : ""
                         visible: source !== "" && status === Image.Ready
                     }
 
                     Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: (root.toastNotif && root.toastNotif.appName) ? root.toastNotif.appName : "Notificação"
-                        color: theme.textStrong
-                        font.pixelSize: 12
-                        font.weight: Font.DemiBold
-                        elide: Text.ElideRight
-                        width: parent.width - 50
+                        anchors.centerIn: parent
+                        visible: !toastAppIcon.visible
+                        text: ""
+                        color: theme.textMedium
+                        font.pixelSize: 14
                         renderType: Text.NativeRendering
                     }
+                }
 
-                    Rectangle {
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 18
-                        height: 18
-                        radius: 9
-                        color: toastCloseMouse.containsMouse ? theme.hoverFill : "transparent"
+                // Text Content
+                Column {
+                    width: parent.width - 48
+                    spacing: 4
+
+                    Row {
+                        width: parent.width
+                        spacing: 8
 
                         Text {
-                            anchors.centerIn: parent
-                            text: ""
-                            color: theme.textMuted
-                            font.pixelSize: 10
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: (root.toastNotif && root.toastNotif.appName) ? root.toastNotif.appName : "Notificação"
+                            color: theme.textStrong
+                            font.pixelSize: 12
+                            font.weight: Font.DemiBold
+                            elide: Text.ElideRight
+                            width: parent.width - 24
                             renderType: Text.NativeRendering
                         }
 
-                        MouseArea {
-                            id: toastCloseMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onClicked: {
-                                root.toastVisible = false
+                        // Close button
+                        Rectangle {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: 18
+                            height: 18
+                            radius: 9
+                            color: toastCloseMouse.containsMouse ? theme.hoverFill : "transparent"
+
+                            Text {
+                                anchors.centerIn: parent
+                                text: ""
+                                color: theme.textMuted
+                                font.pixelSize: 10
+                                renderType: Text.NativeRendering
+                            }
+
+                            MouseArea {
+                                id: toastCloseMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.toastVisible = false
                             }
                         }
                     }
-                }
 
-                Text {
-                    width: parent.width
-                    text: (root.toastNotif && root.toastNotif.summary) ? root.toastNotif.summary : ""
-                    color: theme.textStrong
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
-                    wrapMode: Text.Wrap
-                    renderType: Text.NativeRendering
-                }
+                    Text {
+                        width: parent.width
+                        visible: text !== ""
+                        text: (root.toastNotif && root.toastNotif.summary) ? root.toastNotif.summary : ""
+                        color: theme.textStrong
+                        font.pixelSize: 13
+                        font.weight: Font.DemiBold
+                        wrapMode: Text.Wrap
+                        renderType: Text.NativeRendering
+                    }
 
-                Text {
-                    width: parent.width
-                    visible: text !== ""
-                    text: (root.toastNotif && root.toastNotif.body) ? root.toastNotif.body : ""
-                    color: theme.textMedium
-                    font.pixelSize: 12
-                    wrapMode: Text.Wrap
-                    maximumLineCount: 3
-                    elide: Text.ElideRight
-                    renderType: Text.NativeRendering
+                    Text {
+                        width: parent.width
+                        visible: text !== ""
+                        text: (root.toastNotif && root.toastNotif.body) ? root.toastNotif.body : ""
+                        color: theme.textMedium
+                        font.pixelSize: 12
+                        wrapMode: Text.Wrap
+                        maximumLineCount: 3
+                        elide: Text.ElideRight
+                        renderType: Text.NativeRendering
+                    }
                 }
             }
         }
     }
 
     // -------------------------------------------------------------------------
-    // 2. Full Notification Center (When OPEN)
+    // 2. Full Notification Center (When OPEN) - Narrow Strip from Top to Bottom
     // -------------------------------------------------------------------------
     Item {
         id: fullCenterContainer
         anchors {
             top: parent.top
-            topMargin: 32
+            topMargin: 48
             right: parent.right
-            rightMargin: 0
+            rightMargin: 12
             bottom: parent.bottom
-            bottomMargin: 0
+            bottomMargin: 12
         }
-        width: 392
+        width: 380
         visible: root.open
         opacity: visible ? 1.0 : 0.0
 
         Behavior on opacity {
-            NumberAnimation { duration: 180; easing.type: Easing.OutCubic }
+            NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
         }
 
         MouseArea {
             anchors.fill: parent
         }
 
-        // Subtle frosted glass backdrop for the notifications column
-        Rectangle {
-            id: panelBackdrop
-            anchors.fill: parent
-            topLeftRadius: 20
-            bottomLeftRadius: 20
-            topRightRadius: 0
-            bottomRightRadius: 0
-            color: Qt.rgba(0, 0, 0, 0.03)
-            border.width: 0
-        }
+        // Empty State (when 0 notifications)
+        Item {
+            anchors.centerIn: parent
+            width: parent.width
+            height: 140
+            visible: root.notifCount === 0
 
-        Column {
-            anchors {
-                fill: parent
-                leftMargin: 14
-                rightMargin: 14
-                topMargin: 10
-                bottomMargin: 14
-            }
-            spacing: 12
-
-            // Header: "Limpar Todas" button
-            Item {
-                width: parent.width
-                height: root.notifCount > 0 ? 30 : 0
-                visible: root.notifCount > 0
-
-                // Clear All Button
-                Rectangle {
-                    anchors {
-                        right: parent.right
-                        verticalCenter: parent.verticalCenter
-                    }
-                    visible: root.notifCount > 0
-                    width: clearText.implicitWidth + 16
-                    height: 24
-                    radius: 12
-                    color: clearMouse.containsMouse ? theme.hoverFill : theme.itemFill
-                    border.width: 0
-
-                    Text {
-                        id: clearText
-                        anchors.centerIn: parent
-                        text: "Limpar Todas"
-                        color: theme.textMedium
-                        font.pixelSize: 11
-                        font.weight: Font.Medium
-                        renderType: Text.NativeRendering
-                    }
-
-                    MouseArea {
-                        id: clearMouse
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: {
-                            if (root.notifMod) {
-                                root.notifMod.dismissAll()
-                            }
-                        }
-                    }
-                }
-            }
-
-            // Empty State
-            Item {
-                width: parent.width
-                height: 100
-                visible: root.notifCount === 0
+            Column {
+                anchors.centerIn: parent
+                spacing: 10
 
                 Text {
-                    anchors.centerIn: parent
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: ""
+                    color: Qt.rgba(1, 1, 1, 0.25)
+                    font.pixelSize: 32
+                    renderType: Text.NativeRendering
+                }
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
                     text: "Nenhuma notificação"
                     color: theme.textSubtle
                     font.pixelSize: 13
                     renderType: Text.NativeRendering
                 }
             }
+        }
 
-            // Notifications List
-            ListView {
-                id: notifList
-                width: parent.width
-                height: parent.height - 42
-                clip: true
-                spacing: 10
-                model: root.notifList
-                boundsBehavior: Flickable.StopAtBounds
+        // Notifications List (up to 25 items)
+        ListView {
+            id: notifListView
+            anchors {
+                top: parent.top
+                left: parent.left
+                right: parent.right
+                bottom: clearFooter.visible ? clearFooter.top : parent.bottom
+                bottomMargin: 10
+            }
+            clip: true
+            spacing: 10
+            model: root.notifList
+            boundsBehavior: Flickable.StopAtBounds
 
-                delegate: Rectangle {
-                    id: notifCard
-                    required property var modelData
-                    required property int index
+            delegate: Rectangle {
+                id: notifCard
+                required property var modelData
+                required property int index
 
-                    width: notifList.width
-                    implicitHeight: Math.max(68, cardContentCol.implicitHeight + 20)
-                    radius: 16
-                    color: theme.glassFillDark
-                    border.width: 0
+                width: notifListView.width
+                implicitHeight: Math.max(76, cardLayoutRow.implicitHeight + 24)
+                radius: 16
+                color: cardMouse.containsMouse ? theme.hoverFill : theme.glassFillDark
+                border.width: 1
+                border.color: theme.glassBorderSubtle
 
-                    Behavior on color {
-                        ColorAnimation { duration: 120 }
+                Behavior on color {
+                    ColorAnimation { duration: 120 }
+                }
+
+                MouseArea {
+                    id: cardMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: root.handleDeeplink(modelData)
+                }
+
+                Row {
+                    id: cardLayoutRow
+                    anchors {
+                        left: parent.left
+                        leftMargin: 14
+                        right: parent.right
+                        rightMargin: 14
+                        top: parent.top
+                        topMargin: 12
                     }
+                    spacing: 12
 
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        onClicked: {
-                            if (modelData && modelData.actions && modelData.actions.length > 0) {
-                                try { modelData.actions[0].execute() } catch(e) {}
-                            }
+                    // macOS-style App Icon Box
+                    Rectangle {
+                        width: 36
+                        height: 36
+                        radius: 8
+                        color: Qt.rgba(1, 1, 1, 0.08)
+                        anchors.top: parent.top
+
+                        IconImage {
+                            id: cardAppIcon
+                            anchors.centerIn: parent
+                            width: 24
+                            height: 24
+                            source: root.notifMod ? root.notifMod.resolveIconSource(modelData) : ""
+                            visible: source !== "" && status === Image.Ready
+                        }
+
+                        Text {
+                            anchors.centerIn: parent
+                            visible: !cardAppIcon.visible
+                            text: ""
+                            color: theme.textMedium
+                            font.pixelSize: 14
+                            renderType: Text.NativeRendering
                         }
                     }
 
+                    // Content Column
                     Column {
-                        id: cardContentCol
-                        anchors {
-                            left: parent.left
-                            leftMargin: 14
-                            right: parent.right
-                            rightMargin: 14
-                            top: parent.top
-                            topMargin: 10
-                        }
+                        width: parent.width - 48
                         spacing: 4
 
-                        // Header Row of the card
+                        // Header Row: App Name, Relative Timestamp & Close Button
                         Row {
                             width: parent.width
                             spacing: 8
 
-                            IconImage {
-                                width: 16
-                                height: 16
-                                anchors.verticalCenter: parent.verticalCenter
-                                source: root.notifMod ? root.notifMod.resolveIconSource(modelData) : ""
-                                visible: source !== "" && status === Image.Ready
-                            }
-
                             Text {
-                                anchors.verticalCenter: parent.verticalCenter
                                 text: modelData && modelData.appName ? modelData.appName : "Notificação"
                                 color: theme.textStrong
                                 font.pixelSize: 12
                                 font.weight: Font.DemiBold
                                 elide: Text.ElideRight
-                                width: parent.width - 44
+                                width: parent.width - 110
+                                anchors.verticalCenter: parent.verticalCenter
+                                renderType: Text.NativeRendering
+                            }
+
+                            Text {
+                                text: root.notifMod ? root.notifMod.getRelativeTime(modelData) : ""
+                                color: theme.textMuted
+                                font.pixelSize: 11
+                                horizontalAlignment: Text.AlignRight
+                                width: 70
+                                anchors.verticalCenter: parent.verticalCenter
                                 renderType: Text.NativeRendering
                             }
 
                             // Dismiss Individual Notification Button ("X")
                             Rectangle {
-                                anchors.verticalCenter: parent.verticalCenter
                                 width: 18
                                 height: 18
                                 radius: 9
+                                anchors.verticalCenter: parent.verticalCenter
                                 color: cardCloseMouse.containsMouse ? theme.hoverFill : "transparent"
 
                                 Text {
@@ -393,15 +504,16 @@ Item {
                         // Summary / Title
                         Text {
                             width: parent.width
+                            visible: text !== ""
                             text: modelData && modelData.summary ? modelData.summary : ""
                             color: theme.textStrong
                             font.pixelSize: 13
-                            font.weight: Font.Medium
+                            font.weight: Font.DemiBold
                             wrapMode: Text.Wrap
                             renderType: Text.NativeRendering
                         }
 
-                        // Body
+                        // Body Text
                         Text {
                             width: parent.width
                             visible: text !== ""
@@ -409,7 +521,55 @@ Item {
                             color: theme.textMedium
                             font.pixelSize: 12
                             wrapMode: Text.Wrap
+                            maximumLineCount: 3
+                            elide: Text.ElideRight
                             renderType: Text.NativeRendering
+                        }
+                    }
+                }
+            }
+        }
+
+        // Pinned Footer (Rodapé): Trash can icon to clear all notifications
+        Item {
+            id: clearFooter
+            anchors {
+                bottom: parent.bottom
+                left: parent.left
+                right: parent.right
+            }
+            height: 38
+            visible: root.notifCount > 0
+
+            Rectangle {
+                anchors.centerIn: parent
+                width: 36
+                height: 36
+                radius: 18
+                color: clearMouse.containsMouse ? theme.hoverFill : theme.glassFillDark
+                border.width: 1
+                border.color: clearMouse.containsMouse ? (theme.accentDestructive || "#FF5555") : theme.glassBorderSubtle
+
+                Behavior on color {
+                    ColorAnimation { duration: 120 }
+                }
+
+                Text {
+                    anchors.centerIn: parent
+                    text: ""
+                    color: clearMouse.containsMouse ? (theme.accentDestructive || "#FF5555") : theme.textMuted
+                    font.pixelSize: 14
+                    renderType: Text.NativeRendering
+                }
+
+                MouseArea {
+                    id: clearMouse
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        if (root.notifMod) {
+                            root.notifMod.dismissAll()
                         }
                     }
                 }

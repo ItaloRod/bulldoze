@@ -6,6 +6,26 @@ O formato é baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.0.
 
 ## [3.5.2] - 2026-09
 
+### 🔔 Central de Notificações Estilo macOS & Expansão do Launcher Flutuante na Dynamic Island
+- **Central de Notificações com Estilo macOS e Deeplink Completo (`components/NotificationCenter.qml`, `modules/Notifications.qml`, `docs/specs/notification_center.md`)**:
+  - Buffer ampliado de 15 para até 25 notificações (`maxBuffer: 25`) com descarte automático das mais antigas (FIFO/FILO).
+  - Cálculo e exibição de tempo relativo idêntico ao macOS (`"agora"`, `"há 2 min"`, `"há 1 hora"`, `"há 2 dias"`) com rastreamento dinâmico de timestamps por notificação.
+  - Faixa vertical estreita (largura de 380px) posicionada no canto superior direito, estendendo-se suavemente até o canto inferior direito.
+  - Visual de cartões individuais em Liquid Glass escuro translúcido com cantos arredondados de 16px, container de ícone de app estilo esquilo/squircle (36x36px com raio de 8px), tipografia refinada e botão individual de descarte (``).
+  - Botão de lixeira flutuante (``) fixado no rodapé para limpar todas as notificações (`dismissAll`) de uma só vez com confirmação tátil, sem poluição de título no cabeçalho.
+  - Deeplink completo: ao clicar no cartão da notificação ou no toast flutuante, o sistema dispara a ação nativa do FreeDesktop (`invoke()`), abre URLs externas no navegador padrão (`xdg-open` / `Qt.openUrlExternally`) e foca a janela correspondente no Hyprland (`hyprctl dispatch focuswindow`).
+  - Toasts temporários flutuantes mantidos para novas notificações recebidas com a central fechada (~4,5s de duração).
+- **Bandeja do Sistema: Integração do Botão de Notificações com Badge Numérico (`components/views/TrayBarView.qml`, `shell.qml`)**:
+  - Pílula flutuante superior direita agora abriga os ícones de bandeja ativos e um botão dedicado com ícone de sino (``) e micro-badge contador de pendências (ex.: `1`, `99+`), separado por um divisor sutil.
+  - A pílula superior direita permanece sempre acessível com acionamento estritamente via clique, eliminando disparos acidentais por hover.
+- **Dynamic Island Morphing: Novo Launcher Flutuante (33% Largura x 50% Altura) (`shell.qml`, `components/views/LauncherBarView.qml`, `docs/specs/new_launcher.md`)**:
+  - A Dynamic Island central superior ($y = 8\text{px}$) agora se expande de forma elástica (*Easing.OutBack* / *Easing.OutCubic*) transformando-se diretamente no novo Launcher flutuante com dimensões de 33% da largura e 50% da altura da tela, com cantos de 24px em Liquid Glass.
+  - Remoção do modal fullscreen estático anterior: o launcher agora é uma extensão fluida e viva da Dynamic Island.
+  - Acionamento no hover com *Dwell Timer* de 250ms na ilha compacta, evitando aberturas acidentais durante a passagem rápida do cursor.
+  - Fechamento prático e confiável por overlay transparente ao clicar fora da ilha, pela tecla `Esc` ou por perda de foco via `HyprlandFocusGrab`.
+  - Transição de conteúdo coordenada: o relógio central (`DefaultBarView`) realiza fade-out suave (180ms) enquanto o Launcher (`LauncherBarView`) surge em fade-in suave (220ms).
+  - Reorganização das abas de navegação para a parte superior horizontal: barra superior de 48px contendo apenas os ícones das categorias (`` Home, `` Wi-Fi, `` Bluetooth, `` Som, `` Wallpaper e `` Gaming) com botão de fechar (``) à direita, liberando 100% da largura útil para o conteúdo com rolagem suave (`Flickable`/`ScrollView`).
+
 ### 🔍 Spotlight Superpowers & Integração Nativa com Dolphin e qView
 - **Spotlight: Listagem Completa de Aplicativos (`*`) e Pesquisa Web no Firefox (`/`) (`components/Spotlight.qml`)**:
   - Implementado modo estrito `*` (`isAllAppsMode`): exibe a lista completa de todos os aplicativos instalados no sistema ordenados de A a Z com seus respectivos ícones do tema, navegáveis por teclado e mouse.
